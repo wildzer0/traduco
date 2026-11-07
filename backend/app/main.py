@@ -10,9 +10,20 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
-from app.api import assets, diagrams, events, files, health, nodes, projects, translation
+from app.api import (
+    assets,
+    diagrams,
+    events,
+    files,
+    health,
+    nodes,
+    projects,
+    skeleton,
+    translation,
+)
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
+from app.core.skeleton.model import SkeletonError
 from app.core.translation.service import LlmConfig, TranslationService
 from app.core.workspace.errors import WorkspaceError
 from app.events import EventHub
@@ -58,6 +69,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def workspace_error(_: Request, exc: WorkspaceError) -> JSONResponse:
         return _error(exc.code, exc.message, STATUS.get(exc.code, 400))
 
+    @app.exception_handler(SkeletonError)
+    async def skeleton_error(_: Request, exc: SkeletonError) -> JSONResponse:
+        return JSONResponse(
+            {
+                "error": {
+                    "code": "invalid_skeleton",
+                    "message": str(exc),
+                    "details": {"line": exc.line, "reason": exc.reason},
+                }
+            },
+            status_code=422,
+        )
+
     @app.exception_handler(ValidationError)
     async def model_error(_: Request, exc: ValidationError) -> JSONResponse:
         first = exc.errors()[0]
@@ -77,6 +101,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         files.router,
         assets.router,
         diagrams.router,
+        skeleton.router,
         translation.router,
         events.router,
     ):

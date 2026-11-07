@@ -2,8 +2,12 @@ from fastapi import APIRouter, Depends
 
 from app.api.deps import Root
 from app.config import Settings, get_settings
+from app.core.skeleton.files import bundled_skeleton
+from app.core.skeleton.generate import apply_skeleton
+from app.core.skeleton.model import SKELETON_FILE, parse_skeleton
 from app.core.workspace import manifest, registry
 from app.core.workspace.errors import WorkspaceError
+from app.core.workspace.fsio import atomic_write_text
 from app.core.workspace.tree import Node, build_tree
 from app.schemas.projects import (
     ProjectCreate,
@@ -30,16 +34,30 @@ def create_project(
         example = settings.example_project
         if example is None:
             raise WorkspaceError("not_found", "the example project is not available")
+    skeleton_text = _skeleton_text(body, settings) if not body.esempio else None
+    skeleton = parse_skeleton(skeleton_text) if skeleton_text else None  # validate before creating
     project_id = registry.create_in_workspaces(
         settings.workspaces_path, body.nome, body.lingua_sorgente, body.lingua_ufficiale, example
     )
     project = manifest.load_project(settings.workspaces_path / project_id)
+    if skeleton is not None and skeleton_text is not None:
+        root = settings.workspaces_path / project_id
+        atomic_write_text(root / SKELETON_FILE, skeleton_text)
+        apply_skeleton(root, skeleton, project.lingua_sorgente)
     return ProjectSummary(
         id=project_id,
         nome=project.nome,
         lingua_sorgente=project.lingua_sorgente,
         lingua_ufficiale=project.lingua_ufficiale,
     )
+
+
+def _skeleton_text(body: ProjectCreate, settings: Settings) -> str | None:
+    if body.scheletro_testo:
+        return body.scheletro_testo
+    if body.scheletro:
+        return bundled_skeleton(settings.skeletons_dir, body.scheletro)
+    return None
 
 
 @router.get("/projects/{project_id}")

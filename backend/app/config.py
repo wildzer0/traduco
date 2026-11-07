@@ -26,6 +26,11 @@ class Settings(BaseSettings):
         return example if (example / "progetto.yaml").is_file() else None
 
     @property
+    def skeletons_dir(self) -> Path:
+        base = self.examples_dir or Path(__file__).resolve().parents[2] / "examples"
+        return base / "scheletri"
+
+    @property
     def workspaces_path(self) -> Path:
         return self.workspaces_dir.expanduser()
 

@@ -15,6 +15,9 @@ class ProjectCreate(BaseModel):
     lingua_sorgente: str = "it"
     lingua_ufficiale: str = "en"
     esempio: bool = False
+    # Structure to start from: id of a bundled skeleton, or the text of a scheletro.yaml.
+    scheletro: str | None = None
+    scheletro_testo: str | None = None
 
 
 class ProjectPatch(BaseModel):
