@@ -3,10 +3,12 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { CheckPanel } from "../features/companion/CheckPanel";
 import { EditorPane } from "../features/editor/EditorPane";
+import { ExportPanel } from "../features/export/ExportPanel";
 import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
 import { Preview } from "../features/preview/Preview";
 import { reviewKey } from "../features/preview/segment-actions";
 import { ReviewTable } from "../features/review/ReviewTable";
+import { TemplateDrawer } from "../features/templates/TemplateDrawer";
 import { keys } from "../features/tree/queries";
 import { getLlmStatus, getReview } from "../lib/api";
 import { useAssist } from "../lib/assist-store";
@@ -26,7 +28,7 @@ export function Workspace() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const sidebarOpen = usePrefs((st) => st.sidebarOpen);
-  const { mode, setMode, setFocusKey, glossaryOpen } = useView();
+  const { mode, setMode, setFocusKey, glossaryOpen, templatesOpen, exportOpen } = useView();
   const checkOpen = useAssist((st) => st.checkOpen);
   const lastF8 = useRef<{ path: string; key: string } | null>(null);
   const selected = s ?? null;
@@ -142,6 +144,8 @@ export function Workspace() {
       )}
       {glossaryOpen && <GlossaryDrawer projectId={projectId} />}
       {checkOpen && <CheckPanel projectId={projectId} path={selected} />}
+      {templatesOpen && <TemplateDrawer projectId={projectId} />}
+      {exportOpen && <ExportPanel projectId={projectId} selected={selected} />}
     </>
   );
 }

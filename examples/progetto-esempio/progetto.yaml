@@ -12,3 +12,4 @@ metadati:
 revisioni:
   - { rev: "01", data: 2026-09-15, descrizione: Prima emissione }
   - { rev: "02", data: 2026-11-07, descrizione: Aggiornato capitolo 2 }
+metadati_da_tradurre: [nome, descrizione]

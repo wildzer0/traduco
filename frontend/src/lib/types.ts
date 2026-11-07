@@ -151,3 +151,51 @@ export interface Suggestion {
   origin: "model" | "rule" | "guide";
   status: "open" | "dismissed" | "applied";
 }
+
+export interface TemplateInfo {
+  name: string;
+  default: boolean;
+  has_mapping: boolean;
+}
+
+export interface TemplateStyle {
+  id: string;
+  name: string;
+  kind: "paragraph" | "table";
+  custom: boolean;
+  outline_level: number | null;
+  has_numbering: boolean;
+}
+
+export interface TemplateMapping {
+  contenuto: string;
+  stili: Record<string, string>;
+  numerazione_titoli: boolean;
+  campi_mancanti_ammessi: boolean;
+}
+
+export interface TemplateDetail {
+  name: string;
+  styles: TemplateStyle[];
+  placeholders: { name: string; where: string; count: number }[];
+  fields: string[];
+  has_content: boolean;
+  has_revisions: boolean;
+  has_toc: boolean;
+  roles: string[];
+  mapping: TemplateMapping;
+  problems: string[];
+}
+
+export type ExportScope = "section" | "chapter" | "project";
+export type ExportLanguage = "ufficiale" | "sorgente";
+
+export interface ExportStatus {
+  id: string;
+  state: "running" | "done" | "failed";
+  progress: number;
+  message: string;
+  warnings: string[];
+  error: { code: string; message: string; details: Record<string, unknown> } | null;
+  filename: string | null;
+}

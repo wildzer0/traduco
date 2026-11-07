@@ -16,6 +16,7 @@ export function Sidebar({ projectId, selected, onSelect }: Props) {
   const t = useT();
   const setSettingsOpen = usePrefs((s) => s.setSettingsOpen);
   const openGlossary = useView((s) => s.openGlossary);
+  const setTemplatesOpen = useView((s) => s.setTemplatesOpen);
   return (
     <nav
       aria-label={t("sidebar.label")}
@@ -36,9 +37,8 @@ export function Sidebar({ projectId, selected, onSelect }: Props) {
         </button>
         <button
           type="button"
-          disabled
-          title={t("sidebar.soon")}
-          className={`${itemClass} cursor-not-allowed text-muted opacity-60`}
+          onClick={() => setTemplatesOpen(true)}
+          className={`${itemClass} hover:bg-surface`}
         >
           {t("sidebar.templates")}
         </button>

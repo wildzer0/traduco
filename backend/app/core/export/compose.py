@@ -393,3 +393,32 @@ def compose(
     output.parent.mkdir(parents=True, exist_ok=True)
     master.save(str(output))
     return result
+
+
+def finish_plain(
+    body: Path,
+    output: Path,
+    *,
+    fields: MappingType[str, str | None],
+    allow_missing: bool,
+) -> ComposeResult:
+    """Export without a template: Pandoc's document with the text's ``{{fields}}`` filled."""
+    result = ComposeResult()
+    doc = Document(str(body))
+    values = {k: v for k, v in fields.items() if k not in RESERVED}
+    missing: set[str] = set()
+    for p in _all_paragraphs(doc):
+        missing |= replace_in_paragraph(p, values)
+    if missing:
+        if not allow_missing:
+            raise ExportError(
+                "missing_fields",
+                "The text uses fields that have no value: " + ", ".join(sorted(missing)),
+                {"fields": sorted(missing)},
+            )
+        result.warnings.append("fields left empty: " + ", ".join(sorted(missing)))
+        for p in _all_paragraphs(doc):
+            replace_in_paragraph(p, dict.fromkeys(missing, ""))
+    output.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(str(output))
+    return result

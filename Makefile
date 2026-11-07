@@ -1,15 +1,18 @@
-.PHONY: setup dev test e2e lint licenses
+.PHONY: setup tools dev test e2e lint licenses
 .DEFAULT_GOAL := help
 PNPM = corepack pnpm
 FAKE = cd tools/fake-llm && uv run --project ../../backend python -m fake_llm
 
 help:
-	@echo "Targets: setup dev test e2e lint licenses (see AGENTS.md)"
+	@echo "Targets: setup tools dev test e2e lint licenses (see AGENTS.md)"
 
 setup:
 	cd backend && uv sync
 	cd launcher && uv sync
 	cd frontend && $(PNPM) install --frozen-lockfile
+
+tools:
+	python3 tools/install-pandoc.py
 
 dev:
 	@trap 'kill 0' INT TERM EXIT; \

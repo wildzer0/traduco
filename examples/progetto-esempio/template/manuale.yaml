@@ -1,0 +1,17 @@
+contenuto: '{{CONTENUTO}}'
+stili:
+  titolo_1: AziendaTitolo1
+  titolo_2: AziendaTitolo2
+  titolo_3: AziendaTitolo3
+  titolo_4: Heading4
+  titolo_5: Heading5
+  titolo_6: Heading6
+  corpo: AziendaCorpo
+  didascalia: AziendaDidascalia
+  tabella: AziendaTabella
+  elenco_puntato: AziendaElencoPuntato
+  elenco_numerato: AziendaElencoNumerato
+  citazione: AziendaCitazione
+  codice: AziendaCodice
+numerazione_titoli: true
+campi_mancanti_ammessi: false

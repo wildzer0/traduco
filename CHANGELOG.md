@@ -5,6 +5,22 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-07
+
+Milestone M4 - templates and DOCX export.
+
+### Added
+- Company Word templates (`.docx`): upload, analysis (styles by id and name, `{{fields}}` even when Word splits them, headers, footers and text boxes, `{{CONTENUTO}}`, `{{SOMMARIO}}`, `{{REVISIONI}}`),
+  automatic style mapping that you can change, several templates per project with a default.
+- DOCX export of a section, a chapter or the whole project, in the official or the source language: cover, header and footer of the template, headings, lists, quotes, code and tables in the template's styles,
+  numbered figure captions, footnotes, table of contents, revisions table, fields filled from `progetto.yaml`. Missing translations are completed first. `Ctrl+E` repeats the last export.
+- An export stops with a clear message if a Mermaid diagram has not been drawn yet; a snapshot of every export is kept in `.traduco/export/`.
+- `make tools` downloads the pinned Pandoc into `.runtime/pandoc` (checksum verified).
+- Example project: synthetic company template `manuale.docx` with its style mapping.
+
+### Fixed
+- Diagrams are cached as soon as a section is opened, not only after an edit, so an export does not depend on having typed something.
+
 ## [0.4.1] - 2026-11-07
 
 Milestone M3b - writing companion.

@@ -28,6 +28,12 @@ export function useShortcuts(): void {
         useView.getState().setMode(mode);
         return;
       }
+      if (e.key.toLowerCase() === "e" && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        if (!location.pathname.startsWith("/p/")) return;
+        e.preventDefault();
+        useView.getState().setExportOpen(true, true); // repeat the last export
+        return;
+      }
       const src = SHORTCUTS.toggleSource;
       if (e.key.toLowerCase() === src.key && (e.ctrlKey || e.metaKey) && e.shiftKey) {
         e.preventDefault();

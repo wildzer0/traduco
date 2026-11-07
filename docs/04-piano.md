@@ -106,16 +106,16 @@ accettare ritraduce un solo segmento; con il modello spento le azioni sono disat
 
 ## M4 — Template ed export DOCX (RF-50…53, 56, 60…62)
 
-- [ ] `analyze.py`: stili per styleId e nome, segnaposto anche spezzati in run, intestazioni/piè/caselle di testo
-- [ ] Proposta automatica di mappatura stili; `template/<nome>.yaml`
-- [ ] UI caricamento template, schermata di analisi e mappatura, template predefinito
-- [ ] `combine.py`: unione sezioni nell'ordine, riscrittura percorsi immagini e link interni
-- [ ] `pandoc.py` + filtro Lua per stili e didascalie
-- [ ] `compose.py`: compilazione campi, inserimento corpo a `{{CONTENUTO}}`, `updateFields`
-- [ ] Diagrammi Mermaid → PNG con cache
-- [ ] Export di sezione/capitolo/progetto, job con avanzamento e download
-- [ ] Snapshot dell'export in `.traduco/export/`
-- [ ] Fixture: un template aziendale realistico (copertina con logo, intestazione con codice documento, stili con
+- [x] `analyze.py`: stili per styleId e nome, segnaposto anche spezzati in run, intestazioni/piè/caselle di testo
+- [x] Proposta automatica di mappatura stili; `template/<nome>.yaml`
+- [x] UI caricamento template, schermata di analisi e mappatura, template predefinito
+- [x] `combine.py`: unione sezioni nell'ordine, riscrittura percorsi immagini e link interni
+- [x] `pandoc.py`; stili e didascalie applicati in Python sul DOCX di Pandoc (invece del filtro Lua, vedi ADR-036)
+- [x] `compose.py`: compilazione campi, inserimento corpo a `{{CONTENUTO}}`, `updateFields`
+- [x] Diagrammi Mermaid → PNG con cache
+- [x] Export di sezione/capitolo/progetto, job con avanzamento e download
+- [x] Snapshot dell'export in `.traduco/export/`
+- [x] Fixture: un template aziendale realistico (copertina con logo, intestazione con codice documento, stili con
       nomi italiani, tabella con stile personalizzato)
 
 **Accettazione** (test con python-docx sul file prodotto): nessun `{{…}}` residuo; copertina e intestazioni del

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearch } from "@tanstack/react-router";
-import { PanelLeft } from "lucide-react";
+import { Download, PanelLeft } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
@@ -55,6 +55,7 @@ export function TopBar() {
       <span className="ml-auto" />
       {projectId && <ProjectTone projectId={projectId} />}
       {projectId && <ViewSwitch />}
+      {projectId && <ExportButton />}
       {projectId && (
         <span
           data-testid="llm-indicator"
@@ -152,5 +153,21 @@ function ProjectTone({ projectId }: { projectId: string }) {
         ))}
       </select>
     </label>
+  );
+}
+
+function ExportButton() {
+  const t = useT();
+  const setExportOpen = useView((s) => s.setExportOpen);
+  return (
+    <button
+      type="button"
+      title={`${t("export.title")} (Ctrl+E)`}
+      onClick={() => setExportOpen(true)}
+      className="flex items-center gap-1 rounded-ui border border-border px-2 py-1 hover:bg-surface-2"
+    >
+      <Download size={14} strokeWidth={1.5} aria-hidden />
+      {t("export.title")}
+    </button>
   );
 }

@@ -31,7 +31,9 @@ export function Preview({ projectId }: { projectId: string }) {
   const locale = usePrefs((s) => s.locale);
   const online = useTranslationState((s) => s.online);
   const translation = useTranslation(projectId, path).data;
-  const saved = useEditorStatus((s) => s.save) === "saved";
+  // a section that was just opened has no status yet: its diagrams still need caching for the export
+  const status = useEditorStatus((s) => s.save);
+  const saved = status === "saved" || status === null;
   const theme = useDiagramTheme();
   const scroller = useRef<HTMLDivElement>(null);
   const article = useRef<HTMLElement>(null);

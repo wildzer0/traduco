@@ -20,13 +20,15 @@ from app.api import (
     nodes,
     projects,
     skeleton,
+    templates,
     translation,
 )
-from app.api import (
-    settings as settings_api,
-)
+from app.api import export as export_api
+from app.api import settings as settings_api
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
+from app.core.export.errors import ExportError
+from app.core.export.service import ExportManager
 from app.core.skeleton.model import SkeletonError
 from app.core.translation.service import LlmConfig, TranslationService
 from app.core.workspace.errors import WorkspaceError
@@ -52,8 +54,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             hub.publish,
         )
         app.state.translation = service
+        exports = ExportManager(service, publish=hub.publish)
+        app.state.exports = exports
         service.start()
         yield
+        await exports.close()
         await service.close()
         await hub.close()
 
@@ -73,6 +78,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.exception_handler(WorkspaceError)
     async def workspace_error(_: Request, exc: WorkspaceError) -> JSONResponse:
         return _error(exc.code, exc.message, STATUS.get(exc.code, 400))
+
+    @app.exception_handler(ExportError)
+    async def export_error(_: Request, exc: ExportError) -> JSONResponse:
+        status = {"not_ready": 409, "not_found": 404, "pandoc_missing": 503, "office_missing": 503}
+        return JSONResponse(
+            {"error": {"code": exc.code, "message": exc.message, "details": exc.details}},
+            status_code=status.get(exc.code, 422),
+        )
 
     @app.exception_handler(SkeletonError)
     async def skeleton_error(_: Request, exc: SkeletonError) -> JSONResponse:
@@ -109,6 +122,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         companion.router,
         settings_api.router,
         skeleton.router,
+        templates.router,
+        export_api.router,
         translation.router,
         events.router,
     ):

@@ -13,6 +13,12 @@ interface ViewState {
   /** Segment to scroll to and highlight in the preview after navigating (F8, review table). */
   focusKey: string | null;
   setFocusKey: (key: string | null) => void;
+  templatesOpen: boolean;
+  setTemplatesOpen: (open: boolean) => void;
+  exportOpen: boolean;
+  /** Ctrl+E: open the panel and run the last choice at once. */
+  exportAutoRun: boolean;
+  setExportOpen: (open: boolean, autoRun?: boolean) => void;
   glossaryOpen: boolean;
   /** Entry prefilled when the glossary is opened from the preview's context menu. */
   glossaryDraft: Partial<GlossaryEntry> | null;
@@ -27,6 +33,11 @@ export const useView = create<ViewState>((set) => ({
   setReviewFilter: (reviewFilter) => set({ reviewFilter }),
   focusKey: null,
   setFocusKey: (focusKey) => set({ focusKey }),
+  templatesOpen: false,
+  setTemplatesOpen: (templatesOpen) => set({ templatesOpen }),
+  exportOpen: false,
+  exportAutoRun: false,
+  setExportOpen: (exportOpen, autoRun = false) => set({ exportOpen, exportAutoRun: autoRun }),
   glossaryOpen: false,
   glossaryDraft: null,
   openGlossary: (draft) => set({ glossaryOpen: true, glossaryDraft: draft ?? null }),

@@ -2,6 +2,9 @@ import type {
   AssetSaved,
   AssistAction,
   BundledSkeleton,
+  ExportLanguage,
+  ExportScope,
+  ExportStatus,
   FileContent,
   GlossaryEntry,
   LlmStatus,
@@ -11,6 +14,9 @@ import type {
   SegmentRow,
   SkeletonReport,
   Suggestion,
+  TemplateDetail,
+  TemplateInfo,
+  TemplateMapping,
   Tone,
   TranslationView,
   TreeNode,
@@ -250,3 +256,42 @@ export const getCheck = (id: string, path: string): Promise<{ items: Suggestion[
 
 export const dismissSuggestion = (id: string, path: string, suggestionId: string) =>
   api(`${base(id)}/check/dismiss`, json("POST", { path, suggestion_id: suggestionId }));
+
+// --- templates and export ------------------------------------------------------------------
+
+export const listTemplates = (id: string): Promise<TemplateInfo[]> => api(`${base(id)}/templates`);
+
+export const getTemplate = (id: string, name: string): Promise<TemplateDetail> =>
+  api(`${base(id)}/templates/${enc(name)}`);
+
+export const uploadTemplate = (id: string, file: File): Promise<TemplateDetail> =>
+  api(`${base(id)}/templates?filename=${enc(file.name)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });
+
+export const putTemplateMapping = (
+  id: string,
+  name: string,
+  mapping: TemplateMapping,
+): Promise<TemplateDetail> => api(`${base(id)}/templates/${enc(name)}`, json("PUT", mapping));
+
+export const setDefaultTemplate = (id: string, name: string): Promise<{ default: string }> =>
+  api(`${base(id)}/templates/${enc(name)}/default`, { method: "PUT" });
+
+export const deleteTemplate = async (id: string, name: string): Promise<void> => {
+  const res = await fetch(`/api${base(id)}/templates/${enc(name)}`, { method: "DELETE" });
+  if (!res.ok) throw new ApiError(res.status, `http_${res.status}`, res.statusText);
+};
+
+export const startExport = (
+  id: string,
+  body: { scope: ExportScope; path?: string; language: ExportLanguage; template?: string },
+): Promise<ExportStatus> => api(`${base(id)}/export`, json("POST", body));
+
+export const getExport = (id: string, job: string): Promise<ExportStatus> =>
+  api(`${base(id)}/export/${enc(job)}`);
+
+export const exportDownloadUrl = (id: string, job: string): string =>
+  `/api${base(id)}/export/${enc(job)}/download`;

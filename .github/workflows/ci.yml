@@ -24,8 +24,13 @@ jobs:
         with:
           node-version: "24"
       - run: make setup
+      - run: make tools
+      # LibreOffice opens the exported Word files in the tests (PDF conversion)
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer
       - run: make lint
       - run: make test
+        env:
+          TRADUCO_REQUIRE_TOOLS: "1"
       - run: make licenses
 
   e2e:
@@ -39,6 +44,7 @@ jobs:
         with:
           node-version: "24"
       - run: make setup
+      - run: make tools
       - run: cd frontend && corepack pnpm exec playwright install --with-deps chromium
       - run: make e2e
 
