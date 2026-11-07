@@ -118,6 +118,21 @@ def _run(args: list[str]) -> subprocess.CompletedProcess[str]:
         raise ExportError("office_failed", "LibreOffice took too long and was stopped.") from exc
 
 
+#: What the last conversions did, for diagnosing a LibreOffice that ignores the macro (see tests).
+DIAGNOSTICS: list[str] = []
+
+
+def _macro_calls(docx: Path, produced: Path, fmt: str) -> list[str]:
+    """The ways a `macro:` URL can carry the three arguments; LibreOffice versions differ."""
+    arguments = [docx.resolve().as_uri(), produced.resolve().as_uri(), FILTERS[fmt]]
+    quoted = ",".join(f'"{a}"' for a in arguments)
+    plain = ",".join(arguments)
+    return [
+        f"macro:///Standard.Module1.ConvertUpdating({quoted})",
+        f"macro:///Standard.Module1.ConvertUpdating({plain})",
+    ]
+
+
 def convert(docx: Path, fmt: str, outdir: Path, *, update_fields: bool = True) -> Path:
     """Convert to ``pdf`` or ``odt``; returns the file. Runs with a throw-away profile.
 
@@ -135,14 +150,17 @@ def convert(docx: Path, fmt: str, outdir: Path, *, update_fields: bool = True) -
     base = [str(soffice), "--headless", "--norestore", "--nolockcheck"]
     result: subprocess.CompletedProcess[str] | None = None
     if update_fields and fmt in FILTERS:
-        with tempfile.TemporaryDirectory(prefix="traduco-lo-") as profile:
-            _install_macro(Path(profile))
-            call = (
-                f"macro:///Standard.Module1.ConvertUpdating({docx.resolve().as_uri()},"
-                f"{produced.resolve().as_uri()},{FILTERS[fmt]})"
+        for call in _macro_calls(docx, produced, fmt):
+            with tempfile.TemporaryDirectory(prefix="traduco-lo-") as profile:
+                _install_macro(Path(profile))
+                result = _run([*base, f"-env:UserInstallation={Path(profile).as_uri()}", call])
+            DIAGNOSTICS.append(
+                f"macro {call[-60:]!r}: exit {result.returncode}, file {produced.is_file()}, "
+                f"stderr {result.stderr.strip()[:200]!r}, stdout {result.stdout.strip()[:200]!r}"
             )
-            result = _run([*base, f"-env:UserInstallation={Path(profile).as_uri()}", call])
-    if result is None or not produced.is_file():
+            if produced.is_file():
+                break
+    if not produced.is_file():
         with tempfile.TemporaryDirectory(prefix="traduco-lo-") as profile:
             result = _run(
                 [
@@ -155,9 +173,11 @@ def convert(docx: Path, fmt: str, outdir: Path, *, update_fields: bool = True) -
                     str(docx),
                 ]  # fmt: skip
             )
-    if result.returncode != 0 or not produced.is_file():
+        DIAGNOSTICS.append(f"plain conversion used: exit {result.returncode}")
+    if result is None or result.returncode != 0 or not produced.is_file():
         raise ExportError(
             "office_failed",
-            f"LibreOffice could not convert the file: {result.stderr.strip()[:300]}",
+            "LibreOffice could not convert the file: "
+            + (result.stderr.strip()[:300] if result else ""),
         )
     return produced
