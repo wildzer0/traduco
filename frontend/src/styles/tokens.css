@@ -1,0 +1,50 @@
+/* Design tokens (docs/03-ui.md). Light by default; dark via system preference or data-theme. */
+:root {
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface-2: #f3f1ed;
+  --fg: #26231f;
+  --muted: #6e6a63;
+  --border: #e4e0d9;
+  --accent: #2f6fed;
+  --accent-fg: #ffffff;
+  --amber: #c98a06;
+  --green: #2f9e5b;
+  --red: #d64545;
+  --radius: 6px;
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1a18;
+    --surface: #232220;
+    --surface-2: #2c2a27;
+    --fg: #ece9e3;
+    --muted: #a09b92;
+    --border: #3a3733;
+    --accent: #6c9bff;
+    --accent-fg: #11151f;
+    --amber: #e0a526;
+    --green: #4cc27f;
+    --red: #ef6b6b;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1b1a18;
+  --surface: #232220;
+  --surface-2: #2c2a27;
+  --fg: #ece9e3;
+  --muted: #a09b92;
+  --border: #3a3733;
+  --accent: #6c9bff;
+  --accent-fg: #11151f;
+  --amber: #e0a526;
+  --green: #4cc27f;
+  --red: #ef6b6b;
+  color-scheme: dark;
+}

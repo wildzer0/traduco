@@ -120,3 +120,12 @@ Modalità via `FAKE_LLM_MODE` (`ok|error|slow|glossary-violation`) e override pe
 ## ADR-017 — Versioning e rilasci
 **Decisione**: SemVer 0.x; tag annotato `vX.Y.0` a ogni milestone completata (M0 = v0.1.0, M1 = v0.2.0, …), voce in
 `CHANGELOG.md`. Lavoro su `main`, Conventional Commits in inglese. Il push (anche dei tag) avviene solo su conferma del committente.
+
+## ADR-018 — Frontend M0: scelte minime
+**Contesto**: il layout vuoto deve comunque permettere di verificare i18n it/en e tema chiaro/scuro.
+**Decisione**: i18n con un piccolo modulo proprio (`lib/i18n.ts`, chiavi piatte nei JSON, test di parità it/en) invece di una libreria;
+preferenze (tema, lingua) in Zustand con persistenza `localStorage` tollerante agli errori; un drawer Impostazioni minimale
+(lingua dell'interfaccia e tema, come da `03-ui.md`); Glossario e Template nella barra laterale sono disabilitati fino a M3/M4.
+`pnpm` 12 genera `pnpm-workspace.yaml` con `minimumReleaseAgeExclude`: è versionato così com'è. Biome 2.6 usa `preset` al posto di `recommended`.
+`make e2e` costruisce il frontend e lo serve dal backend (stesso percorso dell'avvio utente).
+**Conseguenze**: nessuna dipendenza i18n o UI in più; il drawer verrà esteso, non sostituito, dalle milestone successive.
