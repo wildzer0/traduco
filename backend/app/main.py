@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
-from app.api import assets, events, files, health, nodes, projects
+from app.api import assets, diagrams, events, files, health, nodes, projects
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.workspace.errors import WorkspaceError
@@ -67,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         nodes.router,
         files.router,
         assets.router,
+        diagrams.router,
         events.router,
     ):
         app.include_router(router, prefix="/api")

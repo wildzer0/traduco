@@ -244,3 +244,43 @@ def test_upload_rejects_non_images_and_serving_is_limited_to_img(api: TestClient
             400,
             404,
         )
+
+
+# --- diagrams --------------------------------------------------------------------------------
+
+SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><text>A</text></svg>'
+DIGEST = "b" * 64
+
+
+def test_diagram_upload_and_download(api: TestClient) -> None:
+    import base64
+
+    pid = make_project(api)
+    body = {"svg": SVG, "png_base64": base64.b64encode(PNG).decode()}
+    assert api.put(f"/api/projects/{pid}/diagrams/{DIGEST}", json=body).status_code == 204
+    svg = api.get(f"/api/projects/{pid}/diagrams/{DIGEST}.svg")
+    png = api.get(f"/api/projects/{pid}/diagrams/{DIGEST}.png")
+    assert svg.text == SVG and png.content == PNG
+    assert "sandbox" in svg.headers["content-security-policy"]
+    assert (ws(api) / pid / f".traduco/cache/diagrams/{DIGEST}.png").is_file()
+
+
+def test_diagram_errors(api: TestClient) -> None:
+    import base64
+
+    pid = make_project(api)
+    good = base64.b64encode(PNG).decode()
+    assert api.get(f"/api/projects/{pid}/diagrams/{DIGEST}.png").status_code == 404
+    bad_hash = api.put(
+        f"/api/projects/{pid}/diagrams/nothex", json={"svg": SVG, "png_base64": good}
+    )
+    assert bad_hash.status_code == 400
+    bad_svg = api.put(
+        f"/api/projects/{pid}/diagrams/{DIGEST}", json={"svg": "<script/>", "png_base64": good}
+    )
+    assert bad_svg.status_code == 415
+    bad_png = api.put(
+        f"/api/projects/{pid}/diagrams/{DIGEST}", json={"svg": SVG, "png_base64": "AAAA"}
+    )
+    assert bad_png.status_code == 415
+    assert api.get(f"/api/projects/{pid}/diagrams/{DIGEST}.exe").status_code == 422
