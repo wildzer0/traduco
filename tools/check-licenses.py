@@ -95,7 +95,7 @@ def check_frontend() -> list[str]:
 
 
 def main() -> int:
-    bad = check_python() + check_frontend()
+    bad = check_python() + ([] if "--python-only" in sys.argv else check_frontend())
     if bad:
         print("Disallowed licenses:\n  " + "\n  ".join(sorted(bad)), file=sys.stderr)
         return 1

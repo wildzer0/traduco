@@ -17,10 +17,11 @@ Spunta i task (`- [x]`) nello stesso commit che li completa.
       servizio `ollama` sotto profilo `llm`
 - [ ] CI GitHub Actions: lint, test, build immagine, verifica licenze
 - [x] `examples/progetto-esempio` con 2 capitoli, 5 sezioni, una tabella, un'immagine, un diagramma, glossario di 5 voci
-- [ ] `start.sh`, `start.cmd`, `launcher/bootstrap.ps1`: bootstrap uv in `.runtime/uv`, poi `python -m launcher`
-- [ ] Launcher, prima versione: controlli preliminari, `uv sync`, build frontend con Node portabile, porta libera,
+- [x] `start.sh`, `start.cmd`, `launcher/bootstrap.ps1`: bootstrap uv in `.runtime/uv`, poi `python -m launcher`
+      (`start.sh` provato su Linux da zero; `start.cmd`/`bootstrap.ps1` non ancora eseguiti su Windows: verifica demandata alla CI)
+- [x] Launcher, prima versione: controlli preliminari, `uv sync`, build frontend con Node portabile, porta libera,
       avvio backend, attesa health, apertura browser, log, arresto pulito
-- [ ] `launcher/manifest.toml` con versioni e SHA-256; `downloads.py` con ripresa, retry, proxy, verifica hash
+- [x] `launcher/manifest.toml` con versioni e SHA-256; `downloads.py` con ripresa, retry, proxy, verifica hash
 - [ ] Job CI "avvio pulito" su Ubuntu e Windows
 
 **Accettazione**: `make setup && make test` verde su macchina pulita; su una VM Windows 11 e una Ubuntu senza nulla

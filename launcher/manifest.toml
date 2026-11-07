@@ -1,0 +1,50 @@
+# Pinned components. Every download is verified against its SHA-256 (ADR-014, RF-71).
+# Platform keys: <os>-<arch> with os in linux|darwin|windows and arch in x64|arm64.
+
+min_free_gb = 2          # M0: Python, Node, dependencies, build. Raised when models arrive (M4b).
+port_range = [8000, 8100]
+
+[node]
+version = "24.22.2"
+# Directory name inside the archive: node-v{version}-{platform_slug}
+[node.platforms.linux-x64]
+url = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.xz"
+sha256 = "48cc0e21e048790e54c0cf5749c2725005313d652651c40b7a21feb9697aaf75"
+[node.platforms.linux-arm64]
+url = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.xz"
+sha256 = "eb187837a2230d4047161ac0be008584e16b46f726e9c9490ee35dc6b17d9ba8"
+[node.platforms.darwin-x64]
+url = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz"
+sha256 = "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52"
+[node.platforms.darwin-arm64]
+url = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz"
+sha256 = "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a"
+[node.platforms.windows-x64]
+url = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip"
+sha256 = "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2"
+
+# Pandoc is pinned here but only installed by the launcher from milestone M4b.
+[pandoc]
+version = "3.13"
+[pandoc.platforms.linux-x64]
+url = "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-linux-amd64.tar.gz"
+sha256 = "38aa33b325a2bc96a4c39409631212db55702f564250bcdbead180b3bf646389"
+[pandoc.platforms.linux-arm64]
+url = "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-linux-arm64.tar.gz"
+sha256 = "21e1d4ba09bd0b334590d204580fd4f6629b21be4ab6a32b26cc98982e9e0c68"
+[pandoc.platforms.darwin-x64]
+url = "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-x86_64-macOS.zip"
+sha256 = "1823278715aa405aaf21b59cde5dc789346aa8d4fc307467f9a9ee84162bedc5"
+[pandoc.platforms.darwin-arm64]
+url = "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-arm64-macOS.zip"
+sha256 = "f436d18bebbfb3ddd326597686dacab9fac5dc23bd060495020f35a28a43a7c3"
+[pandoc.platforms.windows-x64]
+url = "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-windows-x86_64.zip"
+sha256 = "23e1f2e978a3df80db8bf65c9c59534f41a23140480cfb4f783a882ab7dc6a4e"
+
+# Ollama model tags (docs/02-architettura.md, hardware table). NOT VERIFIED against the Ollama library yet:
+# confirm before M4b.
+[models]
+small = "gemma4:e2b"
+default = "gemma4:e4b"
+large = "gemma4:26b-a4b"

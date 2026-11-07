@@ -136,3 +136,20 @@ test) non sono nell'elenco di AGENTS.md pur essendo permissive.
 **Decisione**: si aggiungono PSF-2.0, 0BSD, Unlicense, BlueOak-1.0.0, CC0-1.0, Python-2.0. Copyleft (GPL, LGPL, AGPL) resta vietato come dipendenza.
 `tools/check-licenses.py` controlla Python e frontend; per espressioni `A OR B` basta una alternativa ammessa.
 **Conseguenze**: da confermare insieme al parere legale previsto da ADR-008 prima del rilascio pubblico.
+
+## ADR-020 — Launcher M0: scelte implementative
+**Contesto**: `02-architettura.md` descrive il launcher a livello di passi; servono dettagli per renderlo robusto.
+**Decisione**:
+- Moduli aggiuntivi rispetto all'albero in architettura: `paths.py`, `manifest.py`, `state.py`, `proc.py`, `run.py`
+  (`hardware.py`, `ollama.py`, `office.py` arrivano con M4b). I passi sono 5 in M0: controlli, dipendenze backend, Node, frontend, avvio.
+- Tutto ciò che il launcher scarica sta in `.runtime/`, inclusa la cache di uv (`.runtime/uv-cache`) e Python (`.runtime/python`).
+  Se `uv` è già nel PATH e `.runtime/uv` manca, il bootstrap lo riusa invece di scaricarlo.
+- Il backend ha un proprio venv (`backend/.venv`, `UV_PROJECT_ENVIRONMENT` esplicito) e si installa con `uv sync --frozen --no-dev --inexact`,
+  così non rimuove i pacchetti di sviluppo in una copia di lavoro.
+- Il frontend si ricostruisce se i sorgenti cambiano (hash in `.runtime/state.json`); se mancano i sorgenti (pacchetto di rilascio) si usa `dist`.
+  `--update` forza sync e rebuild. `--reset` cancella Node, download, cache corepack, `dist`, `node_modules`, `backend/.venv` e lo stato;
+  non tocca uv, Python e il venv del launcher (sono in uso) né i progetti.
+- pnpm è scaricato da corepack (registro npm) e non è fissato per hash dal manifest; Node sì.
+- La verifica `/api/health` ignora i proxy (richiesta su loopback). Il probe della porta usa `SO_REUSEADDR` su POSIX come uvicorn.
+- SIGTERM e Ctrl+Break sono trattati come Ctrl+C: il backend viene sempre fermato.
+**Conseguenze**: i comportamenti su Windows (`start.cmd`, `bootstrap.ps1`, Ctrl+C in `cmd`) sono non verificati finché non gira il job CI su `windows-latest`.
