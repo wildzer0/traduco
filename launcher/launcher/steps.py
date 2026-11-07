@@ -372,6 +372,8 @@ def _offer_builtin(ctx: Context, hw: hardware.Hardware, assume_yes: bool) -> boo
     if ctx.state.get("builtin_declined") == "1" and not ctx.update and not assume_yes:
         return False
     model, _ = builtin.choose_model(hw, ctx.manifest)
+    if ctx.offline and not builtin.installed(ctx.paths, ctx.manifest, model):
+        return False  # nothing may be downloaded: only an engine already on disk can be offered
     if not ui.confirm(
         "builtin.ask", "builtin.prompt", assume_yes, model=model.name, gb=f"{model.size_gb:g}"
     ):

@@ -27,7 +27,9 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     monkeypatch.setattr(steps, "ensure_pandoc", lambda ctx: seen.append("pandoc") or True)
     monkeypatch.setattr(steps, "frontend_needs_build", lambda ctx: False)
 
-    def fake_llm(ctx: steps.Context, model: str | None, yes: bool) -> steps.Llm:
+    def fake_llm(
+        ctx: steps.Context, model: str | None, yes: bool, engine: str = "auto"
+    ) -> steps.Llm:
         seen.append(f"llm:{model}:{yes}")
         ctx.ui.skip(2)  # the real one numbers the Ollama and model steps itself
         return steps.Llm(model="m")
