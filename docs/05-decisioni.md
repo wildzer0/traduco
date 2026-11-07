@@ -94,6 +94,11 @@ aperto prima dell'export (caso raro, segnalato).
 | --- | --- | --- | --- |
 | Q5 | Quali documenti e template reali usare come banco di prova? | Fixture inventate in M4, sostituite da quelle reali quando disponibili | rimandata |
 | Q6 | Nome definitivo del prodotto | "Traduco" provvisorio | rimandata |
+| Q7 | Avvio pulito su Windows 11 (`start.cmd`, `bootstrap.ps1`, passaggio di `--opzioni` a PowerShell, Ctrl+C in `cmd`) | Verificare con il job CI `clean-start (windows-latest)` e a mano su una VM | aperta |
+| Q8 | Tag Ollama dei modelli Gemma 4 in `manifest.toml` (`gemma4:e2b`, `e4b`, `26b-a4b`) | Da verificare sulla libreria Ollama prima di M4b | aperta |
+| Q9 | Build dell'immagine Docker (Pandoc, LibreOffice 25 su Debian 13) mai eseguita in locale | Verificare con il job CI `docker` | aperta |
+| Q10 | Fissare le GitHub Actions per SHA e verificare pnpm (corepack) per hash | Prima del rilascio pubblico | rimandata |
+| Q11 | Parere legale su licenze (ADR-008, ADR-013, ADR-019) | Prima del rilascio pubblico | rimandata |
 
 ## ADR-013 — Font OFL ammessi come asset
 **Contesto**: `03-ui.md` impone Inter e IBM Plex Mono, licenza OFL-1.1, che non è nell'elenco di AGENTS.md.
