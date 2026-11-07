@@ -18,3 +18,4 @@ build/
 .traduco/cache/
 .traduco/tm.sqlite
 .e2e-workspaces/
+.e2e-runtime/

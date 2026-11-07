@@ -2,6 +2,8 @@ import type {
   AssetSaved,
   AssistAction,
   BundledSkeleton,
+  Capabilities,
+  ExportFormat,
   ExportLanguage,
   ExportScope,
   ExportStatus,
@@ -287,7 +289,13 @@ export const deleteTemplate = async (id: string, name: string): Promise<void> =>
 
 export const startExport = (
   id: string,
-  body: { scope: ExportScope; path?: string; language: ExportLanguage; template?: string },
+  body: {
+    scope: ExportScope;
+    path?: string;
+    language: ExportLanguage;
+    template?: string;
+    format?: ExportFormat;
+  },
 ): Promise<ExportStatus> => api(`${base(id)}/export`, json("POST", body));
 
 export const getExport = (id: string, job: string): Promise<ExportStatus> =>
@@ -298,3 +306,5 @@ export const exportDownloadUrl = (id: string, job: string): string =>
 
 export const addExampleTemplate = (id: string): Promise<TemplateDetail> =>
   api(`${base(id)}/templates/example`, { method: "POST" });
+
+export const getCapabilities = (): Promise<Capabilities> => api("/capabilities");

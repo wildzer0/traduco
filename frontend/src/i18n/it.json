@@ -313,5 +313,20 @@
   "export.diagrams": "Diagrammi non ancora disegnati in: {sections}",
   "export.needPath": "Apri una sezione per esportarla o esportarne il capitolo.",
   "templates.addExample": "Aggiungi il template di esempio",
-  "preview.diagramEngine": "Impossibile caricare il motore dei diagrammi. Ricarica la pagina (Ctrl+Maiusc+R): l'applicazione potrebbe essere stata aggiornata."
+  "preview.diagramEngine": "Impossibile caricare il motore dei diagrammi. Ricarica la pagina (Ctrl+Maiusc+R): l'applicazione potrebbe essere stata aggiornata.",
+  "model.downloading": "Download del modello {model}: {pct}%. Puoi già scrivere: la traduzione parte appena è pronto.",
+  "model.downloadingUnknown": "Download del modello {model} in corso. Puoi già scrivere: la traduzione parte appena è pronto.",
+  "model.error": "Download del modello non riuscito: {error}",
+  "model.errorHint": "Rilancia Traduco per riprendere dal punto in cui si era fermato, oppure indica un altro server di modelli nelle Impostazioni.",
+  "model.unavailable": "Ollama non è installato, quindi non c'è un modello per tradurre. Puoi scrivere e esportare nella lingua sorgente. Per tradurre installa Ollama (ollama.com) e rilancia con --update, oppure indica un altro server nelle Impostazioni.",
+  "model.dismiss": "Nascondi",
+  "model.settings": "Apri le impostazioni del modello",
+  "preview.offlineDownloading": "Il modello è in download — la traduzione parte da sola appena è pronto.",
+  "export.format": "Formato",
+  "export.format.docx": "Word (.docx)",
+  "export.format.pdf": "PDF",
+  "export.format.odt": "OpenDocument (.odt)",
+  "export.needOffice": "PDF e ODT richiedono LibreOffice, che non è installato. Scaricalo da libreoffice.org/download e riavvia Traduco: il DOCX funziona già.",
+  "export.runFormat": "Esporta {format}",
+  "export.step.convert": "Conversione del formato…"
 }

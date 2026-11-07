@@ -187,6 +187,7 @@ export interface TemplateDetail {
   problems: string[];
 }
 
+export type ExportFormat = "docx" | "pdf" | "odt";
 export type ExportScope = "section" | "chapter" | "project";
 export type ExportLanguage = "ufficiale" | "sorgente";
 
@@ -198,4 +199,19 @@ export interface ExportStatus {
   warnings: string[];
   error: { code: string; message: string; details: Record<string, unknown> } | null;
   filename: string | null;
+}
+
+export interface ModelDownload {
+  state: "none" | "unavailable" | "downloading" | "ready" | "error";
+  model?: string;
+  completed?: number;
+  total?: number | null;
+  error?: string;
+}
+
+export interface Capabilities {
+  pandoc: { available: boolean };
+  libreoffice: { available: boolean };
+  formats: ExportFormat[];
+  model: ModelDownload;
 }

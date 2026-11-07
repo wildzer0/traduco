@@ -1,7 +1,7 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page } from "@playwright/test";
-import { WORKSPACES } from "../../playwright.config";
+import { RUNTIME, WORKSPACES } from "../../playwright.config";
 
 export const projectDir = (id: string) => join(WORKSPACES, id);
 export const onDisk = (id: string, rel: string) => existsSync(join(projectDir(id), rel));
@@ -89,4 +89,12 @@ export async function startFakeLlm(env: Record<string, string> = {}): Promise<Ch
 export async function stopFakeLlm(child: ChildProcess) {
   child.kill("SIGTERM");
   await new Promise((res) => (child.exitCode !== null ? res(null) : child.once("exit", res)));
+}
+
+// --- model download state, as the launcher writes it -----------------------------------------------
+
+export function setModelState(state: Record<string, unknown> | null) {
+  mkdirSync(RUNTIME, { recursive: true });
+  if (state === null) rmSync(join(RUNTIME, "model.json"), { force: true });
+  else writeFileSync(join(RUNTIME, "model.json"), JSON.stringify(state));
 }

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { exportDownloadUrl, getExport, listTemplates, startExport } from "../../lib/api";
+import { useCapabilities } from "../../lib/capabilities";
 import { type ExportChoice, loadExportChoice, saveExportChoice } from "../../lib/export-prefs";
 import { useT } from "../../lib/i18n";
 import type { ExportStatus } from "../../lib/types";
@@ -8,7 +9,15 @@ import { useView } from "../../lib/view-store";
 import { useReview } from "../review/queries";
 import { useProjects } from "../tree/queries";
 
-const STEPS = new Set(["collect", "translate", "titles", "fields", "document", "snapshot"]);
+const STEPS = new Set([
+  "collect",
+  "translate",
+  "titles",
+  "fields",
+  "document",
+  "snapshot",
+  "convert",
+]);
 
 /** Export panel (docs/03-ui.md): scope, language and template, progress, then the download. */
 export function ExportPanel({
@@ -30,6 +39,8 @@ export function ExportPanel({
     queryFn: () => listTemplates(projectId),
   });
   const { data: review } = useReview(projectId);
+  const { data: capabilities } = useCapabilities();
+  const office = capabilities?.libreoffice.available ?? false;
   const [choice, setChoice] = useState<ExportChoice>(loadExportChoice);
   const [status, setStatus] = useState<ExportStatus | null>(null);
   const [running, setRunning] = useState(false);
@@ -63,6 +74,7 @@ export function ExportPanel({
         ...(pathFor(used.scope) ? { path: pathFor(used.scope) as string } : {}),
         language: used.language,
         ...(used.template ? { template: used.template } : {}),
+        format: used.format,
       });
       setStatus(job);
       while (job.state === "running") {
@@ -157,6 +169,27 @@ export function ExportPanel({
           </option>
         </select>
       </label>
+
+      <label className="mt-3 block">
+        {t("export.format")}
+        <select
+          className={field}
+          value={choice.format}
+          disabled={running}
+          onChange={(e) =>
+            setChoice({ ...choice, format: e.target.value as ExportChoice["format"] })
+          }
+        >
+          <option value="docx">{t("export.format.docx")}</option>
+          <option value="pdf" disabled={!office}>
+            {t("export.format.pdf")}
+          </option>
+          <option value="odt" disabled={!office}>
+            {t("export.format.odt")}
+          </option>
+        </select>
+      </label>
+      {!office && <p className="m-0 mt-1 text-[12px] text-muted">{t("export.needOffice")}</p>}
 
       <label className="mt-3 block">
         {t("export.template")}

@@ -2,6 +2,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Languages, RefreshCw } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { retranslate } from "../../lib/api";
+import { useCapabilities } from "../../lib/capabilities";
 import { useEditorStatus } from "../../lib/editor-status";
 import { useT } from "../../lib/i18n";
 import { createRenderer } from "../../lib/markdown/render";
@@ -36,6 +37,7 @@ export function Preview({ projectId }: { projectId: string }) {
   const { path, text, topBlock, mode, setMode } = usePreview();
   const locale = usePrefs((s) => s.locale);
   const online = useTranslationState((s) => s.online);
+  const downloading = useCapabilities().data?.model.state === "downloading";
   const translation = useTranslation(projectId, path).data;
   // a section that was just opened has no status yet: its diagrams still need caching for the export
   const status = useEditorStatus((s) => s.save);
@@ -175,14 +177,20 @@ export function Preview({ projectId }: { projectId: string }) {
           role="status"
           className="border-b border-border bg-surface-2 px-3 py-1.5 text-[13px] text-amber"
         >
-          {t("preview.offline")}{" "}
-          <button
-            type="button"
-            onClick={() => usePrefs.getState().setSettingsOpen(true)}
-            className="underline underline-offset-2"
-          >
-            {t("preview.offlineSettings")}
-          </button>
+          {downloading ? (
+            t("preview.offlineDownloading")
+          ) : (
+            <>
+              {t("preview.offline")}{" "}
+              <button
+                type="button"
+                onClick={() => usePrefs.getState().setSettingsOpen(true)}
+                className="underline underline-offset-2"
+              >
+                {t("preview.offlineSettings")}
+              </button>
+            </>
+          )}
         </p>
       )}
       <div ref={scroller} className="editor-scroll relative min-h-0 flex-1 overflow-y-auto">

@@ -313,5 +313,20 @@
   "export.diagrams": "Diagrams not drawn yet in: {sections}",
   "export.needPath": "Open a section to export it or its chapter.",
   "templates.addExample": "Add the sample template",
-  "preview.diagramEngine": "Could not load the diagram engine. Reload the page (Ctrl+Shift+R): the application may have been updated."
+  "preview.diagramEngine": "Could not load the diagram engine. Reload the page (Ctrl+Shift+R): the application may have been updated.",
+  "model.downloading": "Downloading model {model}: {pct}%. You can write already: translation starts as soon as it is ready.",
+  "model.downloadingUnknown": "Downloading model {model}. You can write already: translation starts as soon as it is ready.",
+  "model.error": "Model download failed: {error}",
+  "model.errorHint": "Run Traduco again to resume where it stopped, or point to another model server in Settings.",
+  "model.unavailable": "Ollama is not installed, so there is no model to translate with. You can write and export in the source language. To translate, install Ollama (ollama.com) and run again with --update, or point to another server in Settings.",
+  "model.dismiss": "Dismiss",
+  "model.settings": "Open the model settings",
+  "preview.offlineDownloading": "The model is downloading — translation starts by itself as soon as it is ready.",
+  "export.format": "Format",
+  "export.format.docx": "Word (.docx)",
+  "export.format.pdf": "PDF",
+  "export.format.odt": "OpenDocument (.odt)",
+  "export.needOffice": "PDF and ODT need LibreOffice, which is not installed. Get it from libreoffice.org/download and restart Traduco: DOCX already works.",
+  "export.runFormat": "Export {format}",
+  "export.step.convert": "Converting the format…"
 }
