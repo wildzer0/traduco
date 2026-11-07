@@ -5,6 +5,10 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-07
+
+Milestone M5b - issues, comparison and review comments.
+
 ### Added
 - Issues: freeze the document with a number and a date (both languages), browse them, restore a section from one.
 - Word-level comparison between two issues or with the draft, in the source or the official language, change by change.
