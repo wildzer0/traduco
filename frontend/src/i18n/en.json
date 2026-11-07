@@ -503,5 +503,18 @@
   "palette.tmxImport": "Import a translation memory (TMX)",
   "palette.tmxDone": "{count} entries imported",
   "glossary.import": "Import CSV or TBX…",
-  "glossary.imported": "{added} new terms added ({seen} in the file); yours were kept."
+  "glossary.imported": "{added} new terms added ({seen} in the file); yours were kept.",
+  "languages.title": "Language",
+  "languages.manage": "Languages of the project…",
+  "languages.intro": "The official language is translated at once; the additional ones are translated from the source in the background, after it, each with its own tone and date format.",
+  "languages.none": "No additional language.",
+  "languages.code": "Language code",
+  "languages.tone": "Tone",
+  "languages.toneInherit": "Same tone as the project",
+  "languages.dateFormat": "Date format",
+  "languages.remove": "Remove the language",
+  "languages.add": "Add a language",
+  "languages.save": "Save",
+  "languages.saved": "Saved",
+  "palette.language": "Show the translation in {language}"
 }

@@ -76,3 +76,4 @@ ignore_missing_imports = true
 "app/core/export/web.py" = ["E501"]  # inline CSS and JavaScript
 "tests/integration/test_import_api.py" = ["F811"]  # fixtures imported by name
 "tests/integration/test_memory_api.py" = ["F811"]  # fixtures imported by name
+"tests/integration/test_languages_api.py" = ["F811"]  # fixtures imported by name

@@ -6,7 +6,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.deps import Root
 from app.core.export.errors import ExportError
@@ -37,7 +37,7 @@ Manager = Annotated[ExportManager, Depends(get_manager)]
 class ExportBody(BaseModel):
     scope: Scope = "project"
     path: str | None = None
-    language: Language = "ufficiale"
+    language: Language = Field(default="ufficiale", min_length=2, max_length=20)
     template: str | None = None
     format: Format = "docx"
 

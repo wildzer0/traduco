@@ -27,6 +27,8 @@ interface ViewState {
   setPalette: (open: boolean, mode?: "all" | "text") => void;
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
+  languagesOpen: boolean;
+  setLanguagesOpen: (open: boolean) => void;
   snippetsOpen: boolean;
   setSnippetsOpen: (open: boolean) => void;
   issuesOpen: boolean;
@@ -61,6 +63,8 @@ export const useView = create<ViewState>((set) => ({
   setPalette: (paletteOpen, paletteMode = "all") => set({ paletteOpen, paletteMode }),
   helpOpen: false,
   setHelpOpen: (helpOpen) => set({ helpOpen }),
+  languagesOpen: false,
+  setLanguagesOpen: (languagesOpen) => set({ languagesOpen }),
   snippetsOpen: false,
   setSnippetsOpen: (snippetsOpen) => set({ snippetsOpen }),
   issuesOpen: false,

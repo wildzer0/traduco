@@ -10,7 +10,7 @@ import { useTranslationState } from "../../lib/translation-store";
 import type { Suggestion } from "../../lib/types";
 import { useView } from "../../lib/view-store";
 import { Diff } from "../preview/AssistBox";
-import { translationKey, useTranslation } from "../preview/translation";
+import { translationPrefix, useTranslation } from "../preview/translation";
 
 const checkKey = (id: string, path: string) => ["check", id, path] as const;
 
@@ -61,7 +61,7 @@ export function CheckPanel({ projectId, path }: { projectId: string; path: strin
       });
       recheckOpenFile();
       await refresh();
-      await qc.invalidateQueries({ queryKey: translationKey(projectId, path) });
+      await qc.invalidateQueries({ queryKey: translationPrefix(projectId, path) });
     } catch (e) {
       notify(e instanceof Error ? e.message : String(e));
     }

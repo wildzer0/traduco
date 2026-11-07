@@ -25,7 +25,7 @@ export function loadExportChoice(): ExportChoice {
     const data = JSON.parse(raw) as Partial<ExportChoice>;
     return {
       scope: data.scope === "section" || data.scope === "chapter" ? data.scope : "project",
-      language: data.language === "sorgente" ? "sorgente" : "ufficiale",
+      language: typeof data.language === "string" && data.language ? data.language : "ufficiale",
       template: typeof data.template === "string" ? data.template : "",
       format: FORMATS.includes(data.format as ExportFormat)
         ? (data.format as ExportFormat)

@@ -71,6 +71,30 @@ class Project(BaseModel):
 
     _codes = field_validator("lingua_sorgente", "lingua_ufficiale")(_check_lang)
 
+    @property
+    def target_languages(self) -> list[str]:
+        """The official language first, then the additional ones (RF-21b)."""
+        return [self.lingua_ufficiale, *(lang.codice for lang in self.lingue_aggiuntive)]
+
+    def for_language(self, code: str) -> Project:
+        """The project as seen for one target language.
+
+        Everything that translates, reviews or exports works on "the project's target language".
+        For an additional language that is a copy whose target is ``code``, with that language's
+        own tone and date format; the official language gives the project itself.
+        """
+        if code == self.lingua_ufficiale:
+            return self
+        extra = next((lang for lang in self.lingue_aggiuntive if lang.codice == code), None)
+        if extra is None:
+            raise ValueError(f"language not configured: {code}")
+        update: dict[str, Any] = {"lingua_ufficiale": code, "lingue_aggiuntive": []}
+        if extra.tono:
+            update["tono"] = extra.tono
+        if extra.formato_date:
+            update["formato_date"] = extra.formato_date
+        return self.model_copy(update=update)
+
     @model_validator(mode="after")
     def _languages_are_distinct(self) -> Self:
         used = [self.lingua_sorgente, self.lingua_ufficiale]

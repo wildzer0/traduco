@@ -191,8 +191,29 @@ class TranslationService:
         rel: str,
         text: str,
         priority: int = PRIORITY_EDIT,
-        *,
         force: bool = False,
+    ) -> SegmentFile | None:
+        """Bring every target language up to date; the official one first and at full priority.
+
+        Additional languages (RF-21b, RF-21c) are queued at the lowest priority, so they never
+        make the official translation wait.
+        """
+        result = self._sync_one(root, project, rel, text, priority, force)
+        for code in project.target_languages[1:]:
+            self._sync_one(
+                root, project.for_language(code), rel, text, priority, force, PRIORITY_BULK
+            )
+        return result
+
+    def _sync_one(
+        self,
+        root: Path,
+        project: Project,
+        rel: str,
+        text: str,
+        priority: int = PRIORITY_EDIT,
+        force: bool = False,
+        floor: int = 0,
     ) -> SegmentFile | None:
         """Reconcile ``text`` with the stored translation and queue the segments that need work."""
         self._roots.add(root)
@@ -219,7 +240,7 @@ class TranslationService:
                 if not force and self._reuse(root, project, new, seg.source):
                     segments.append(new)
                     continue
-                todo.append((new, PRIORITY_EDIT))
+                todo.append((new, max(PRIORITY_EDIT, floor)))
                 segments.append(new)
                 continue
             current = StoredSegment(**{**kept.__dict__, "key": seg.key, "kind": seg.kind})
@@ -233,12 +254,12 @@ class TranslationService:
                     continue  # the new wording is already in the memory
                 else:
                     current.status = "queued"
-                todo.append((current, PRIORITY_EDIT))
+                todo.append((current, max(PRIORITY_EDIT, floor)))
             elif force and not current.locked:
                 current.status = "queued"
-                todo.append((current, priority))
+                todo.append((current, max(priority, floor)))
             elif current.status == "queued":
-                todo.append((current, PRIORITY_OPEN))
+                todo.append((current, max(PRIORITY_OPEN, floor)))
         result = SegmentFile(sha256_text(text), segments)
         store.save(root, lang, rel, result)
 

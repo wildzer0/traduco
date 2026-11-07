@@ -9,7 +9,7 @@ import { useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
 import { useTranslationState } from "../../lib/translation-store";
 import type { AssistAction } from "../../lib/types";
-import { translationKey } from "./translation";
+import { translationPrefix } from "./translation";
 
 const ACTIONS: AssistAction[] = [
   "correct",
@@ -96,7 +96,7 @@ export function AssistBox({
       await editorBridge.flush(); // unsaved typing must be on disk before the file is rewritten
       await applyAssist(projectId, { path, key: segKey, text: result.proposal });
       recheckOpenFile();
-      await qc.invalidateQueries({ queryKey: translationKey(projectId, path) });
+      await qc.invalidateQueries({ queryKey: translationPrefix(projectId, path) });
       onClose();
     } catch (e) {
       notify(e instanceof Error ? e.message : String(e));

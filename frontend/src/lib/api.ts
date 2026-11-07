@@ -1,3 +1,4 @@
+import { langParam, languageContext } from "./language";
 import type {
   AssetSaved,
   AssistAction,
@@ -137,14 +138,14 @@ export const assetUrl = (id: string, path: string): string =>
   `/api${base(id)}/assets?path=${enc(path)}`;
 
 export const getTranslation = (projectId: string, path: string): Promise<TranslationView> =>
-  api(`${base(projectId)}/translation?path=${enc(path)}`);
+  api(`${base(projectId)}/translation?path=${enc(path)}${langParam()}`);
 
 export const retranslate = (
   projectId: string,
   scope: "section" | "chapter" | "project",
   path?: string,
 ): Promise<{ sections: number; queued: number }> =>
-  api(`${base(projectId)}/retranslate`, json("POST", { scope, path }));
+  api(`${base(projectId)}/retranslate`, json("POST", { scope, path, lang: languageContext.lang }));
 
 export const getLlmStatus = (): Promise<LlmStatus> => api("/llm/status");
 
@@ -181,7 +182,7 @@ export const putSegment = (
   key: string,
   change: SegmentChange,
 ): Promise<SegmentRow> =>
-  api(`${base(id)}/segments/${enc(key)}?path=${enc(path)}`, json("PUT", change));
+  api(`${base(id)}/segments/${enc(key)}?path=${enc(path)}${langParam()}`, json("PUT", change));
 
 export const instructSegment = (
   id: string,
@@ -191,12 +192,14 @@ export const instructSegment = (
   alternatives = false,
 ): Promise<{ proposals: string[] }> =>
   api(
-    `${base(id)}/segments/${enc(key)}/instruct?path=${enc(path)}`,
+    `${base(id)}/segments/${enc(key)}/instruct?path=${enc(path)}${langParam()}`,
     json("POST", { instruction, alternatives }),
   );
 
 export const backTranslate = (id: string, path: string, key: string): Promise<{ text: string }> =>
-  api(`${base(id)}/segments/${enc(key)}/back-translate?path=${enc(path)}`, { method: "POST" });
+  api(`${base(id)}/segments/${enc(key)}/back-translate?path=${enc(path)}${langParam()}`, {
+    method: "POST",
+  });
 
 export const applySource = (
   id: string,
@@ -204,7 +207,10 @@ export const applySource = (
   key: string,
   text: string,
 ): Promise<SegmentRow> =>
-  api(`${base(id)}/segments/${enc(key)}/apply-source?path=${enc(path)}`, json("POST", { text }));
+  api(
+    `${base(id)}/segments/${enc(key)}/apply-source?path=${enc(path)}${langParam()}`,
+    json("POST", { text }),
+  );
 
 export const getReview = (id: string): Promise<ReviewData> => api(`${base(id)}/review`);
 
@@ -217,7 +223,12 @@ export const patchSectionMeta = (
 
 export const patchProject = (
   id: string,
-  body: { tono?: Tone; metadati?: Record<string, string>; revisioni?: ProjectRevision[] },
+  body: {
+    tono?: Tone;
+    metadati?: Record<string, string>;
+    revisioni?: ProjectRevision[];
+    lingue_aggiuntive?: AdditionalLanguage[];
+  },
 ): Promise<Record<string, unknown>> => api(base(id), json("PATCH", body));
 
 export interface ProjectRevision {
@@ -550,7 +561,7 @@ export const suggestFromMemory = (
   path: string,
   key: string,
 ): Promise<{ matches: MemoryMatch[] }> =>
-  api(`${base(id)}/tm/suggest?path=${enc(path)}&key=${enc(key)}`);
+  api(`${base(id)}/tm/suggest?path=${enc(path)}&key=${enc(key)}${langParam()}`);
 
 export const tmxUrl = (id: string): string => `/api${base(id)}/tm/export`;
 
@@ -574,3 +585,29 @@ export const importGlossary = (
     headers: { "Content-Type": "application/octet-stream" },
     body: file,
   });
+
+// --- languages -------------------------------------------------------------------------------
+export interface LanguageInfo {
+  code: string;
+  role: "source" | "official" | "additional";
+  percent: number;
+  translated: number;
+  total: number;
+  tono?: Tone | null;
+  base?: "sorgente" | "ufficiale" | null;
+  formato_date?: string | null;
+}
+
+export interface AdditionalLanguage {
+  codice: string;
+  tono?: Tone;
+  formato_date?: string;
+}
+
+export const listLanguages = (id: string): Promise<LanguageInfo[]> => api(`${base(id)}/languages`);
+
+export const setAdditionalLanguages = (
+  id: string,
+  languages: AdditionalLanguage[],
+): Promise<Record<string, unknown>> =>
+  api(base(id), json("PATCH", { lingue_aggiuntive: languages }));

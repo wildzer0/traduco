@@ -2,10 +2,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getTranslation } from "../../lib/api";
 import { onFileEvent } from "../../lib/file-events";
+import { usePreview } from "../../lib/preview-store";
 import type { TranslationView } from "../../lib/types";
 
-export const translationKey = (projectId: string, path: string) =>
+/** Prefix shared by every language of a section: what to invalidate after a change. */
+export const translationPrefix = (projectId: string, path: string) =>
   ["translation", projectId, path] as const;
+
+/** The language is the last element, so invalidating by (project, path) reaches all of them. */
+export const translationKey = (projectId: string, path: string, lang: string | null = null) =>
+  ["translation", projectId, path, lang] as const;
 
 /**
  * Translation of the open section. Refetched (debounced) when the server reports progress on it,
@@ -13,8 +19,9 @@ export const translationKey = (projectId: string, path: string) =>
  */
 export function useTranslation(projectId: string, path: string | null) {
   const qc = useQueryClient();
+  const language = usePreview((s) => s.language);
   const query = useQuery<TranslationView>({
-    queryKey: translationKey(projectId, path ?? ""),
+    queryKey: translationKey(projectId, path ?? "", language),
     queryFn: () => getTranslation(projectId, path as string),
     enabled: path !== null,
     retry: false,
@@ -25,7 +32,7 @@ export function useTranslation(projectId: string, path: string | null) {
     const refresh = () => {
       clearTimeout(timer);
       timer = setTimeout(
-        () => void qc.invalidateQueries({ queryKey: translationKey(projectId, path) }),
+        () => void qc.invalidateQueries({ queryKey: translationPrefix(projectId, path) }),
         150,
       );
     };

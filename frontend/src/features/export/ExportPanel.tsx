@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { exportDownloadUrl, getExport, listTemplates, startExport } from "../../lib/api";
+import {
+  exportDownloadUrl,
+  getExport,
+  listLanguages,
+  listTemplates,
+  startExport,
+} from "../../lib/api";
 import { useCapabilities } from "../../lib/capabilities";
 import { type ExportChoice, loadExportChoice, saveExportChoice } from "../../lib/export-prefs";
 import { useT } from "../../lib/i18n";
@@ -38,6 +44,10 @@ export function ExportPanel({
   const { data: templates = [] } = useQuery({
     queryKey: ["templates", projectId],
     queryFn: () => listTemplates(projectId),
+  });
+  const { data: languages = [] } = useQuery({
+    queryKey: ["languages", projectId],
+    queryFn: () => listLanguages(projectId),
   });
   const { data: review } = useReview(projectId);
   const { data: capabilities } = useCapabilities();
@@ -176,6 +186,13 @@ export function ExportPanel({
           <option value="sorgente">
             {t("export.language.sorgente", { language: language(project?.lingua_sorgente) })}
           </option>
+          {languages
+            .filter((l) => l.role === "additional")
+            .map((l) => (
+              <option key={l.code} value={l.code}>
+                {language(l.code)} ({l.percent}%)
+              </option>
+            ))}
         </select>
       </label>
 

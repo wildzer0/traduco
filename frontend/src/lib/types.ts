@@ -189,7 +189,8 @@ export interface TemplateDetail {
 
 export type ExportFormat = "docx" | "pdf" | "odt" | "html" | "epub" | "md";
 export type ExportScope = "section" | "chapter" | "project";
-export type ExportLanguage = "ufficiale" | "sorgente";
+/** "ufficiale", "sorgente" or the code of an additional language. */
+export type ExportLanguage = string;
 
 export interface ExportStatus {
   id: string;

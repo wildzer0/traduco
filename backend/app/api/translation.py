@@ -32,18 +32,28 @@ def get_service(request: Request) -> TranslationService:
 Service = Annotated[TranslationService, Depends(get_service)]
 
 
+def view_for(root: Any, lang: str | None) -> Any:
+    """The project as seen for ``lang`` (the official language when it is not given)."""
+    project = load_project(root)
+    if lang is None:
+        return project
+    try:
+        return project.for_language(lang)
+    except ValueError as exc:
+        raise WorkspaceError("not_found", f"language not configured: {lang}") from exc
+
+
 class RetranslateBody(BaseModel):
     scope: Literal["section", "chapter", "project"]
     path: str | None = None
+    lang: str | None = None
 
 
 @router.get("/projects/{project_id}/translation")
 def get_translation(
     root: Root, service: Service, path: str = Query(...), lang: str | None = None
 ) -> dict[str, Any]:
-    project = load_project(root)
-    if lang is not None and lang != project.lingua_ufficiale:
-        raise WorkspaceError("not_found", f"language not configured yet: {lang}")
+    project = view_for(root, lang)
     text, _ = read_section(root, path)
     stored = load_segments(root, project.lingua_ufficiale, path)
     if stored is None or stored.source_file_hash != sha256_text(text):
@@ -53,7 +63,7 @@ def get_translation(
 
 @router.post("/projects/{project_id}/retranslate")
 def retranslate(root: Root, service: Service, body: RetranslateBody) -> dict[str, int]:
-    project = load_project(root)
+    project = view_for(root, body.lang)
     if body.scope == "project":
         base = root / CHAPTERS_DIR
     else:
@@ -157,9 +167,14 @@ def _row(
 
 @router.put("/projects/{project_id}/segments/{key}")
 def put_segment(
-    root: Root, service: Service, key: str, body: SegmentPut, path: str = Query(...)
+    root: Root,
+    service: Service,
+    key: str,
+    body: SegmentPut,
+    path: str = Query(...),
+    lang: str | None = None,
 ) -> dict[str, Any]:
-    project = load_project(root)
+    project = view_for(root, lang)
     actions = SegmentActions(service)
     given = [v for v in (body.target, body.locked, body.action) if v is not None]
     if len(given) != 1:
@@ -183,27 +198,37 @@ def put_segment(
 
 @router.post("/projects/{project_id}/segments/{key}/instruct")
 async def instruct(
-    root: Root, service: Service, key: str, body: Instruct, path: str = Query(...)
+    root: Root,
+    service: Service,
+    key: str,
+    body: Instruct,
+    path: str = Query(...),
+    lang: str | None = None,
 ) -> dict[str, list[str]]:
     proposals = await SegmentActions(service).revise(
-        root, load_project(root), path, key, body.instruction, body.alternatives
+        root, view_for(root, lang), path, key, body.instruction, body.alternatives
     )
     return {"proposals": proposals}
 
 
 @router.post("/projects/{project_id}/segments/{key}/back-translate")
 async def back_translate(
-    root: Root, service: Service, key: str, path: str = Query(...)
+    root: Root, service: Service, key: str, path: str = Query(...), lang: str | None = None
 ) -> dict[str, str]:
-    text = await SegmentActions(service).back_translate(root, load_project(root), path, key)
+    text = await SegmentActions(service).back_translate(root, view_for(root, lang), path, key)
     return {"text": text}
 
 
 @router.post("/projects/{project_id}/segments/{key}/apply-source")
 def apply_source(
-    root: Root, service: Service, key: str, body: ApplySource, path: str = Query(...)
+    root: Root,
+    service: Service,
+    key: str,
+    body: ApplySource,
+    path: str = Query(...),
+    lang: str | None = None,
 ) -> dict[str, Any]:
-    project = load_project(root)
+    project = view_for(root, lang)
     SegmentActions(service).apply_source(root, project, path, key, body.text)
     return _row(service, root, project, path, key)
 

@@ -1,7 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { importTmx, patchProject, retranslate, searchProject, tmxUrl } from "../../lib/api";
+import {
+  importTmx,
+  listLanguages,
+  patchProject,
+  retranslate,
+  searchProject,
+  tmxUrl,
+} from "../../lib/api";
 import { fuzzyScore } from "../../lib/fuzzy";
 import { type MessageKey, useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
@@ -63,6 +70,10 @@ function Palette({ projectId, selected }: { projectId: string; selected: string 
   const [index, setIndex] = useState(0);
   const [debounced, setDebounced] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const { data: languages = [] } = useQuery({
+    queryKey: ["languages", projectId],
+    queryFn: () => listLanguages(projectId),
+  });
   const { data: tree } = useTree(projectId);
 
   useEffect(() => {
@@ -141,6 +152,14 @@ function Palette({ projectId, selected }: { projectId: string; selected: string 
           );
         }),
       ),
+      ...languages
+        .filter((l) => l.role !== "source")
+        .map((l) =>
+          act(`language:${l.code}`, t("palette.language", { language: l.code }), () =>
+            usePreview.getState().setLanguage(l.role === "official" ? null : l.code),
+          ),
+        ),
+      act("languages", t("languages.manage"), () => view.setLanguagesOpen(true)),
       act("retranslate-project", t("palette.retranslateProject"), () => {
         void retranslate(projectId, "project");
       }),
@@ -167,7 +186,7 @@ function Palette({ projectId, selected }: { projectId: string; selected: string 
       run: () => open(h.path),
     }));
     return [...pages, ...actions, ...hits];
-  }, [t, tree, found, projectId, selected, qc, navigate]);
+  }, [t, tree, found, projectId, selected, qc, navigate, languages]);
 
   const shown = useMemo(() => {
     const q = query.trim();

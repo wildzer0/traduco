@@ -10,6 +10,7 @@ import { ImportPanel } from "../features/import/ImportPanel";
 import { CommentsPanel } from "../features/issues/CommentsPanel";
 import { IssuesPanel } from "../features/issues/IssuesPanel";
 import { RequirementsPanel } from "../features/issues/RequirementsPanel";
+import { LanguagesPanel } from "../features/preview/LanguagesPanel";
 import { Preview } from "../features/preview/Preview";
 import { reviewKey } from "../features/preview/segment-actions";
 import { ReviewTable } from "../features/review/ReviewTable";
@@ -45,6 +46,7 @@ export function Workspace() {
     commentsOpen,
     requirementsOpen,
     snippetsOpen,
+    languagesOpen,
   } = useView();
   const checkOpen = useAssist((st) => st.checkOpen);
   const lastF8 = useRef<{ path: string; key: string } | null>(null);
@@ -165,6 +167,7 @@ export function Workspace() {
       {exportOpen && <ExportPanel projectId={projectId} selected={selected} />}
       {importOpen && <ImportPanel projectId={projectId} />}
       {requirementsOpen && <RequirementsPanel projectId={projectId} />}
+      {languagesOpen && <LanguagesPanel projectId={projectId} />}
       {snippetsOpen && <SnippetsDrawer projectId={projectId} />}
       {issuesOpen && <IssuesPanel projectId={projectId} />}
       {commentsOpen && <CommentsPanel projectId={projectId} path={selected} />}

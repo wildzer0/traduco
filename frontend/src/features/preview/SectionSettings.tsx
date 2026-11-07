@@ -6,7 +6,7 @@ import { patchSectionMeta, retranslate } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
 import type { Tone, TranslationView } from "../../lib/types";
-import { translationKey } from "./translation";
+import { translationPrefix } from "./translation";
 
 const TONES: Tone[] = ["formale", "neutro", "informale"];
 
@@ -30,7 +30,7 @@ export function SectionSettings({
       await patchSectionMeta(projectId, path, { tono, contesto });
       // a changed tone applies to what the author has not fixed by hand
       if (tono !== view.tone) await retranslate(projectId, "section", path);
-      await qc.invalidateQueries({ queryKey: translationKey(projectId, path) });
+      await qc.invalidateQueries({ queryKey: translationPrefix(projectId, path) });
     } catch (e) {
       notify(e instanceof Error ? e.message : String(e));
     }

@@ -503,5 +503,18 @@
   "palette.tmxImport": "Importa una memoria di traduzione (TMX)",
   "palette.tmxDone": "{count} voci importate",
   "glossary.import": "Importa CSV o TBX…",
-  "glossary.imported": "{added} nuovi termini aggiunti ({seen} nel file); i tuoi sono rimasti."
+  "glossary.imported": "{added} nuovi termini aggiunti ({seen} nel file); i tuoi sono rimasti.",
+  "languages.title": "Lingua",
+  "languages.manage": "Lingue del progetto…",
+  "languages.intro": "La lingua ufficiale si traduce subito; le aggiuntive si traducono dal sorgente in sottofondo, dopo di essa, ciascuna con il proprio tono e formato di data.",
+  "languages.none": "Nessuna lingua aggiuntiva.",
+  "languages.code": "Codice lingua",
+  "languages.tone": "Tono",
+  "languages.toneInherit": "Stesso tono del progetto",
+  "languages.dateFormat": "Formato data",
+  "languages.remove": "Rimuovi la lingua",
+  "languages.add": "Aggiungi una lingua",
+  "languages.save": "Salva",
+  "languages.saved": "Salvato",
+  "palette.language": "Mostra la traduzione in {language}"
 }

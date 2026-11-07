@@ -11,7 +11,7 @@ import { errorText } from "../../lib/api-errors";
 import { recheckOpenFile } from "../../lib/file-events";
 import { useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
-import { translationKey } from "./translation";
+import { translationPrefix } from "./translation";
 
 export const reviewKey = (projectId: string) => ["review", projectId] as const;
 
@@ -23,7 +23,7 @@ export function useSegmentActions(projectId: string, path: string) {
 
   const refresh = useCallback(async () => {
     await Promise.all([
-      qc.invalidateQueries({ queryKey: translationKey(projectId, path) }),
+      qc.invalidateQueries({ queryKey: translationPrefix(projectId, path) }),
       qc.invalidateQueries({ queryKey: reviewKey(projectId) }),
     ]);
   }, [qc, projectId, path]);

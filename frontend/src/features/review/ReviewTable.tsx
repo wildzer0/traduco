@@ -6,7 +6,7 @@ import { useNotices } from "../../lib/notices";
 import type { ReviewRow, SegmentStatus } from "../../lib/types";
 import { type ReviewFilter, useView } from "../../lib/view-store";
 import { reviewKey } from "../preview/segment-actions";
-import { translationKey } from "../preview/translation";
+import { translationPrefix } from "../preview/translation";
 import { useReview } from "./queries";
 
 const FILTERS: ReviewFilter[] = [
@@ -45,7 +45,7 @@ export function ReviewTable({
     try {
       await putSegment(projectId, row.path, row.key, { action: "approve" });
       await qc.invalidateQueries({ queryKey: reviewKey(projectId) });
-      await qc.invalidateQueries({ queryKey: translationKey(projectId, row.path) });
+      await qc.invalidateQueries({ queryKey: translationPrefix(projectId, row.path) });
     } catch (e) {
       notify(e instanceof Error ? e.message : String(e));
     }

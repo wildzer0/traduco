@@ -23,9 +23,11 @@ def summary(root: Root) -> dict[str, int]:
 
 
 @router.get("/projects/{project_id}/tm/suggest")
-def suggest(root: Root, path: str, key: str) -> dict[str, Any]:
+def suggest(root: Root, path: str, key: str, lang: str | None = None) -> dict[str, Any]:
     """Memory entries for the source of one segment: exact first, then similar ones."""
     project = load_project(root)
+    if lang:
+        project = project.for_language(lang)
     seg = segment(read_section(root, path)[0]).by_key().get(key)
     if seg is None:
         raise WorkspaceError("not_found", f"segment not found: {key}")

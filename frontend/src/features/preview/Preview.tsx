@@ -19,6 +19,7 @@ import {
   renderDiagram,
   sha256Hex,
 } from "./diagrams";
+import { LanguageMenu } from "./LanguageMenu";
 import { SectionSettings } from "./SectionSettings";
 import { SegmentOverlay } from "./SegmentOverlay";
 import { useTranslation } from "./translation";
@@ -156,6 +157,7 @@ export function Preview({ projectId }: { projectId: string }) {
             : t("preview.sourceTitle")}
         </span>
         <div className="ml-auto flex items-center gap-1">
+          <LanguageMenu projectId={projectId} />
           <button
             type="button"
             aria-pressed={mode === "source"}

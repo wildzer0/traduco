@@ -66,6 +66,7 @@ class ImportJob:
     filename: str = ""
     snapshot: str = ""
     language: str = "ufficiale"
+    lang: str = ""  # code of the language the exported file was in
     warnings: list[str] = field(default_factory=list)
     error: dict[str, Any] | None = None
     proposals: list[Proposal] = field(default_factory=list)
@@ -179,6 +180,7 @@ class ImportManager:
                 "the export this file came from is gone: the most recent one is used"
             )
         job.snapshot, job.language = snapshot["id"], snapshot["language"]
+        job.lang = snapshot.get("lang", "")
         fields: dict[str, Any] = snapshot.get("fields", {})
         units: list[dict[str, Any]] = snapshot["units"]
 
@@ -282,7 +284,9 @@ class ImportManager:
         async def one(p: Proposal) -> None:
             nonlocal done
             async with semaphore:
-                ctx = Context(project.lingua_ufficiale, project.lingua_sorgente, project.tono)
+                ctx = Context(
+                    job.lang or project.lingua_ufficiale, project.lingua_sorgente, project.tono
+                )
                 try:
                     outcome = await translate(client, p.new, ctx)
                     if outcome.ok or outcome.target:
@@ -333,7 +337,7 @@ class ImportManager:
 
     def _apply(self, root: Path, project: Project, job: ImportJob, p: Proposal, text: str) -> None:
         official = job.language == "ufficiale"
-        lang = project.lingua_ufficiale
+        lang = job.lang or project.lingua_ufficiale
         target = p.new if official else None
         try:
             if p.unit_kind == "chapter":

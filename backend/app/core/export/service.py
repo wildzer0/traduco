@@ -13,7 +13,7 @@ import json
 import tempfile
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -37,7 +37,7 @@ from app.core.workspace.ordering import slugify
 from app.core.workspace.tree import Node, build_tree
 
 Scope = Literal["section", "chapter", "project"]
-Language = Literal["ufficiale", "sorgente"]
+Language = str  # "ufficiale", "sorgente" or the code of an additional language
 Format = Literal["docx", "pdf", "odt", "html", "epub", "md"]
 WEB_FORMATS = ("html", "epub", "md")
 WAIT_SECONDS = 300.0
@@ -75,12 +75,28 @@ class ExportJob:
         }
 
 
-def format_value(value: Any, language: str) -> str:
+_PATTERN_TOKENS = (("yyyy", "%Y"), ("yy", "%y"), ("MM", "%m"), ("dd", "%d"))
+
+
+def date_pattern(pattern: str) -> str:
+    """``dd.MM.yyyy`` (as written in progetto.yaml) -> a ``strftime`` format."""
+    for token, code in _PATTERN_TOKENS:
+        pattern = pattern.replace(token, code)
+    return pattern
+
+
+def format_value(value: Any, language: str, pattern: str | None = None) -> str:
     if value is None:
         return ""
     if isinstance(value, date):
-        return value.strftime(DATE_FORMATS.get(language, "%Y-%m-%d"))
+        fmt = date_pattern(pattern) if pattern else DATE_FORMATS.get(language, "%Y-%m-%d")
+        return value.strftime(fmt)
     return str(value)
+
+
+def _pattern(project: Project) -> str | None:
+    value = getattr(project, "formato_date", None)
+    return str(value) if value else None
 
 
 class ExportManager:
@@ -154,6 +170,14 @@ class ExportManager:
     async def _build(
         self, job: ExportJob, root: Path, project: Project, req: ExportRequest
     ) -> Path:
+        if req.language not in ("ufficiale", "sorgente"):  # an additional language (RF-21b)
+            try:
+                project = project.for_language(req.language)
+            except ValueError as exc:
+                raise ExportError(
+                    "invalid_language", f"Language not configured: {req.language}"
+                ) from exc
+            req = replace(req, language="ufficiale")  # from here on it is "the target language"
         official = req.language == "ufficiale"
         lang = project.lingua_ufficiale if official else project.lingua_sorgente
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")  # also names the snapshot
@@ -190,7 +214,7 @@ class ExportManager:
         revisions = [
             compose_mod.Revision(
                 r.rev,
-                format_value(r.data, lang),
+                format_value(r.data, lang, _pattern(project)),
                 await self._maybe(client, project, "descrizione", r.descrizione, official, job),
             )
             for r in project.revisioni
@@ -397,10 +421,10 @@ class ExportManager:
         raw: dict[str, Any] = {"nome": project.nome, **project.metadati}
         fields: dict[str, str | None] = {}
         for key, value in raw.items():
-            text = format_value(value, lang)
+            text = format_value(value, lang, _pattern(project))
             fields[key] = await self._maybe(client, project, key, text, official, job)
         fields["lingua"] = lang
-        fields.setdefault("data_esportazione", format_value(date.today(), lang))
+        fields.setdefault("data_esportazione", format_value(date.today(), lang, _pattern(project)))
         return fields
 
     # -- snapshot ------------------------------------------------------------------------------
