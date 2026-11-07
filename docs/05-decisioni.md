@@ -249,3 +249,14 @@ perché non dipende dal modello.
 - **e2e**: i test avviano da soli il fake-llm sulla porta 11500 per poterlo spegnere.
 **Limiti noti**: validazione di glossario e memoria di traduzione sono M3/M6; una sola lingua (la ufficiale); la modifica non salvata non è tradotta (si traduce al salvataggio, dopo 1 s di pausa).
 
+## ADR-030 — Il companion di scrittura è assistenza esplicita, mai automatica
+**Contesto**: l'utente vuole che il modello consigli miglioramenti e correzioni oltre a tradurre.
+**Decisione**:
+- Stesso motore della traduzione (client, coda, segnaposto, glossario), nuovi prompt versionati `improve@n` e `check@n`; le richieste interattive hanno priorità 1 e passano davanti alla traduzione.
+- Nessun suggerimento non richiesto e nessuna applicazione automatica: ogni proposta è una differenza che l'utente accetta, ignora o rigenera. I suggerimenti non sono scritti nei file del progetto finché non sono accettati;
+  il controllo di sezione salva solo l'elenco in `.traduco/cache/` (in `.gitignore`).
+- Accettare modifica il **sorgente**, quindi segue il normale percorso: salvataggio, riconciliazione, ritraduzione del solo segmento.
+- Il testo va solo all'endpoint configurato; se non è locale la UI lo mostra in Impostazioni.
+**Conseguenze**: carico sul modello unico (2 richieste in parallelo): le azioni dell'utente rallentano la traduzione in coda, non il contrario. La qualità con modelli piccoli sulla lingua sorgente va verificata prima di promettere correzioni grammaticali affidabili;
+per questo il controllo ortografico resta a LanguageTool (RF-16) e il companion si concentra su stile, chiarezza e coerenza.
+

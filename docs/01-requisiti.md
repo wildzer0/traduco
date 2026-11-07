@@ -116,6 +116,10 @@ un documento nella lingua ufficiale di progetto, conforme ai template Word azien
 | RF-84 | **Modelli di documento software** (ADD, DDD, SRS, …) come scheletri (RF-09) con guida per sezione; tracciabilità dei requisiti tra documenti tramite identificatori e riferimenti incrociati verificati | C |
 | RF-85 | Export HTML come sito statico navigabile (indice, ricerca, immagini incluse) e altri formati (Markdown unico, EPUB) oltre a DOCX/PDF/ODT | C |
 | RF-86 | **Snippet personalizzati** per progetto (`snippet.yaml`) con alias richiamabile dal menu `/` (stile VS Code): segnaposto con tab-stop, e **macro** come contatori persistenti (`{{contatore:REQ}}` → `FOO-REQ-00042`, incrementato a ogni inserimento), data, titolo della sezione | S |
+| RF-87 | **Companion di scrittura**: su una selezione o un segmento, azioni *Correggi*, *Riformula*, *Più conciso*, *Più semplice*, *Cambia tono*; il risultato appare come differenza parola per parola e si applica solo con l'accettazione dell'utente | S |
+| RF-88 | **Controllo della sezione** su richiesta: errori, ambiguità, incoerenze terminologiche e aderenza alla guida dello scheletro (RF-09); per i requisiti software: una sola prescrizione per frase, uso di "shall", parole vaghe. L'esito è un elenco di suggerimenti ancorati ai segmenti | S |
+| RF-89 | Il companion non modifica mai il testo da solo, non invia nulla fuori dall'endpoint configurato e non parte da solo (nessun suggerimento non richiesto); rispetta glossario, "non tradurre" e blocchi protetti | M |
+
 
 ### Installazione e avvio
 

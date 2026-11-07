@@ -90,6 +90,20 @@ obbligatoria la segnala come mancante; un file di scheletro non valido dà un er
 una correzione manuale sopravvive a ritraduzione di progetto e cambio di tono; e2e del flusso modifica → blocco →
 modifica sorgente → proposta.
 
+## M3b — Companion di scrittura (RF-87…89)
+
+Dopo M3: riusa la coda, la protezione dei segnaposto, il glossario e l'interfaccia Accetta/Ignora della M3.
+
+- [ ] Prompt `improve@1` (correggi, riformula, conciso, semplice, tono) e `check@1` con validazione dei segnaposto e della lunghezza
+- [ ] Endpoint `POST /projects/{id}/assist` (azione, segmento o selezione) e `POST …/check` (sezione); priorità 1 nella coda, nessun salvataggio automatico
+- [ ] Interfaccia: menu sulla selezione e sul segmento, diff per parola, Accetta/Ignora/Rigenera, scorciatoie
+- [ ] Controllo della sezione: pannello dei suggerimenti ancorati ai segmenti (condivide il modello dei commenti di RF-83)
+- [ ] La guida dello scheletro (RF-09) e il glossario entrano nel prompt; regole per i requisiti (RF-84)
+- [ ] Accettare un suggerimento modifica il sorgente e ritraduce solo quel segmento (nessun ciclo)
+
+**Accettazione**: un suggerimento non cambia il file finché non è accettato; i segnaposto (codice, link, `{{campi}}`) restano intatti;
+accettare ritraduce un solo segmento; con il modello spento le azioni sono disattivate con un messaggio e l'editor non si blocca.
+
 ## M4 — Template ed export DOCX (RF-50…53, 56, 60…62)
 
 - [ ] `analyze.py`: stili per styleId e nome, segnaposto anche spezzati in run, intestazioni/piè/caselle di testo
