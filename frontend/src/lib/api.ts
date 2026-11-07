@@ -475,3 +475,24 @@ export const setCommentStatus = (
   thread: string,
   body: { path: string; status: "open" | "resolved" },
 ): Promise<unknown> => api(`${base(id)}/comments/${enc(thread)}`, json("PATCH", body));
+
+// --- requirement identifiers -------------------------------------------------------------
+export interface RequirementInfo {
+  id: string;
+  path: string;
+  key: string;
+  text: string;
+  referenced_by: { path: string; key: string }[];
+}
+
+export interface RequirementProblem {
+  kind: "duplicate" | "undefined" | "unreferenced";
+  id: string;
+  path: string;
+  key: string;
+}
+
+export const getRequirements = (
+  id: string,
+): Promise<{ requirements: RequirementInfo[]; problems: RequirementProblem[] }> =>
+  api(`${base(id)}/requirements`);

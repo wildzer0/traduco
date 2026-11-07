@@ -6,6 +6,7 @@ import { installFakeApi } from "../../test/fake-api";
 import { CommentsPanel } from "./CommentsPanel";
 import { ComparePanel } from "./ComparePanel";
 import { IssuesPanel } from "./IssuesPanel";
+import { RequirementsPanel } from "./RequirementsPanel";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -147,5 +148,40 @@ describe("comments panel", () => {
       author: "Bruno",
       text: "Va bene così",
     });
+  });
+});
+
+describe("requirements panel", () => {
+  it("lists what to check before the full list", async () => {
+    usePrefs.setState({ locale: "it" });
+    installFakeApi([
+      (c) =>
+        c.url.endsWith("/requirements")
+          ? {
+              body: {
+                requirements: [
+                  {
+                    id: "FOO-REQ-00001",
+                    path: "capitoli/a/01.md",
+                    key: "p:0",
+                    text: "Il sistema deve partire.",
+                    referenced_by: [],
+                  },
+                ],
+                problems: [
+                  {
+                    kind: "unreferenced",
+                    id: "FOO-REQ-00001",
+                    path: "capitoli/a/01.md",
+                    key: "p:0",
+                  },
+                ],
+              },
+            }
+          : undefined,
+    ]);
+    wrap(<RequirementsPanel projectId="demo" />);
+    expect(await screen.findByLabelText("Da controllare")).toHaveTextContent("Mai citato");
+    expect(screen.getByText("0 riferimenti")).toBeInTheDocument();
   });
 });

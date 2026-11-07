@@ -19,6 +19,8 @@ interface ViewState {
   /** Ctrl+E: open the panel and run the last choice at once. */
   exportAutoRun: boolean;
   setExportOpen: (open: boolean, autoRun?: boolean) => void;
+  requirementsOpen: boolean;
+  setRequirementsOpen: (open: boolean) => void;
   issuesOpen: boolean;
   setIssuesOpen: (open: boolean) => void;
   commentsOpen: boolean;
@@ -44,6 +46,8 @@ export const useView = create<ViewState>((set) => ({
   exportOpen: false,
   exportAutoRun: false,
   setExportOpen: (exportOpen, autoRun = false) => set({ exportOpen, exportAutoRun: autoRun }),
+  requirementsOpen: false,
+  setRequirementsOpen: (requirementsOpen) => set({ requirementsOpen }),
   issuesOpen: false,
   setIssuesOpen: (issuesOpen) => set({ issuesOpen }),
   commentsOpen: false,

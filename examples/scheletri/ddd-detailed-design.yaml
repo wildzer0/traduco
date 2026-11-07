@@ -1,0 +1,60 @@
+# Struttura di un documento di progettazione di dettaglio (DDD), ispirata alle prassi comuni (ISO/IEC/IEEE 1016).
+# Esempio didattico scritto per Traduco: adattalo al tuo processo e ai requisiti contrattuali.
+nome: Documento di progettazione di dettaglio (DDD)
+versione: 1
+nodi:
+  - id: introduzione
+    titolo: { it: Introduzione, en: Introduction }
+    nodi:
+      - id: scopo
+        titolo: { it: Scopo e ambito, en: Purpose and scope }
+        guida: Quale parte del sistema è progettata qui e in quale documento di architettura è collocata.
+      - id: riferimenti
+        titolo: { it: Documenti di riferimento, en: Reference documents }
+        guida: Specifica dei requisiti e documento di architettura, con identificativo ed edizione.
+      - id: convenzioni
+        titolo: { it: Convenzioni, en: Conventions }
+        obbligatorio: false
+  - id: moduli
+    titolo: { it: Progetto dei moduli, en: Module design }
+    nodi:
+      - id: elenco
+        titolo: { it: Elenco dei moduli, en: Module list }
+        guida: Un modulo per sezione figlia di questo capitolo, con responsabilità e requisiti soddisfatti (cita gli identificativi).
+      - id: modulo-tipo
+        titolo: { it: Modulo - descrizione, en: Module - description }
+        guida: "Per ogni modulo: scopo, interfacce pubbliche, dati, algoritmi principali, gestione degli errori."
+  - id: dati
+    titolo: { it: Strutture dati, en: Data structures }
+    nodi:
+      - id: modello
+        titolo: { it: Modello dei dati, en: Data model }
+        guida: Entità, campi, unità di misura, vincoli di integrità.
+      - id: formati
+        titolo: { it: Formati di file e di messaggio, en: File and message formats }
+        obbligatorio: false
+  - id: interfacce
+    titolo: { it: Interfacce, en: Interfaces }
+    nodi:
+      - id: api
+        titolo: { it: Interfacce di programmazione, en: Programming interfaces }
+      - id: esterne
+        titolo: { it: Interfacce esterne, en: External interfaces }
+        obbligatorio: false
+  - id: gestione-errori
+    titolo: { it: Gestione degli errori, en: Error handling }
+    nodi:
+      - id: codici
+        titolo: { it: Codici di errore e comportamento, en: Error codes and behaviour }
+  - id: verifica
+    titolo: { it: Verifica e test, en: Verification and testing }
+    nodi:
+      - id: strategia
+        titolo: { it: Strategia di test, en: Test strategy }
+        guida: Come si verifica ogni modulo e quali requisiti copre ogni test.
+  - id: tracciabilita
+    titolo: { it: Tracciabilità, en: Traceability }
+    nodi:
+      - id: requisiti-moduli
+        titolo: { it: Requisiti e moduli, en: Requirements and modules }
+        guida: Ogni requisito allocato a un modulo e ogni modulo riconducibile a un requisito. Usa il pannello Requisiti per il controllo.

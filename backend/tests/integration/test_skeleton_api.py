@@ -27,6 +27,22 @@ def test_lists_bundled_skeletons(api: TestClient) -> None:
     assert "ecss-e-st-10-06c" in ids
 
 
+def test_the_software_document_models_are_there_and_usable(api: TestClient) -> None:
+    ids = {s["id"] for s in api.get("/api/skeletons").json()}
+    models = {"srs-software-requirements", "add-architectural-design", "ddd-detailed-design"}
+    assert models <= ids
+    for model in sorted(models):
+        r = api.post("/api/projects", json={"nome": model, "scheletro": model})
+        assert r.status_code == 201, (model, r.text)
+        pid = r.json()["id"]
+        tree = api.get(f"/api/projects/{pid}/tree").json()["nodes"]
+        assert len(tree) >= 5 and all(n["children"] for n in tree)
+        assert api.get(f"/api/projects/{pid}/requirements").json() == {
+            "requirements": [],
+            "problems": [],
+        }
+
+
 def test_create_project_from_bundled_skeleton(api: TestClient) -> None:
     r = api.post("/api/projects", json={"nome": "Spec", "scheletro": "ecss-e-st-10-06c"})
     assert r.status_code == 201, r.text

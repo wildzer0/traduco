@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearch } from "@tanstack/react-router";
-import { Download, History, MessageSquare, PanelLeft } from "lucide-react";
+import { Download, History, ListChecks, MessageSquare, PanelLeft } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
@@ -177,6 +177,7 @@ function PanelButtons() {
   const t = useT();
   const setIssuesOpen = useView((s) => s.setIssuesOpen);
   const setCommentsOpen = useView((s) => s.setCommentsOpen);
+  const setRequirementsOpen = useView((s) => s.setRequirementsOpen);
   const style =
     "flex items-center gap-1 rounded-ui border border-border px-2 py-1 hover:bg-surface-2";
   return (
@@ -184,6 +185,10 @@ function PanelButtons() {
       <button type="button" onClick={() => setCommentsOpen(true)} className={style}>
         <MessageSquare size={14} strokeWidth={1.5} aria-hidden />
         {t("comments.open")}
+      </button>
+      <button type="button" onClick={() => setRequirementsOpen(true)} className={style}>
+        <ListChecks size={14} strokeWidth={1.5} aria-hidden />
+        {t("requirements.open")}
       </button>
       <button type="button" onClick={() => setIssuesOpen(true)} className={style}>
         <History size={14} strokeWidth={1.5} aria-hidden />

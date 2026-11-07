@@ -1,0 +1,57 @@
+# Struttura di una specifica dei requisiti software (SRS), ispirata alle prassi comuni (ISO/IEC/IEEE 29148).
+# Esempio didattico scritto per Traduco: adattalo al tuo processo e ai requisiti contrattuali.
+nome: Specifica dei requisiti software (SRS)
+versione: 1
+nodi:
+  - id: introduzione
+    titolo: { it: Introduzione, en: Introduction }
+    nodi:
+      - id: scopo
+        titolo: { it: Scopo e ambito, en: Purpose and scope }
+        guida: Che cosa fa il software, chi lo usa e che cosa è escluso. Una frase di scopo, poi i confini.
+      - id: definizioni
+        titolo: { it: "Definizioni, sigle e abbreviazioni", en: "Definitions, acronyms and abbreviations" }
+        guida: Ogni termine tecnico usato nei requisiti, con la stessa grafia che userai ovunque (alimenta il glossario).
+      - id: riferimenti
+        titolo: { it: Documenti di riferimento, en: References }
+        guida: Documenti citati, con identificativo ed edizione.
+  - id: descrizione
+    titolo: { it: Descrizione generale, en: Overall description }
+    nodi:
+      - id: prospettiva
+        titolo: { it: Prospettiva del prodotto, en: Product perspective }
+        guida: Come il software si inserisce nel sistema più grande e con quali interfacce esterne.
+      - id: utenti
+        titolo: { it: Utenti e ruoli, en: Users and roles }
+      - id: vincoli
+        titolo: { it: Vincoli e assunzioni, en: Constraints and assumptions }
+        obbligatorio: false
+  - id: requisiti
+    titolo: { it: Requisiti specifici, en: Specific requirements }
+    nodi:
+      - id: funzionali
+        titolo: { it: Requisiti funzionali, en: Functional requirements }
+        guida: Un requisito per paragrafo, con identificativo univoco all'inizio (es. FOO-REQ-00001) e una sola prescrizione ("shall").
+      - id: prestazioni
+        titolo: { it: Requisiti prestazionali, en: Performance requirements }
+        guida: Ogni valore ha un'unità e una condizione di misura. Evita "veloce", "adeguato".
+      - id: interfacce
+        titolo: { it: Requisiti di interfaccia, en: Interface requirements }
+      - id: sicurezza
+        titolo: { it: Requisiti di sicurezza e protezione dei dati, en: Safety and security requirements }
+        obbligatorio: false
+      - id: qualita
+        titolo: { it: Attributi di qualità, en: Quality attributes }
+        obbligatorio: false
+  - id: verifica
+    titolo: { it: Verifica, en: Verification }
+    nodi:
+      - id: metodi
+        titolo: { it: Metodi di verifica, en: Verification methods }
+        guida: Per ogni requisito indica come si verifica - test, analisi, ispezione o dimostrazione.
+  - id: tracciabilita
+    titolo: { it: Tracciabilità, en: Traceability }
+    nodi:
+      - id: matrice
+        titolo: { it: Matrice di tracciabilità, en: Traceability matrix }
+        guida: Collega ogni requisito a ciò che lo origina e a ciò che lo realizza. Il pannello Requisiti verifica che i riferimenti esistano.

@@ -448,5 +448,17 @@
   "comments.lost": "Il testo commentato non c'è più.",
   "comments.author": "Il tuo nome",
   "comments.text": "Commento",
-  "comments.send": "Invia"
+  "comments.send": "Invia",
+  "requirements.open": "Requisiti",
+  "requirements.title": "Requisiti e riferimenti",
+  "requirements.intro": "Un identificativo come FOO-REQ-00042 all'inizio di un paragrafo definisce un requisito; citarlo altrove è un riferimento.",
+  "requirements.none": "Nessun identificativo di requisito trovato.",
+  "requirements.problems": "Da controllare",
+  "requirements.all": "Tutti i requisiti",
+  "requirements.problem.duplicate": "Definito più volte",
+  "requirements.problem.undefined": "Citato ma mai definito",
+  "requirements.problem.unreferenced": "Mai citato",
+  "requirements.refs": "{count} riferimenti",
+  "requirements.ok": "Nessun problema.",
+  "requirements.refresh": "Ricontrolla"
 }

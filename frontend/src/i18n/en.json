@@ -448,5 +448,17 @@
   "comments.lost": "The commented text is gone.",
   "comments.author": "Your name",
   "comments.text": "Comment",
-  "comments.send": "Send"
+  "comments.send": "Send",
+  "requirements.open": "Requirements",
+  "requirements.title": "Requirements and references",
+  "requirements.intro": "An identifier like FOO-REQ-00042 at the start of a paragraph defines a requirement; mentioning it anywhere else is a reference.",
+  "requirements.none": "No requirement identifiers found.",
+  "requirements.problems": "To check",
+  "requirements.all": "All requirements",
+  "requirements.problem.duplicate": "Defined more than once",
+  "requirements.problem.undefined": "Referenced but never defined",
+  "requirements.problem.unreferenced": "Never referenced",
+  "requirements.refs": "{count} references",
+  "requirements.ok": "No problems found.",
+  "requirements.refresh": "Check again"
 }

@@ -1,0 +1,61 @@
+# Struttura di un documento di progettazione architetturale (ADD), ispirata alle prassi comuni (ISO/IEC/IEEE 42010, 1016).
+# Esempio didattico scritto per Traduco: adattalo al tuo processo e ai requisiti contrattuali.
+nome: Documento di progettazione architetturale (ADD)
+versione: 1
+nodi:
+  - id: introduzione
+    titolo: { it: Introduzione, en: Introduction }
+    nodi:
+      - id: scopo
+        titolo: { it: Scopo e ambito, en: Purpose and scope }
+        guida: Quale sistema descrive l'architettura e a chi serve il documento.
+      - id: riferimenti
+        titolo: { it: Documenti applicabili e di riferimento, en: Applicable and reference documents }
+        guida: Cita la specifica dei requisiti con il suo identificativo, così i riferimenti ai requisiti sono verificabili.
+      - id: definizioni
+        titolo: { it: Termini e abbreviazioni, en: Terms and abbreviations }
+  - id: contesto
+    titolo: { it: Contesto e obiettivi, en: Context and goals }
+    nodi:
+      - id: obiettivi
+        titolo: { it: Obiettivi architetturali, en: Architectural goals }
+        guida: Le qualità che guidano le scelte - prestazioni, disponibilità, manutenibilità - e i requisiti da cui derivano.
+      - id: vincoli
+        titolo: { it: Vincoli, en: Constraints }
+  - id: vista-logica
+    titolo: { it: Vista logica, en: Logical view }
+    nodi:
+      - id: componenti
+        titolo: { it: Scomposizione in componenti, en: Component breakdown }
+        guida: Un diagramma (Mermaid) e, per ogni componente, responsabilità e requisiti allocati.
+      - id: interfacce
+        titolo: { it: Interfacce tra componenti, en: Interfaces between components }
+  - id: vista-dinamica
+    titolo: { it: Vista dinamica, en: Dynamic view }
+    nodi:
+      - id: scenari
+        titolo: { it: Scenari principali, en: Main scenarios }
+        guida: Diagrammi di sequenza per i flussi che attraversano più componenti.
+      - id: concorrenza
+        titolo: { it: Concorrenza e temporizzazione, en: Concurrency and timing }
+        obbligatorio: false
+  - id: vista-fisica
+    titolo: { it: Vista di distribuzione, en: Deployment view }
+    nodi:
+      - id: nodi
+        titolo: { it: Nodi e distribuzione, en: Nodes and deployment }
+      - id: dati
+        titolo: { it: Dati e persistenza, en: Data and persistence }
+        obbligatorio: false
+  - id: decisioni
+    titolo: { it: Decisioni architetturali, en: Architectural decisions }
+    nodi:
+      - id: registro
+        titolo: { it: Registro delle decisioni, en: Decision log }
+        guida: Per ogni decisione - contesto, alternative considerate, scelta e conseguenze.
+  - id: tracciabilita
+    titolo: { it: Tracciabilità dei requisiti, en: Requirements traceability }
+    nodi:
+      - id: allocazione
+        titolo: { it: Allocazione dei requisiti ai componenti, en: Allocation of requirements to components }
+        guida: Ogni requisito della specifica compare qui almeno una volta. Il pannello Requisiti segnala quelli senza riferimento.
