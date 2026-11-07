@@ -330,3 +330,8 @@ Se la risposta è vuota perché tagliata dal limite, una sola nuova richiesta co
 - **Strumenti esterni**: Pandoc è cercato in `$TRADUCO_PANDOC`, `.runtime/pandoc` (`make tools` lo scarica verificando lo SHA-256 del `manifest.toml`), PATH. LibreOffice solo da `$TRADUCO_SOFFICE` o PATH finché il launcher (M4b) non lo installa. In CI Pandoc e LibreOffice sono obbligatori (`TRADUCO_REQUIRE_TOOLS=1`).
 **Limiti**: il template di prova è sintetico (non un vero template aziendale); l'apertura in Word non è verificata, solo con python-docx, Pandoc e (in CI) LibreOffice; titoli di Mermaid non tradotti; nessuna didascalia per le tabelle; il sommario è un campo da aggiornare (Word lo chiede, LibreOffice no senza macro); numerazione dei titoli solo se il template la definisce negli stili.
 
+**Aggiunta a ADR-036 (dopo la prima prova reale)**: un progetto può nominare un `template_predefinito` che non c'è nella cartella `template/` (creato da una versione precedente, file cancellato a mano). L'export non fallisce più:
+usa l'unico template presente oppure gli stili di Pandoc e lo dice negli avvisi; un template chiesto per nome e assente resta un errore. Il pannello Template ha «Aggiungi il template di esempio» (`POST …/templates/example`).
+Altro difetto trovato provando template diversi: `{{REVISIONI}}` dentro una cella di tabella lasciava la cella senza paragrafo finale (Word la considera danneggiata). Ora il paragrafo resta, vuoto. Nuovi test con template costruiti in modo diverso:
+documento Word semplice, copertina in tabella con più sezioni e pagina orizzontale, controlli di contenuto, `{{CONTENUTO}}` spezzato in pezzi o dentro una tabella.
+

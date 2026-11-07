@@ -129,3 +129,23 @@ def delete_template(root: Path, name: str) -> None:
     if project.template_predefinito == name:
         project.template_predefinito = None
         save_project(root, project)
+
+
+def add_example(root: Path, example_dir: Path) -> str:
+    """Copy the sample template (``manuale``) shipped with the application into the project."""
+    source = example_dir / "manuale.docx"
+    if not source.is_file():
+        raise WorkspaceError("not_found", "the example template is not available")
+    name = "manuale"
+    if template_path(root, name).exists():
+        raise WorkspaceError("exists", "the project already has a template called manuale")
+    atomic_write_bytes(template_path(root, name), source.read_bytes())
+    mapping = example_dir / "manuale.yaml"
+    if mapping.is_file():
+        atomic_write_bytes(mapping_path(root, name), mapping.read_bytes())
+    else:
+        save_mapping(root, name, propose_mapping(analyze(template_path(root, name))))
+    current = load_project(root).template_predefinito
+    if current is None or not template_path(root, current).is_file():
+        set_default(root, name)
+    return name

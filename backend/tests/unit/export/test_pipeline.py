@@ -46,13 +46,6 @@ Vedi [lo scopo](../01-intro/01-scopo.md) e [il sito](https://example.com).
 """
 
 
-@pytest.fixture
-def project(tmp_path: Path) -> Path:
-    (tmp_path / "capitoli/01-intro/img").mkdir(parents=True)
-    logo_png(tmp_path / "capitoli/01-intro/img/schema.png", 300, 120, (180, 60, 60))
-    return tmp_path
-
-
 def items() -> list[Item]:
     return [
         Item("chapter", "capitoli/01-intro", "Introduzione", 1),

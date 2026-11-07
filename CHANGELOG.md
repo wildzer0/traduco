@@ -5,6 +5,13 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+### Fixed
+- Export no longer fails when the project's default template is not in its `template/` folder (projects made before the export existed): it uses the only template present, or Pandoc's styles, and says so.
+- A revisions table placed inside a table cell left the cell without a final paragraph, which Word treats as damaged.
+
+### Added
+- "Add the sample template" in the Templates panel.
+
 ## [0.5.0] - 2026-11-07
 
 Milestone M4 - templates and DOCX export.

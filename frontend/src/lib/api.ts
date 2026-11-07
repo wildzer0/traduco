@@ -295,3 +295,6 @@ export const getExport = (id: string, job: string): Promise<ExportStatus> =>
 
 export const exportDownloadUrl = (id: string, job: string): string =>
   `/api${base(id)}/export/${enc(job)}/download`;
+
+export const addExampleTemplate = (id: string): Promise<TemplateDetail> =>
+  api(`${base(id)}/templates/example`, { method: "POST" });

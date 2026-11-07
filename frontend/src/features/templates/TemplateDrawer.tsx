@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
+  addExampleTemplate,
   deleteTemplate,
   getProject,
   getTemplate,
@@ -121,6 +122,22 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
         {t("templates.upload")}
       </button>
 
+      {!templates.some((x) => x.name === "manuale") && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() =>
+            guard(async () => {
+              const created = await addExampleTemplate(projectId);
+              setSelected(created.name);
+              await refresh();
+            })
+          }
+          className="mt-2 rounded-ui border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-50"
+        >
+          {t("templates.addExample")}
+        </button>
+      )}
       {templates.length === 0 && <p className="mt-3 text-muted">{t("templates.empty")}</p>}
       {templates.length > 0 && (
         <ul className="m-0 mt-3 list-none space-y-1 p-0" aria-label={t("templates.list")}>

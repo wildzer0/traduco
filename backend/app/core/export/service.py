@@ -208,14 +208,7 @@ class ExportManager:
         job: ExportJob,
     ) -> Path:
         pandoc = find_pandoc(self._pandoc)
-        name = req.template or project.template_predefinito
-        if name is None:
-            available = (
-                sorted(p.stem for p in (root / "template").glob("*.docx"))
-                if (root / "template").is_dir()
-                else []
-            )
-            name = available[0] if len(available) == 1 else None
+        name = self._choose_template(root, project, req, job)
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         output = root / "build" / f"{slugify(project.nome) or 'documento'}-{lang}-{stamp}.docx"
         with tempfile.TemporaryDirectory(prefix="traduco-export-") as tmp:
@@ -247,6 +240,31 @@ class ExportManager:
                 )
         job.warnings.extend(result.warnings)
         return output
+
+    @staticmethod
+    def _choose_template(
+        root: Path, project: Project, req: ExportRequest, job: ExportJob
+    ) -> str | None:
+        """The template to use; one asked for by name must exist, a missing default is not fatal.
+
+        A project can name a default that is not there (made by an older version, file deleted by
+        hand): the export then uses the only template present, or none, and says so.
+        """
+        folder = root / "template"
+        available = sorted(p.stem for p in folder.glob("*.docx")) if folder.is_dir() else []
+        if req.template:
+            if req.template not in available:
+                raise ExportError("template_missing", f'Template not found: "{req.template}".')
+            return req.template
+        wanted = project.template_predefinito
+        if wanted and wanted in available:
+            return wanted
+        if wanted:
+            job.warnings.append(
+                f'The default template "{wanted}" is not in the project\'s template folder'
+                + (f'; using "{available[0]}" instead.' if len(available) == 1 else ".")
+            )
+        return available[0] if len(available) == 1 else None
 
     # -- translation of what the segments do not cover ------------------------------------------
     async def _ensure_translated(

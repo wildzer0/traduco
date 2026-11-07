@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.deps import Root
+from app.config import Settings, get_settings
 from app.core.templates import store
 from app.core.templates.analyze import MAX_TEMPLATE_BYTES, Analysis
 from app.core.templates.mapping import ROLES, Mapping
@@ -50,6 +51,18 @@ async def upload_template(
         if len(data) > MAX_TEMPLATE_BYTES:
             raise WorkspaceError("too_large", "the template is larger than 50 MB")
     name = store.import_template(root, filename, bytes(data))
+    return _detail(name, *store.describe(root, name))
+
+
+@router.post("/projects/{project_id}/templates/example", status_code=201)
+def add_example_template(
+    root: Root, settings: Annotated[Settings, Depends(get_settings)]
+) -> dict[str, Any]:
+    """Add the sample company template to the project (to try the export, or to start from)."""
+    example = settings.example_project
+    if example is None:
+        raise WorkspaceError("not_found", "the example template is not available")
+    name = store.add_example(root, example / "template")
     return _detail(name, *store.describe(root, name))
 
 

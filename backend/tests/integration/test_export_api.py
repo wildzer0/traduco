@@ -158,3 +158,44 @@ def test_bad_requests(xapi: TestClient) -> None:
     ).json()
     early = xapi.get(f"/api/projects/{pid}/export/{job['id']}/download")
     assert early.status_code in (200, 409)
+
+
+def test_a_default_template_that_is_not_in_the_folder_does_not_break_the_export(
+    xapi: TestClient, tmp_path: Path
+) -> None:
+    """Seen in real use: a project made before M4 names 'manuale' but has no such file."""
+    pid = example(xapi)
+    for f in (tmp_path / "ws" / pid / "template").glob("manuale.*"):
+        f.unlink()
+    status = run_export(
+        xapi, pid, scope="section", path="capitoli/01-introduzione/01-scopo.md", language="sorgente"
+    )
+    assert status["state"] == "done", status
+    assert any('default template "manuale"' in w for w in status["warnings"])
+    assert any("no template" in w for w in status["warnings"])
+
+
+def test_a_template_asked_for_by_name_must_exist(xapi: TestClient) -> None:
+    pid = example(xapi)
+    status = run_export(
+        xapi,
+        pid,
+        scope="section",
+        path="capitoli/01-introduzione/01-scopo.md",
+        language="sorgente",
+        template="non-esiste",
+    )
+    assert status["state"] == "failed" and status["error"]["code"] == "template_missing"
+
+
+def test_the_sample_template_can_be_added_to_any_project(xapi: TestClient, tmp_path: Path) -> None:
+    pid = xapi.post("/api/projects", json={"nome": "Vuoto"}).json()["id"]
+    r = xapi.post(f"/api/projects/{pid}/templates/example")
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["name"] == "manuale" and body["problems"] == [] and body["has_content"]
+    assert (tmp_path / "ws" / pid / "template" / "manuale.docx").is_file()
+    assert xapi.get(f"/api/projects/{pid}/templates").json() == [
+        {"name": "manuale", "default": True, "has_mapping": True}
+    ]
+    assert xapi.post(f"/api/projects/{pid}/templates/example").status_code == 409

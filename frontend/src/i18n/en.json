@@ -311,5 +311,6 @@
   "export.goReview": "Go to review",
   "export.failed": "Export failed",
   "export.diagrams": "Diagrams not drawn yet in: {sections}",
-  "export.needPath": "Open a section to export it or its chapter."
+  "export.needPath": "Open a section to export it or its chapter.",
+  "templates.addExample": "Add the sample template"
 }

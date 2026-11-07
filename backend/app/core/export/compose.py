@@ -317,7 +317,10 @@ def _build_revisions(
         for i, text in enumerate((rev.rev, rev.date, rev.description)):
             table.cell(row, i).text = text
     p.addprevious(table._tbl)
-    p.getparent().remove(p)
+    if p.getparent().tag == qn("w:tc"):
+        _clear(p)  # a table cell must end with a paragraph: keep the (now empty) one
+    else:
+        p.getparent().remove(p)
 
 
 def _enable_update_fields(doc: DocumentObject) -> None:
