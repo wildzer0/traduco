@@ -215,3 +215,33 @@ export interface Capabilities {
   formats: ExportFormat[];
   model: ModelDownload;
 }
+
+export interface ImportProposal {
+  id: string;
+  kind: "modified" | "added" | "deleted";
+  unit_kind: string;
+  section: string;
+  section_title: string;
+  old: string;
+  new: string;
+  current_source: string;
+  proposed_source: string;
+  authors: string[];
+  tracked: boolean;
+  stale: boolean;
+  applicable: boolean;
+  status: "pending" | "accepted" | "rejected" | "failed";
+  note: string;
+}
+
+export interface ImportJob {
+  id: string;
+  state: "running" | "done" | "failed";
+  progress: number;
+  message: string;
+  filename: string;
+  language: "ufficiale" | "sorgente";
+  warnings: string[];
+  error: { code: string; message: string } | null;
+  proposals: ImportProposal[];
+}

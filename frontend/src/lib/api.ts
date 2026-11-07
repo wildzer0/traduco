@@ -9,6 +9,8 @@ import type {
   ExportStatus,
   FileContent,
   GlossaryEntry,
+  ImportJob,
+  ImportProposal,
   LlmStatus,
   NodeResult,
   ProjectSummary,
@@ -213,8 +215,16 @@ export const patchSectionMeta = (
 ): Promise<{ tono: Tone | null; contesto: string }> =>
   api(`${base(id)}/sections/meta?path=${enc(path)}`, json("PATCH", meta));
 
-export const patchProject = (id: string, body: { tono: Tone }): Promise<Record<string, unknown>> =>
-  api(base(id), json("PATCH", body));
+export const patchProject = (
+  id: string,
+  body: { tono?: Tone; metadati?: Record<string, string>; revisioni?: ProjectRevision[] },
+): Promise<Record<string, unknown>> => api(base(id), json("PATCH", body));
+
+export interface ProjectRevision {
+  rev: string;
+  data: string;
+  descrizione: string;
+}
 
 export const getProject = (id: string): Promise<{ tono: Tone } & Record<string, unknown>> =>
   api(base(id));
@@ -308,3 +318,52 @@ export const addExampleTemplate = (id: string): Promise<TemplateDetail> =>
   api(`${base(id)}/templates/example`, { method: "POST" });
 
 export const getCapabilities = (): Promise<Capabilities> => api("/capabilities");
+
+// --- import of a revised document ----------------------------------------------------------
+export const startImport = (id: string, file: File): Promise<ImportJob> =>
+  api(`${base(id)}/import?filename=${enc(file.name)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });
+
+export const getImport = (id: string, job: string): Promise<ImportJob> =>
+  api(`${base(id)}/import/${enc(job)}`);
+
+export const decideProposal = (
+  id: string,
+  job: string,
+  proposal: string,
+  action: "accept" | "reject",
+  source?: string,
+): Promise<ImportProposal> =>
+  api(
+    `${base(id)}/import/${enc(job)}/proposals/${enc(proposal)}`,
+    json("POST", { action, ...(source !== undefined ? { source } : {}) }),
+  );
+
+// --- template wizard -------------------------------------------------------------------------
+export interface WizardOptions {
+  page: "A4" | "Letter";
+  font_body: string;
+  font_heading: string;
+  size_body: number;
+  color: string;
+  margin_cm: number;
+  cover: boolean;
+  cover_fields: string[];
+  header_text: string;
+  footer_text: string;
+  page_numbers: boolean;
+  logo_in_header: boolean;
+  toc: boolean;
+  revisions: boolean;
+  language: "it" | "en";
+}
+
+export const wizardFonts = (): Promise<string[]> => api("/template-wizard/fonts");
+
+export const createTemplateWithWizard = (
+  id: string,
+  body: { nome: string; opzioni: WizardOptions; logo_base64?: string },
+): Promise<TemplateDetail> => api(`${base(id)}/templates/wizard`, json("POST", body));

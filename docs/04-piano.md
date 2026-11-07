@@ -139,12 +139,12 @@ l'installazione di Ollama l'app parte e spiega come configurare un endpoint.
 
 ## M5 — PDF/ODT, revisioni, wizard template (RF-54, 55, 63, 65, 66)
 
-- [ ] `office.py`: PDF e ODT via LibreOffice headless con aggiornamento campi
-- [ ] Tabella revisioni da `progetto.yaml`
-- [ ] Procedura guidata di creazione template in 4 passi
-- [ ] Import DOCX: Pandoc con tracked changes, rimozione parti del template, allineamento con snapshot
-- [ ] Retro-traduzione delle modifiche e schermata proposte (Accetta/Rifiuta/Modifica)
-- [ ] Fixture: DOCX revisionato con modifiche dirette e revisioni Word
+- [x] `office.py`: PDF e ODT via LibreOffice headless con aggiornamento campi
+- [x] Tabella revisioni da `progetto.yaml`
+- [x] Procedura guidata di creazione template in 4 passi
+- [x] Import DOCX: lettura diretta dell'XML con tracked changes (ADR-038), rimozione parti del template, allineamento con snapshot
+- [x] Retro-traduzione delle modifiche e schermata proposte (Accetta/Rifiuta/Modifica)
+- [x] Fixture: DOCX revisionato con modifiche dirette e revisioni Word
 
 **Accettazione**: un DOCX esportato, modificato in 3 punti (anche con revisioni attive) e reimportato produce
 esattamente 3 proposte nella sezione corretta, nella lingua sorgente; accettarle aggiorna sorgente e traduzione

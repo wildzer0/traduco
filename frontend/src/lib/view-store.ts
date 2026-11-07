@@ -19,6 +19,8 @@ interface ViewState {
   /** Ctrl+E: open the panel and run the last choice at once. */
   exportAutoRun: boolean;
   setExportOpen: (open: boolean, autoRun?: boolean) => void;
+  importOpen: boolean;
+  setImportOpen: (open: boolean) => void;
   glossaryOpen: boolean;
   /** Entry prefilled when the glossary is opened from the preview's context menu. */
   glossaryDraft: Partial<GlossaryEntry> | null;
@@ -38,6 +40,8 @@ export const useView = create<ViewState>((set) => ({
   exportOpen: false,
   exportAutoRun: false,
   setExportOpen: (exportOpen, autoRun = false) => set({ exportOpen, exportAutoRun: autoRun }),
+  importOpen: false,
+  setImportOpen: (importOpen) => set({ importOpen }),
   glossaryOpen: false,
   glossaryDraft: null,
   openGlossary: (draft) => set({ glossaryOpen: true, glossaryDraft: draft ?? null }),

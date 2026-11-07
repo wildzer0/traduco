@@ -7,6 +7,7 @@ import {
   getProject,
   getTemplate,
   listTemplates,
+  type ProjectRevision,
   putTemplateMapping,
   setDefaultTemplate,
   uploadTemplate,
@@ -15,6 +16,8 @@ import { useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
 import type { TemplateDetail, TemplateMapping } from "../../lib/types";
 import { useView } from "../../lib/view-store";
+import { MetadataForm } from "./MetadataForm";
+import { TemplateWizard } from "./TemplateWizard";
 
 export const templatesKey = (id: string) => ["templates", id] as const;
 const RESERVED = new Set(["CONTENUTO", "REVISIONI", "SOMMARIO"]);
@@ -30,6 +33,7 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [mapping, setMapping] = useState<TemplateMapping | null>(null);
   const [busy, setBusy] = useState(false);
+  const [wizard, setWizard] = useState(false);
 
   const { data: templates = [] } = useQuery({
     queryKey: templatesKey(projectId),
@@ -122,6 +126,26 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
         {t("templates.upload")}
       </button>
 
+      <button
+        type="button"
+        disabled={busy || wizard}
+        onClick={() => setWizard(true)}
+        className="mt-2 rounded-ui border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-50"
+      >
+        {t("wizard.open")}
+      </button>
+      {wizard && (
+        <TemplateWizard
+          projectId={projectId}
+          onCancel={() => setWizard(false)}
+          onCreated={(created) => {
+            setWizard(false);
+            setSelected(created.name);
+            void refresh();
+          }}
+        />
+      )}
+
       {!templates.some((x) => x.name === "manuale") && (
         <button
           type="button"
@@ -178,6 +202,17 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
           mapping={mapping}
           withoutValue={withoutValue}
           onChange={setMapping}
+        />
+      )}
+
+      {detail && project && (
+        <MetadataForm
+          key={`${detail.name}:${JSON.stringify(project.metadati)}`}
+          projectId={projectId}
+          fields={detail.fields.filter((f) => !RESERVED.has(f) && !KNOWN_BY_APP.includes(f))}
+          metadata={(project.metadati as Record<string, string>) ?? {}}
+          revisions={(project.revisioni as ProjectRevision[]) ?? []}
+          onSaved={() => void refresh()}
         />
       )}
 

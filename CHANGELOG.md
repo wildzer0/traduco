@@ -5,6 +5,19 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-07
+
+Milestone M5 - PDF/ODT with updated fields, template wizard, import of revised documents.
+
+### Added
+- PDF and ODT export refresh the table of contents and the fields through LibreOffice (a macro run on a freshly initialised throw-away profile).
+- "Create a template" in four steps (look, cover, header and footer, contents) with a live sketch and an optional logo.
+- Import of a revised Word file: the changes (including Word's tracked changes) become proposals per section, written back in the source language by the model; Accept, Edit or Reject each one. Accepting keeps the client's wording as a locked translation.
+- A form for the project's metadata and revision history in the Templates panel.
+
+### Changed
+- Exported documents carry an identifier and the export snapshot records every unit, so a revised file is matched with the export it came from.
+
 ## [0.6.0] - 2026-11-07
 
 Milestone M4b - complete launcher.

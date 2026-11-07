@@ -31,6 +31,7 @@ export function ExportPanel({
   const close = useView((s) => s.setExportOpen);
   const autoRun = useView((s) => s.exportAutoRun);
   const setMode = useView((s) => s.setMode);
+  const openImport = useView((s) => s.setImportOpen);
   const setFilter = useView((s) => s.setReviewFilter);
   const { data: projects = [] } = useProjects();
   const project = projects.find((p) => p.id === projectId);
@@ -248,6 +249,18 @@ export function ExportPanel({
           : status?.state === "done"
             ? t("export.again")
             : t("export.run")}
+      </button>
+
+      <button
+        type="button"
+        disabled={running}
+        onClick={() => {
+          close(false);
+          openImport(true);
+        }}
+        className="mt-2 rounded-ui border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-50"
+      >
+        {t("import.open")}
       </button>
 
       {status && status.state === "running" && (

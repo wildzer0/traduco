@@ -5,6 +5,7 @@ import { CheckPanel } from "../features/companion/CheckPanel";
 import { EditorPane } from "../features/editor/EditorPane";
 import { ExportPanel } from "../features/export/ExportPanel";
 import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
+import { ImportPanel } from "../features/import/ImportPanel";
 import { Preview } from "../features/preview/Preview";
 import { reviewKey } from "../features/preview/segment-actions";
 import { ReviewTable } from "../features/review/ReviewTable";
@@ -28,7 +29,8 @@ export function Workspace() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const sidebarOpen = usePrefs((st) => st.sidebarOpen);
-  const { mode, setMode, setFocusKey, glossaryOpen, templatesOpen, exportOpen } = useView();
+  const { mode, setMode, setFocusKey, glossaryOpen, templatesOpen, exportOpen, importOpen } =
+    useView();
   const checkOpen = useAssist((st) => st.checkOpen);
   const lastF8 = useRef<{ path: string; key: string } | null>(null);
   const selected = s ?? null;
@@ -146,6 +148,7 @@ export function Workspace() {
       {checkOpen && <CheckPanel projectId={projectId} path={selected} />}
       {templatesOpen && <TemplateDrawer projectId={projectId} />}
       {exportOpen && <ExportPanel projectId={projectId} selected={selected} />}
+      {importOpen && <ImportPanel projectId={projectId} />}
     </>
   );
 }
