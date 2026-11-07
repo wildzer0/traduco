@@ -9,6 +9,7 @@ rights and everything lives in ``.runtime/``.
 from __future__ import annotations
 
 import contextlib
+import secrets
 import socket
 import subprocess
 import sys
@@ -16,7 +17,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import IO
 
@@ -40,6 +41,9 @@ class Plan:
 
     model: BuiltinModel
     port: int
+    # Without a key any web page open in the browser could use this loopback server (it answers
+    # every origin): the key is shared only with the backend.
+    api_key: str = field(default_factory=lambda: secrets.token_urlsafe(24))
 
     @property
     def base_url(self) -> str:
@@ -114,12 +118,22 @@ def is_ready(plan: Plan) -> bool:
         return False  # 503 while the model loads is an HTTPError: not ready yet
 
 
+def write_key(path: Path, plan: Plan) -> Path:
+    """The API key in a file only the user can read (keeps it out of the process list)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(plan.api_key, encoding="utf-8")
+    with contextlib.suppress(OSError):
+        path.chmod(0o600)
+    return path
+
+
 def start_server(
-    binary: Path, weights: Path, plan: Plan, log: IO[bytes]
+    binary: Path, weights: Path, plan: Plan, log: IO[bytes], key_file: Path
 ) -> subprocess.Popen[bytes]:
     cmd = [
         str(binary), "-m", str(weights), "--host", "127.0.0.1", "--port", str(plan.port),
-        "--alias", plan.model.name, "-c", str(CONTEXT),
+        "--alias", plan.model.name, "-c", str(CONTEXT), "--no-webui", "--reasoning", "off",
+        "--api-key-file", str(write_key(key_file, plan)),
     ]  # fmt: skip
     env = clean_env()
     if sys.platform.startswith("linux"):
@@ -226,7 +240,9 @@ class Engine:
             with contextlib.suppress(OSError):
                 self.state.write("downloading", self.name, 1, 1)  # loading into memory
             log = (self.paths.logs / "llama-server.log").open("ab")
-            self.server = start_server(binary, weights, self.plan, log)
+            self.server = start_server(
+                binary, weights, self.plan, log, self.paths.runtime / "llama-key"
+            )
             wait_until_ready(self.plan, self.server)
         except LauncherError as err:
             self.error = err

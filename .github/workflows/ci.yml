@@ -90,6 +90,21 @@ jobs:
       - name: First start, then restart in under 10 s
         run: python tools/ci-clean-start.py
 
+  builtin-engine:
+    name: built-in engine (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      # The launcher downloads the pinned llama-server and, here only, a 38 MB test model; it must
+      # start the engine, the backend must reach it with its API key, and stopping the app must
+      # stop the engine.
+      - name: Start with the built-in engine
+        run: python tools/ci-clean-start.py --builtin --port 8140
+
   bundle-offline:
     name: offline package (${{ matrix.os }})
     strategy:

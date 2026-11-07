@@ -67,6 +67,8 @@ def backend_env(ctx: Context, workspace: Path, office: Path | None) -> dict[str,
     if llm is not None and not llm.external and llm.base_url and llm.model:
         env["TRADUCO_LLM_BASE_URL"] = llm.base_url
         env["TRADUCO_LLM_MODEL"] = llm.model
+        if llm.builtin is not None:
+            env["TRADUCO_LLM_API_KEY"] = llm.builtin.api_key
     return env
 
 

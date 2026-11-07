@@ -65,6 +65,35 @@ def wait_for_model(base: str, timeout: float) -> dict[str, object]:
     raise SystemExit("the model never became ready")
 
 
+TINY_NAME = "stories15M-test"
+TINY_URL = "https://huggingface.co/ggml-org/stories15M_MOE/resolve/main/stories15M_MOE-Q8_0.gguf"
+TINY_SHA = "c7aa6863f9a4b3cdf19716e2c95622dcbd3bd06989324bf1ac8e60486ef8e881"
+
+
+def use_tiny_model() -> None:
+    """Point the built-in engine at a 38 MB test model instead of the 2.8 GB Gemma (CI only)."""
+    import re
+
+    path = ROOT / "launcher" / "manifest.toml"
+    text = path.read_text(encoding="utf-8")
+    block = (
+        f'[builtin.models.small]\nname = "{TINY_NAME}"\nurl = "{TINY_URL}"\n'
+        f'sha256 = "{TINY_SHA}"\nsize_gb = 1\n'
+    )
+    text, count = re.subn(r"\[builtin\.models\.small\]\n(?:[^\[]*?\n)*?(?=\[|\Z)", block, text)
+    assert count == 1, "builtin.models.small not found in manifest.toml"
+    path.write_text(text, encoding="utf-8")
+
+
+def check_builtin(base: str) -> None:
+    """The backend must reach the engine with its key, and the engine must stop with the app."""
+    import json
+
+    status = json.loads(get(base + "/api/llm/status")[1])
+    assert status["online"] is True and status["model"] == TINY_NAME, status
+    print(f"built-in engine answers through the backend: {status}")
+
+
 def launch(port: int, log: Path) -> subprocess.Popen[bytes]:
     script = ["cmd", "/c", "start.cmd"] if WINDOWS else ["./start.sh"]
     cmd = [*script, "--no-browser", "--port", str(port), *EXTRA_ARGS]
@@ -114,6 +143,14 @@ def stop(proc: subprocess.Popen[bytes]) -> None:
         proc.kill()
 
 
+def engine_listening() -> bool:
+    import socket
+
+    with socket.socket() as s:
+        s.settimeout(1)
+        return s.connect_ex(("127.0.0.1", 18434)) == 0
+
+
 def dump_logs(*files: Path) -> None:
     for f in [*files, *sorted((ROOT / ".runtime" / "logs").glob("*.log"))]:
         if f.exists():
@@ -126,6 +163,11 @@ def main() -> int:
     parser.add_argument(
         "--root", type=Path, help="unpacked offline bundle to start instead of the repository"
     )
+    parser.add_argument(
+        "--builtin",
+        action="store_true",
+        help="check the built-in llama.cpp engine (real llama-server, tiny model) instead of Ollama",
+    )
     parser.add_argument("--port", type=int, default=8123)
     parser.add_argument("--first-timeout", type=float, default=900)
     parser.add_argument("--second-limit", type=float, default=10)
@@ -135,10 +177,13 @@ def main() -> int:
         # an offline start downloads nothing: Ollama must already have the model
         EXTRA_ARGS.extend(["--offline", "--model", "gemma4:e4b"])
     base = f"http://127.0.0.1:{args.port}"
+    if args.builtin:
+        use_tiny_model()
+        EXTRA_ARGS.extend(["--llm", "builtin", "--yes"])
     ollama_port = free_port()
     os.environ["TRADUCO_OLLAMA_HOST"] = f"http://127.0.0.1:{ollama_port}"
-    fake = start_fake_ollama(ollama_port)
-    if args.root:
+    fake = None if args.builtin else start_fake_ollama(ollama_port)
+    if args.root and fake is not None:
         pull = urllib.request.Request(
             f"http://127.0.0.1:{ollama_port}/api/pull",
             data=b'{"model": "gemma4:e4b"}',
@@ -154,10 +199,15 @@ def main() -> int:
         status, html = get(base + "/")
         assert status == 200 and '<div id="root">' in html, "frontend not served"
         print(f"first start healthy after {first:.1f}s")
-        caps = wait_for_model(base, 60)
+        caps = wait_for_model(base, 600 if args.builtin else 60)
         assert caps["pandoc"]["available"], "Pandoc was not installed"  # type: ignore[index]
         print(f"model ready, capabilities: {caps}")
+        if args.builtin:
+            check_builtin(base)
         stop(proc)
+        if args.builtin:
+            time.sleep(2)
+            assert not engine_listening(), "llama-server kept running after the app stopped"
         time.sleep(2)
 
         proc = launch(args.port, logs[1])
@@ -171,7 +221,8 @@ def main() -> int:
         dump_logs(*logs)
         raise
     finally:
-        fake.kill()
+        if fake is not None:
+            fake.kill()
     print("clean start OK")
     return 0
 

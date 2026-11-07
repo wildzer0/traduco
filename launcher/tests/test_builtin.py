@@ -178,7 +178,7 @@ def test_a_server_that_dies_is_reported_with_its_log(tmp_path: Path) -> None:
         load_manifest(REPO / "launcher" / "manifest.toml").builtin_model("small"), 1
     )
     log = (tmp_path / "log").open("ab")
-    proc = builtin.start_server(script, tmp_path / "w.gguf", plan, log)
+    proc = builtin.start_server(script, tmp_path / "w.gguf", plan, log, tmp_path / "key")
     with pytest.raises(LauncherError) as err:
         builtin.wait_until_ready(plan, proc, timeout=5)
     assert err.value.code == "E050"
@@ -256,3 +256,39 @@ def test_offline_without_the_files_stops_with_a_clear_message(ctx: steps.Context
     with pytest.raises(LauncherError) as err:
         steps.setup_llm(ctx, None, False, "builtin")
     assert err.value.code == "E012"
+
+
+def test_the_server_is_started_with_a_key_that_is_not_on_the_command_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[list[str]] = []
+
+    class Fake:
+        pass
+
+    monkeypatch.setattr(builtin.subprocess, "Popen", lambda cmd, **kw: seen.append(cmd) or Fake())
+    plan = builtin.Plan(
+        load_manifest(REPO / "launcher" / "manifest.toml").builtin_model("small"), 18434
+    )
+    builtin.start_server(
+        Path("llama-server"),
+        tmp_path / "w.gguf",
+        plan,
+        (tmp_path / "log").open("ab"),
+        tmp_path / "key",
+    )
+    [cmd] = seen
+    assert plan.api_key not in " ".join(cmd) and "--api-key-file" in cmd
+    assert (tmp_path / "key").read_text() == plan.api_key
+    assert cmd[cmd.index("--host") + 1] == "127.0.0.1"  # never reachable from the network
+    assert "--reasoning" in cmd and "--no-webui" in cmd
+
+
+def test_the_backend_gets_the_url_the_model_and_the_key(ctx: steps.Context) -> None:
+    from launcher.run import backend_env
+
+    ctx.llm = steps.setup_llm(ctx, None, False, "builtin")
+    env = backend_env(ctx, ctx.paths.root / "ws", None)
+    assert env["TRADUCO_LLM_BASE_URL"] == ctx.llm.builtin.openai_url  # type: ignore[union-attr]
+    assert env["TRADUCO_LLM_API_KEY"] == ctx.llm.builtin.api_key  # type: ignore[union-attr]
+    assert env["TRADUCO_LLM_MODEL"] == "gemma-4-E2B-it-Q4_0"
