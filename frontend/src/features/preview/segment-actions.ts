@@ -7,7 +7,9 @@ import {
   putSegment,
   type SegmentChange,
 } from "../../lib/api";
+import { errorText } from "../../lib/api-errors";
 import { recheckOpenFile } from "../../lib/file-events";
+import { useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
 import { translationKey } from "./translation";
 
@@ -17,6 +19,7 @@ export const reviewKey = (projectId: string) => ["review", projectId] as const;
 export function useSegmentActions(projectId: string, path: string) {
   const qc = useQueryClient();
   const notify = useNotices((s) => s.show);
+  const t = useT();
 
   const refresh = useCallback(async () => {
     await Promise.all([
@@ -30,11 +33,11 @@ export function useSegmentActions(projectId: string, path: string) {
       try {
         return await run();
       } catch (e) {
-        notify(e instanceof Error ? e.message : String(e));
+        notify(errorText(e, t));
         return null;
       }
     },
-    [notify],
+    [notify, t],
   );
 
   return useMemo(

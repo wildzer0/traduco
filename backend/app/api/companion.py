@@ -16,7 +16,7 @@ from app.core.skeleton import generate as skeleton_gen
 from app.core.skeleton.model import SkeletonError
 from app.core.translation import glossary as glossary_mod
 from app.core.translation.llm_client import LlmError
-from app.core.translation.service import PRIORITY_EDIT, TranslationService
+from app.core.translation.service import PRIORITY_EDIT, TranslationService, refusal
 from app.core.workspace import frontmatter
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.manifest import Project, load_project
@@ -118,7 +118,7 @@ async def assist(root: Root, service: Service, body: AssistBody) -> dict[str, An
     except LlmError as exc:
         raise WorkspaceError("model_refused", str(exc)) from exc
     if not outcome.ok:
-        raise WorkspaceError("model_refused", outcome.reason)
+        raise refusal(outcome.reason)
     return {
         "original": seg.source,
         "proposal": outcome.target,

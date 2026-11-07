@@ -9,6 +9,8 @@ Modes (env ``FAKE_LLM_MODE`` or per-request header ``X-Fake-Mode``):
   error               HTTP 500 with an OpenAI-style error body
   slow                normal reply after ``FAKE_LLM_DELAY`` seconds (default 2)
   glossary-violation  reply that also contains ``FAKE_LLM_VIOLATION_TERM`` (default ``offer``)
+  recipe              an obedient model: rewrite requests (those whose system prompt carries the
+                      ``[[REFUSED]]`` rule) get a carbonara recipe; translation works as usual
 
 It also answers the few Ollama endpoints the launcher uses (``/api/version``, ``/api/tags``,
 ``/api/pull``), so the clean-start CI can run the whole first-start flow without Ollama.
@@ -23,7 +25,12 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-MODES = ("ok", "error", "slow", "glossary-violation")
+MODES = ("ok", "error", "slow", "glossary-violation", "recipe")
+RECIPE = (
+    "Ecco la ricetta della carbonara.\n\nIngredienti:\n\n- 200 g di guanciale\n- 4 uova\n"
+    "- 100 g di pecorino\n\n1. Rosola il guanciale.\n2. Mescola le uova con il pecorino.\n"
+    "3. Unisci la pasta e servi."
+)
 # Models "installed" in the fake Ollama; /api/pull adds the requested one (clean-start CI).
 INSTALLED: list[str] = []
 MODEL_ID = "fake-model"
@@ -125,29 +132,34 @@ class Handler(BaseHTTPRequestHandler):
             return
         if mode == "slow":
             time.sleep(float(os.environ.get("FAKE_LLM_DELAY", "2")))
+        system = " ".join(str(m.get("content", "")) for m in messages if m.get("role") == "system")
+        if mode == "recipe" and "[[REFUSED]]" in system:
+            self._send(200, self._completion(payload, RECIPE))
+            return
         reply = build_reply(
             extract_source(messages),
             mode,
             os.environ.get("FAKE_LLM_PREFIX", "[EN] "),
             os.environ.get("FAKE_LLM_VIOLATION_TERM", "offer"),
         )
-        self._send(
-            200,
-            {
-                "id": "chatcmpl-fake",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": payload.get("model", MODEL_ID),
-                "choices": [
-                    {
-                        "index": 0,
-                        "finish_reason": "stop",
-                        "message": {"role": "assistant", "content": reply},
-                    }
-                ],
-                "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
-            },
-        )
+        self._send(200, self._completion(payload, reply))
+
+    @staticmethod
+    def _completion(payload: dict[str, Any], reply: str) -> dict[str, Any]:
+        return {
+            "id": "chatcmpl-fake",
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": payload.get("model", MODEL_ID),
+            "choices": [
+                {
+                    "index": 0,
+                    "finish_reason": "stop",
+                    "message": {"role": "assistant", "content": reply},
+                }
+            ],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+        }
 
 
 def make_server(host: str = "127.0.0.1", port: int = 11500) -> ThreadingHTTPServer:

@@ -95,12 +95,36 @@ _EMPHASIS = (
 )
 
 
+def _balanced(body: str, pairs: Iterable[int]) -> bool:
+    """Does every placeholder pair opened inside ``body`` also close inside it, in order?"""
+    known = set(pairs)
+    stack: list[int] = []
+    for m in _MARK.finditer(body):
+        n = int(m.group(2))
+        if n not in known:
+            continue  # an atom: nothing to close
+        if m.group(1) != "/":
+            stack.append(n)
+        elif stack and stack[-1] == n:
+            stack.pop()
+        else:
+            return False
+    return not stack
+
+
 def protect(source: str, non_translate: Iterable[str] = ()) -> Protected:
     """Replace the elements that must not be translated by placeholders."""
     builder = _Builder(non_translate)
     text = builder.scan(source)
+
+    def wrap(m: re.Match[str]) -> str:
+        # an emphasis that would cut across a pair found earlier (``_:*_*``) is left as text
+        return (
+            builder.pair(m["d"], m["body"], m["d"]) if _balanced(m["body"], builder.pairs) else m[0]
+        )
+
     for rule in _EMPHASIS:
-        text = rule.sub(lambda m: builder.pair(m["d"], m["body"], m["d"]), text)
+        text = rule.sub(wrap, text)
     return Protected(text, dict(builder.atoms), dict(builder.pairs))
 
 

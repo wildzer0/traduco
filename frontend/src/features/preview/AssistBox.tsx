@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { applyAssist, assist } from "../../lib/api";
+import { errorText } from "../../lib/api-errors";
 import { diffWords } from "../../lib/diff";
 import { editorBridge } from "../../lib/editor-bridge";
 import { recheckOpenFile } from "../../lib/file-events";
@@ -83,7 +84,7 @@ export function AssistBox({
     try {
       setResult(await assist(projectId, { path, key: segKey, action, instruction }));
     } catch (e) {
-      notify(e instanceof Error ? e.message : String(e));
+      notify(errorText(e, t));
     } finally {
       setBusy(false);
     }

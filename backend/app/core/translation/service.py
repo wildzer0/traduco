@@ -26,7 +26,7 @@ from app.core.workspace.sections import read_section, write_section
 from app.core.workspace.tree import Node, build_tree
 
 from . import glossary as glossary_mod
-from . import store
+from . import guard, store
 from .llm_client import LlmClient, LlmError, LlmUnavailable
 from .queue import TranslationQueue
 from .store import SegmentFile, StoredSegment
@@ -507,6 +507,17 @@ def _queue(seg: StoredSegment) -> None:
     seg.reason = ""
 
 
+def refusal(reason: str) -> WorkspaceError:
+    """A rewrite that was not accepted: off-topic requests get a code the interface can explain."""
+    if reason == guard.OFF_TOPIC:
+        return WorkspaceError(
+            "off_topic",
+            "The instruction asks for something other than rewriting this text, "
+            "so nothing was changed. Edit the text by hand to add content.",
+        )
+    return WorkspaceError("model_refused", reason)
+
+
 class SegmentActions:
     """Edits made by the author. They never wait for the model, except ``revise``."""
 
@@ -677,7 +688,7 @@ class SegmentActions:
         if not alternatives:
             outcome = await revise(client, source.source, current.target, instruction, ctx)
             if not outcome.ok:
-                raise WorkspaceError("model_refused", outcome.reason)
+                raise refusal(outcome.reason)
             return [outcome.target]
         variants = [
             "Give a clearly different wording from the obvious one.",

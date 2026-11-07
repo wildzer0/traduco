@@ -7,10 +7,10 @@ from typing import Literal
 
 from app.core.segmentation.protect import PlaceholderError, protect, restore
 from app.core.translation import glossary as glossary_mod
-from app.core.translation import prompts
+from app.core.translation import guard, prompts
 from app.core.translation.translator import LANGUAGES, TONES, Chat, Outcome, _clean
 
-PROMPT_VERSION = "improve@1"
+PROMPT_VERSION = "improve@2"
 Action = Literal["correct", "rephrase", "concise", "simple", "formale", "neutro", "informale"]
 INSTRUCTIONS: dict[str, str] = {
     "correct": "Correct spelling, grammar and punctuation only. Change nothing else.",
@@ -45,7 +45,7 @@ def build_system(ctx: AssistContext) -> str:
         rules.append(f"- Note from the author: {ctx.note}")
     if ctx.guide:
         rules.append(f"- This section should cover: {ctx.guide}")
-    return prompts.load("improve", 1).format(
+    return prompts.load("improve", 2).format(
         language=LANGUAGES.get(ctx.language, ctx.language),
         tone_instruction=TONES.get(ctx.tone, TONES["neutro"]),
         extra_rules=("\n" + "\n".join(rules)) if rules else "",
@@ -85,6 +85,10 @@ async def improve(
         reply = _clean(
             await client.chat(messages, temperature=temperature, max_tokens=max(256, 3 * len(text)))
         )
+        if guard.is_refusal(reply):
+            return Outcome(
+                text, False, guard.OFF_TOPIC, model=client.model, prompt_version=PROMPT_VERSION
+            )
         try:
             restored = restore(reply, protected)
         except PlaceholderError as exc:
@@ -92,6 +96,9 @@ async def improve(
             continue
         if not restored.strip():
             reason = "it was empty"
+            continue
+        if why := guard.violation(text, restored):
+            reason = f"it was not a rewrite: {why}"
             continue
         low, high = LENGTH_RANGE
         if len(text) >= 20 and not low <= len(restored) / len(text) <= high:
@@ -108,6 +115,8 @@ async def improve(
         return Outcome(
             restored, True, model=client.model, prompt_version=PROMPT_VERSION, attempts=attempt
         )
+    if "not a rewrite" in reason:
+        reason = guard.OFF_TOPIC  # twice: the instruction is asking for something else
     return Outcome(
         text, False, reason, model=client.model, prompt_version=PROMPT_VERSION, attempts=2
     )

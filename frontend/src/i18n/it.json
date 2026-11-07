@@ -470,5 +470,6 @@
   "snippets.example": "Inserisci un esempio",
   "export.format.html": "Pagina web (.html, un solo file)",
   "export.format.epub": "E-book (.epub)",
-  "export.format.md": "Markdown (.md, o .zip con le immagini)"
+  "export.format.md": "Markdown (.md, o .zip con le immagini)",
+  "assist.offTopic": "Questa istruzione chiede qualcosa di diverso dal riscrivere il testo, quindi non è stato cambiato nulla. L'assistente riscrive soltanto (tono, parole, lunghezza); per aggiungere contenuto scrivilo tu nel testo."
 }

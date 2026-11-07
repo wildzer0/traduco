@@ -29,6 +29,7 @@ STATUS = {
     "invalid_state": 409,
     "invalid_template": 422,
     "model_refused": 502,
+    "off_topic": 422,
 }
 
 _locks: defaultdict[str, threading.RLock] = defaultdict(threading.RLock)

@@ -5,6 +5,13 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-07
+
+### Fixed
+- The "Istruzione" box (and the writing assistant's free instruction) no longer writes whatever it is asked: it only rewrites. A request for new content, such as a recipe in a technical manual, is refused with a clear message and nothing changes.
+- After using a rewritten translation from the "Istruzione" box, the preview now warns that the source no longer matches and offers to update it, as it already did after a manual edit.
+- Emphasis that crossed another protected span (`_:*_*`) broke the placeholders of a segment.
+
 ## [0.10.0] - 2026-11-07
 
 Milestone: built-in engine (llama.cpp) as an alternative to Ollama.

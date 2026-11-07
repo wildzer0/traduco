@@ -286,8 +286,11 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
                 actions.instruct(panel.key, instruction, alternatives)
               }
               onUse={async (text) => {
+                const key = panel.key;
                 setPanel(null);
-                await actions.change(panel.key, { target: text });
+                const row = await actions.change(key, { target: text });
+                // the text on the left no longer matches what was just chosen: offer to update it
+                if (row) setDiverged(key);
               }}
             />
           )}

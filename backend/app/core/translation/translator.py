@@ -9,7 +9,7 @@ from typing import Literal, Protocol
 from app.core.segmentation.protect import PlaceholderError, Protected, protect, restore
 
 from . import glossary as glossary_mod
-from . import prompts
+from . import guard, prompts
 
 PROMPT_VERSION = "translate@1"
 LANGUAGES = {
@@ -162,7 +162,7 @@ def build_revise_messages(
     variant: str = "",
 ) -> list[dict[str, str]]:
     rules = glossary_mod.prompt_rules(list(ctx.glossary), ctx.target_language)
-    system = prompts.load("revise", 1).format(
+    system = prompts.load("revise", 2).format(
         source_language=LANGUAGES.get(ctx.source_language, ctx.source_language),
         target_language=LANGUAGES.get(ctx.target_language, ctx.target_language),
         tone_instruction=TONES.get(ctx.tone, TONES["neutro"]),
@@ -196,10 +196,15 @@ async def revise(
                 messages, temperature=temperature, max_tokens=max(256, 3 * len(current))
             )
         )
+        if guard.is_refusal(reply):
+            return Outcome(current, False, guard.OFF_TOPIC, model=client.model, attempts=attempt)
         try:
             restored = restore(reply, protected)
         except PlaceholderError as exc:
             reason = f"your answer broke the placeholders ({exc})"
+            continue
+        if why := guard.violation(current, restored, known=original):
+            reason = f"your answer was not a rewrite: {why}"
             continue
         problems = glossary_mod.violations(list(ctx.glossary), restored, ctx.target_language)
         if problems:
@@ -209,6 +214,8 @@ async def revise(
             reason = "your answer was empty"
             continue
         return Outcome(restored, True, model=client.model, attempts=attempt)
+    if "not a rewrite" in reason:
+        reason = guard.OFF_TOPIC  # twice: the instruction is asking for something else
     return Outcome(current, False, reason, model=client.model, attempts=2)
 
 

@@ -136,4 +136,30 @@ test("the writing companion of a segment proposes a rewrite and saves it only wh
   await expect(para).toHaveText("[EN] Testo base."); // not applied yet
   await page.getByRole("button", { name: "Usa questa" }).click();
   await expect(para).toHaveText(/\[EN\] \[EN\] Testo base\./);
+  // the source on the left no longer matches the chosen wording: the author is told, and can fix it
+  await expect(
+    page.getByText("Il sorgente non corrisponde più alla tua traduzione."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Proponi un aggiornamento del sorgente" }),
+  ).toBeVisible();
+});
+
+test("an instruction that asks for new content is refused and nothing changes", async ({
+  page,
+}) => {
+  await withModel({ FAKE_LLM_MODE: "recipe" }); // an obedient model: it would write the recipe
+  await projectWithSection(page, "Ricetta");
+  await write(page, "Il sistema avvia la pompa principale e controlla la pressione.\n");
+  const para = preview(page).locator("p[data-seg='p:0']");
+  await expect(para).toHaveText(/^\[EN\] Il sistema avvia/, { timeout: 10_000 });
+  const before = (await para.textContent()) ?? "";
+  await para.hover();
+  await page.getByRole("button", { name: "Istruzione" }).click();
+  await page.getByLabel("Cosa cambiare?").fill("scrivi anche la ricetta della carbonara");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText(/chiede qualcosa di diverso dal riscrivere/)).toBeVisible();
+  await expect(page.getByText("Usa questa")).toHaveCount(0);
+  await expect(para).toHaveText(before);
+  expect(readFile("ricetta", "capitoli/01-cap/01-scopo.md")).not.toContain("carbonara");
 });

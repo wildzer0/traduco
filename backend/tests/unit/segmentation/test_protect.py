@@ -2,7 +2,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from app.core.segmentation.protect import PlaceholderError, protect, restore
+from app.core.segmentation.protect import PlaceholderError, check, protect, restore
 
 
 def test_protects_code_urls_fields_and_terms() -> None:
@@ -69,3 +69,10 @@ def test_escapes_are_atoms() -> None:
 def test_identity_roundtrip_for_any_text(src: str) -> None:
     p = protect(src, ["ab"])
     assert restore(p.text, p) == src
+
+
+def test_emphasis_that_would_cross_another_pair_is_left_as_text() -> None:
+    """Found by the property test: ``_:*_*`` used to give ``⟦2⟧:⟦1⟧⟦/2⟧⟦/1⟧``."""
+    p = protect("_:*_*")
+    assert restore(p.text, p) == "_:*_*"
+    check(p.text, p)
