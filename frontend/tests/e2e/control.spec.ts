@@ -99,7 +99,9 @@ test("a manual correction survives project retranslation and a tone change", asy
   await withModel();
   await projectWithSection(page, "Sopravvive");
   await write(page, "Uno.\n\nDue.\n");
-  await expect(preview(page).locator("p").nth(1)).toHaveText("[EN] Due.", { timeout: 10_000 });
+  await expect(preview(page).locator("article p").nth(1)).toHaveText("[EN] Due.", {
+    timeout: 10_000,
+  });
 
   const first = preview(page).locator("p[data-seg='p:0']");
   await first.hover();

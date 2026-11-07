@@ -10,7 +10,8 @@ export const listDir = (id: string, rel: string) => readdirSync(join(projectDir(
 /** The app is mounted (effects and keyboard listeners registered) once the backend answered. */
 export async function openApp(page: Page, path = "/") {
   await page.goto(path);
-  await expect(page.getByRole("status")).toContainText("0.1.0");
+  // the footer (role contentinfo) holds the backend status; banners elsewhere are statuses too
+  await expect(page.getByRole("contentinfo").getByRole("status")).toContainText("0.1.0");
 }
 
 export async function createProject(page: Page, nome: string) {

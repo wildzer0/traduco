@@ -54,7 +54,7 @@ test("raw HTML typed in a section is shown as text, never executed", async ({ pa
     "\n<img src=x onerror=alert(1)>\n\n<script>alert(2)</script>\n\n[x](javascript:alert(3))\n",
   );
   const preview = page.getByRole("region", { name: "Anteprima tradotta" });
-  await expect(preview.locator("p").first()).toContainText("<img src=x onerror=alert(1)>");
+  await expect(preview.locator("article p").first()).toContainText("<img src=x onerror=alert(1)>");
   await expect(preview.locator("img, script")).toHaveCount(0);
   await expect(preview.locator('a[href^="javascript:"]')).toHaveCount(0);
   await page.waitForTimeout(500);

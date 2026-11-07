@@ -132,11 +132,19 @@ def main() -> int:
     args = parser.parse_args()
     if args.root:
         ROOT = args.root.resolve()
-        EXTRA_ARGS.append("--offline")
+        # an offline start downloads nothing: Ollama must already have the model
+        EXTRA_ARGS.extend(["--offline", "--model", "gemma4:e4b"])
     base = f"http://127.0.0.1:{args.port}"
     ollama_port = free_port()
     os.environ["TRADUCO_OLLAMA_HOST"] = f"http://127.0.0.1:{ollama_port}"
     fake = start_fake_ollama(ollama_port)
+    if args.root:
+        pull = urllib.request.Request(
+            f"http://127.0.0.1:{ollama_port}/api/pull",
+            data=b'{"model": "gemma4:e4b"}',
+            method="POST",
+        )
+        urllib.request.urlopen(pull, timeout=10).read()  # noqa: S310 - loopback
     tmp = Path(os.environ.get("RUNNER_TEMP", ROOT / ".runtime"))
     tmp.mkdir(parents=True, exist_ok=True)
     logs = [tmp / "first-start.log", tmp / "second-start.log"]
