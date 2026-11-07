@@ -467,5 +467,8 @@
   "snippets.save": "Salva",
   "snippets.saved": "Salvato",
   "snippets.counters": "Prossimo numero di ogni contatore",
-  "snippets.example": "Inserisci un esempio"
+  "snippets.example": "Inserisci un esempio",
+  "export.format.html": "Pagina web (.html, un solo file)",
+  "export.format.epub": "E-book (.epub)",
+  "export.format.md": "Markdown (.md, o .zip con le immagini)"
 }

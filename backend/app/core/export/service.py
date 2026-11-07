@@ -20,7 +20,7 @@ from typing import Any, Literal
 
 from app.core.export import combine as combine_mod
 from app.core.export import compose as compose_mod
-from app.core.export import office
+from app.core.export import office, web
 from app.core.export.errors import ExportError
 from app.core.export.pandoc import default_reference_doc, find_pandoc, run_pandoc
 from app.core.importer.snapshot import Part, build_units
@@ -38,7 +38,8 @@ from app.core.workspace.tree import Node, build_tree
 
 Scope = Literal["section", "chapter", "project"]
 Language = Literal["ufficiale", "sorgente"]
-Format = Literal["docx", "pdf", "odt"]
+Format = Literal["docx", "pdf", "odt", "html", "epub", "md"]
+WEB_FORMATS = ("html", "epub", "md")
 WAIT_SECONDS = 300.0
 DATE_FORMATS = {"it": "%d/%m/%Y", "de": "%d.%m.%Y", "fr": "%d/%m/%Y", "es": "%d/%m/%Y"}
 
@@ -201,6 +202,8 @@ class ExportManager:
         output = await asyncio.to_thread(
             self._render, root, project, req, combined, fields, revisions, lang, job, stamp
         )
+        if req.format in WEB_FORMATS:
+            return output  # nothing to import back from these: no snapshot, no conversion
         self._step(job, 95, "snapshot", root)
         self._snapshot(root, req, combined, output, build_units(parts), fields, lang, stamp)
         if req.format != "docx":
@@ -222,12 +225,18 @@ class ExportManager:
     ) -> Path:
         pandoc = find_pandoc(self._pandoc)
         name = self._choose_template(root, project, req, job)
-        stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
-        output = root / "build" / f"{slugify(project.nome) or 'documento'}-{lang}-{stamp}.docx"
+        # (``stamp`` names the snapshot and goes into the document: the file name has its own)
+        file_stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+        base = f"{slugify(project.nome) or 'documento'}-{lang}-{file_stamp}"
+        output = root / "build" / f"{base}.docx"
         with tempfile.TemporaryDirectory(prefix="traduco-export-") as tmp:
             work = Path(tmp)
             for asset, source in combined.assets.items():
                 (work / asset).write_bytes(source.read_bytes())
+            if req.format in WEB_FORMATS:
+                return self._render_web(
+                    pandoc, project, req, combined, work, output.with_name(base), lang
+                )
             markdown = work / "document.md"
             markdown.write_text(combined.markdown, encoding="utf-8")
             body = work / "body.docx"
@@ -255,6 +264,25 @@ class ExportManager:
                     identifier=stamp,
                 )
         job.warnings.extend(result.warnings)
+        return output
+
+    @staticmethod
+    def _render_web(
+        pandoc: Path,
+        project: Project,
+        req: ExportRequest,
+        combined: combine_mod.Combined,
+        work: Path,
+        target: Path,
+        lang: str,
+    ) -> Path:
+        """HTML, EPUB and Markdown need no template, fields or revision table (RF-85)."""
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if req.format == "md":
+            return web.build_markdown(combined, work, target)
+        output = target.with_suffix(f".{req.format}")
+        build = web.build_html if req.format == "html" else web.build_epub
+        build(pandoc, combined, work, output, project.nome, lang)
         return output
 
     @staticmethod

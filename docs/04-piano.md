@@ -162,9 +162,9 @@ un commento resta ancorato al suo segmento dopo modifiche del testo vicino.
 
 ## M5c — Documentazione software, altri formati, snippet (RF-84…86)
 
-- [ ] Modelli di scheletro ADD/DDD/SRS e controllo dei riferimenti tra requisiti (RF-84)
-- [ ] Export HTML statico, Markdown unico, EPUB (RF-85)
-- [ ] Snippet con alias, tab-stop e contatori nel menu `/` e in `snippet.yaml` (RF-86)
+- [x] Modelli di scheletro ADD/DDD/SRS e controllo dei riferimenti tra requisiti (RF-84)
+- [x] Export HTML statico, Markdown unico, EPUB (RF-85)
+- [x] Snippet con alias, tab-stop e contatori nel menu `/` e in `snippet.yaml` (RF-86)
 
 **Accettazione**: l'export HTML si apre da `file://` senza server; uno snippet con contatore inserisce `FOO-REQ-00042` e
 al secondo inserimento `…00043`, anche dopo il riavvio.

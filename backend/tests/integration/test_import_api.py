@@ -129,6 +129,8 @@ def test_an_unchanged_export_gives_no_proposals(xapi: TestClient, tmp_path: Path
     r = xapi.post(f"/api/projects/{pid}/import", content=docx.read_bytes())
     job = wait(xapi, pid, r.json()["id"])
     assert job["state"] == "done" and job["proposals"] == []
+    # the identifier inside the document finds its own snapshot: no "latest export" fallback
+    assert job["warnings"] == []
 
 
 def test_a_file_that_is_not_word_fails_cleanly(xapi: TestClient) -> None:

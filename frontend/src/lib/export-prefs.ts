@@ -1,5 +1,7 @@
 import type { ExportFormat, ExportLanguage, ExportScope } from "./types";
 
+const FORMATS: ExportFormat[] = ["docx", "pdf", "odt", "html", "epub", "md"];
+
 export interface ExportChoice {
   scope: ExportScope;
   language: ExportLanguage;
@@ -25,7 +27,9 @@ export function loadExportChoice(): ExportChoice {
       scope: data.scope === "section" || data.scope === "chapter" ? data.scope : "project",
       language: data.language === "sorgente" ? "sorgente" : "ufficiale",
       template: typeof data.template === "string" ? data.template : "",
-      format: data.format === "pdf" || data.format === "odt" ? data.format : "docx",
+      format: FORMATS.includes(data.format as ExportFormat)
+        ? (data.format as ExportFormat)
+        : "docx",
     };
   } catch {
     return DEFAULT;

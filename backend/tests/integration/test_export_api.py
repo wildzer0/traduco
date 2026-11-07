@@ -239,9 +239,16 @@ def test_capabilities_report_tools_and_the_model_download(
     monkeypatch.setattr(office, "find_soffice", lambda: None)
     body = xapi.get("/api/capabilities").json()
     assert body["pandoc"]["available"] is True and body["libreoffice"]["available"] is False
-    assert body["formats"] == ["docx"] and body["model"] == {"state": "none"}
+    assert body["formats"] == ["docx", "html", "epub", "md"] and body["model"] == {"state": "none"}
     monkeypatch.setattr(office, "find_soffice", lambda: Path("/usr/bin/soffice"))
-    assert xapi.get("/api/capabilities").json()["formats"] == ["docx", "pdf", "odt"]
+    assert xapi.get("/api/capabilities").json()["formats"] == [
+        "docx",
+        "html",
+        "epub",
+        "md",
+        "pdf",
+        "odt",
+    ]
     runtime = tmp_path / "runtime"
     runtime.mkdir()
     monkeypatch.setenv("TRADUCO_RUNTIME_DIR", str(runtime))

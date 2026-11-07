@@ -5,6 +5,19 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-07
+
+Milestone M5c - software documents, other formats, snippets.
+
+### Added
+- Document models for software: requirements specification (SRS), architectural design (ADD) and detailed design (DDD).
+- "Requirements" panel: identifiers such as FOO-REQ-00042 are defined at the start of a paragraph and cross-references are checked (duplicates, undefined, never referenced).
+- Export as a single self-contained web page (index, search, images included, opens from a file), EPUB and Markdown (a zip when there are images).
+- Snippets: `snippet.yaml` with aliases, tab-stops and persistent counters (`{{contatore:REQ}}` gives FOO-REQ-00042, then 00043), in the `/` menu with an editor.
+
+### Fixed
+- The identifier inside an exported Word file now matches its snapshot, so a revised file is matched with its own export.
+
 ## [0.8.0] - 2026-11-07
 
 Milestone M5b - issues, comparison and review comments.

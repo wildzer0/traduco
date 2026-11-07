@@ -187,7 +187,7 @@ export interface TemplateDetail {
   problems: string[];
 }
 
-export type ExportFormat = "docx" | "pdf" | "odt";
+export type ExportFormat = "docx" | "pdf" | "odt" | "html" | "epub" | "md";
 export type ExportScope = "section" | "chapter" | "project";
 export type ExportLanguage = "ufficiale" | "sorgente";
 

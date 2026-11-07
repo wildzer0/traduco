@@ -467,5 +467,8 @@
   "snippets.save": "Save",
   "snippets.saved": "Saved",
   "snippets.counters": "Next number of each counter",
-  "snippets.example": "Insert an example"
+  "snippets.example": "Insert an example",
+  "export.format.html": "Web page (.html, one file)",
+  "export.format.epub": "E-book (.epub)",
+  "export.format.md": "Markdown (.md, or .zip with images)"
 }

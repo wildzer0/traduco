@@ -196,11 +196,16 @@ export function ExportPanel({
           <option value="odt" disabled={!office}>
             {t("export.format.odt")}
           </option>
+          <option value="html">{t("export.format.html")}</option>
+          <option value="epub">{t("export.format.epub")}</option>
+          <option value="md">{t("export.format.md")}</option>
         </select>
       </label>
       {!office && <p className="m-0 mt-1 text-[12px] text-muted">{t("export.needOffice")}</p>}
 
-      <label className="mt-3 block">
+      <label
+        className={`mt-3 block ${["html", "epub", "md"].includes(choice.format) ? "hidden" : ""}`}
+      >
         {t("export.template")}
         <select
           className={field}

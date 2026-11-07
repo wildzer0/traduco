@@ -48,7 +48,7 @@ def capabilities() -> dict[str, Any]:
     except ExportError:
         pandoc = False
     has_office = office.find_soffice() is not None
-    formats = ["docx"] if pandoc else []
+    formats = ["docx", "html", "epub", "md"] if pandoc else []
     if pandoc and has_office:
         formats += ["pdf", "odt"]
     return {

@@ -19,6 +19,10 @@ MEDIA = {
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pdf": "application/pdf",
     ".odt": "application/vnd.oasis.opendocument.text",
+    ".html": "text/html; charset=utf-8",
+    ".epub": "application/epub+zip",
+    ".md": "text/markdown; charset=utf-8",
+    ".zip": "application/zip",
 }
 
 

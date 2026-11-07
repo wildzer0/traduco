@@ -1,5 +1,6 @@
 import { resolveStops } from "./snippet-text";
 
+// biome-ignore-all lint/suspicious/noTemplateCurlyInString: ${1:x} is the snippet syntax under test
 describe("snippet tab-stops", () => {
   it("fills the defaults and finds the first stop", () => {
     const r = resolveStops("**X** Il sistema ${2:fare} ${1:deve}. $0");

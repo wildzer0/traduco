@@ -80,3 +80,35 @@ def default_reference_doc(pandoc: Path, target: Path) -> Path:
         raise ExportError("pandoc_failed", "Pandoc could not provide its default template.")
     target.write_bytes(result.stdout)
     return target
+
+
+def convert(
+    pandoc: Path,
+    markdown: Path,
+    output: Path | None,
+    to: str,
+    *,
+    resource_dir: Path,
+    extra: list[str] | None = None,
+) -> str:
+    """Pandoc to another format; with ``output`` None the result is returned as text."""
+    args = [str(pandoc), "--from", INPUT_FORMAT, "--to", to, "--wrap=none"]
+    args += [f"--resource-path={resource_dir}", *(extra or [])]
+    if output is not None:
+        args += ["--output", str(output)]
+    args.append(str(markdown))
+    try:
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=TIMEOUT_SECONDS,
+            cwd=resource_dir,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise ExportError("pandoc_failed", "Pandoc took too long and was stopped.") from exc
+    if result.returncode != 0:
+        raise ExportError("pandoc_failed", f"Pandoc failed: {result.stderr.strip()[:500]}")
+    return result.stdout

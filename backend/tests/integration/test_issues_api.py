@@ -129,3 +129,38 @@ def test_snippets_expand_through_the_api(xapi: TestClient) -> None:  # noqa: F81
     second = xapi.post(f"{base}/req/expand", json={"path": SECTION}).json()["text"]
     assert first.startswith("FOO-REQ-00001 in ") and second.startswith("FOO-REQ-00002 in ")
     assert xapi.get(base).json()["counters"][0]["next"] == "FOO-REQ-00003"
+
+
+def test_web_formats_open_without_a_server(xapi: TestClient, tmp_path: Path) -> None:  # noqa: F811
+    import io
+    import zipfile
+
+    from tests.integration.test_export_api import draw_diagrams, run_export
+
+    pid = example(xapi)
+    draw_diagrams(xapi, pid, tmp_path / "ws")
+    html = run_export(xapi, pid, scope="project", language="sorgente", format="html")
+    assert html["state"] == "done" and html["filename"].endswith(".html"), html
+    page = xapi.get(f"/api/projects/{pid}/export/{html['id']}/download")
+    assert page.headers["content-type"].startswith("text/html")
+    text = page.text
+    assert "<script src" not in text and "<link " not in text  # nothing fetched: file:// works
+    assert 'id="q"' in text and 'href="#' in text  # search box and index
+    assert "data:image/png;base64," in text  # images are inside the file
+    assert "Introduzione" in text
+
+    md = run_export(xapi, pid, scope="project", language="sorgente", format="md")
+    assert md["state"] == "done" and md["filename"].endswith(".zip"), md
+    archive = zipfile.ZipFile(
+        io.BytesIO(xapi.get(f"/api/projects/{pid}/export/{md['id']}/download").content)
+    )
+    assert "document.md" in archive.namelist() and any(
+        n.startswith("img") for n in archive.namelist()
+    )
+
+    epub = run_export(xapi, pid, scope="project", language="sorgente", format="epub")
+    assert epub["state"] == "done" and epub["filename"].endswith(".epub"), epub
+    book = zipfile.ZipFile(
+        io.BytesIO(xapi.get(f"/api/projects/{pid}/export/{epub['id']}/download").content)
+    )
+    assert "mimetype" in book.namelist() and any(n.endswith(".xhtml") for n in book.namelist())
