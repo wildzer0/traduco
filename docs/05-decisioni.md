@@ -292,3 +292,9 @@ Il servizio si riconfigura senza riavvio: i lavori in coda e il monitor usano su
 che distingue server irraggiungibile da modello assente e mostra i modelli disponibili. Il banner offline rimanda alle impostazioni. L'API non restituisce mai la chiave, solo `has_api_key`.
 **Conseguenze**: l'installazione automatica di Ollama e del modello resta nella M4b (RF-70…79); fino ad allora l'utente installa Ollama da sé.
 
+## ADR-034 — Modelli che ragionano: ragionamento spento e budget di token
+**Contesto**: con Gemma 4 E4B su Ollama la traduzione restava in coda e finiva in «da rivedere» (`empty translation`). Il modello «pensa» per circa 450 token prima di rispondere; il nostro limite (3× la lunghezza del sorgente, ≈200 token) si esauriva nel ragionamento e il testo restava vuoto (`finish_reason: length`). Misurato: 1,8 s e testo vuoto contro 0,2 s e traduzione corretta con il ragionamento spento.
+**Decisione**: il client invia sempre `reasoning_effort: "none"` (Ollama lo accetta sull'endpoint compatibile OpenAI; `think: false` no). Un server che lo rifiuta con 400/422 citando «reasoning» viene richiamato senza il parametro e il client se lo ricorda.
+Se la risposta è vuota perché tagliata dal limite, una sola nuova richiesta con 6× i token. Il minimo di `max_tokens` sale da 64 a 256.
+**Conseguenze**: la traduzione di una sezione di esempio (5 segmenti) richiede circa 2 s sulla RTX 5070 Laptop. Le traduzioni fallite prima della correzione restano «da rivedere» finché non si usa «Ritraduci».
+

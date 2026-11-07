@@ -5,6 +5,9 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+### Fixed
+- Translation with reasoning models (Gemma 4 on Ollama) returned empty text and stayed "translating": reasoning is switched off and the token budget is larger.
+
 ### Added
 - Model settings in the app (server address, model, API key) with "Save and verify"; the "model unreachable" banner links to them. Changes apply without a restart.
 

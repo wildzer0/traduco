@@ -117,7 +117,7 @@ async def translate(client: Chat, source: str, ctx: Context) -> Outcome:
             await client.chat(
                 build_messages(ctx, protected, correction),
                 temperature=0.2,
-                max_tokens=max(64, 3 * len(source)),
+                max_tokens=max(256, 3 * len(source)),
             )
         )
         try:
@@ -193,7 +193,7 @@ async def revise(
         messages = build_revise_messages(ctx, original, protected, instruction, variant or extra)
         reply = _clean(
             await client.chat(
-                messages, temperature=temperature, max_tokens=max(64, 3 * len(current))
+                messages, temperature=temperature, max_tokens=max(256, 3 * len(current))
             )
         )
         try:
