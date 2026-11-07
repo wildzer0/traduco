@@ -129,3 +129,10 @@ preferenze (tema, lingua) in Zustand con persistenza `localStorage` tollerante a
 `pnpm` 12 genera `pnpm-workspace.yaml` con `minimumReleaseAgeExclude`: è versionato così com'è. Biome 2.6 usa `preset` al posto di `recommended`.
 `make e2e` costruisce il frontend e lo serve dal backend (stesso percorso dell'avvio utente).
 **Conseguenze**: nessuna dipendenza i18n o UI in più; il drawer verrà esteso, non sostituito, dalle milestone successive.
+
+## ADR-019 — Licenze permissive equivalenti ammesse
+**Contesto**: `typing_extensions` (PSF-2.0, richiesta da pydantic a runtime), `isbot` (Unlicense) e `lru-cache` (BlueOak-1.0.0, strumenti di
+test) non sono nell'elenco di AGENTS.md pur essendo permissive.
+**Decisione**: si aggiungono PSF-2.0, 0BSD, Unlicense, BlueOak-1.0.0, CC0-1.0, Python-2.0. Copyleft (GPL, LGPL, AGPL) resta vietato come dipendenza.
+`tools/check-licenses.py` controlla Python e frontend; per espressioni `A OR B` basta una alternativa ammessa.
+**Conseguenze**: da confermare insieme al parere legale previsto da ADR-008 prima del rilascio pubblico.

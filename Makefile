@@ -19,7 +19,7 @@ dev:
 
 test:
 	cd backend && uv run pytest -q
-	cd backend && uv run pytest -q ../tools/fake-llm/tests
+	cd backend && uv run pytest -q ../tools/fake-llm/tests ../tools/tests
 	cd frontend && $(PNPM) test
 
 e2e:
@@ -30,3 +30,6 @@ lint:
 	cd backend && uv run mypy ../tools/fake-llm/fake_llm
 	cd backend && uv run ruff check ../tools && uv run ruff format --check ../tools
 	cd frontend && $(PNPM) lint
+
+licenses:
+	cd backend && uv run python ../tools/check-licenses.py

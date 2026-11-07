@@ -51,7 +51,8 @@ Se un comando non esiste ancora, crealo nel `Makefile` durante la milestone M0.
 
 1. **Nessuna chiamata di rete esterna** nel codice di runtime, salvo l'endpoint LLM configurato dall'utente.
    Niente telemetria, CDN, font remoti: tutti gli asset sono inclusi nel build.
-2. **Licenze**: dipendenze solo MIT, BSD, Apache-2.0, ISC, MPL-2.0, PostgreSQL, Zlib. Software GPL/LGPL (Pandoc,
+2. **Licenze**: dipendenze solo MIT, BSD, Apache-2.0, ISC, MPL-2.0, PostgreSQL, Zlib (più equivalenti permissive: PSF-2.0, 0BSD, Unlicense, BlueOak-1.0.0, CC0-1.0, vedi ADR-019;
+   OFL-1.1 solo per i file font, ADR-013). Software GPL/LGPL (Pandoc,
    LibreOffice) solo come **eseguibili esterni** invocati via processo, mai importati come librerie.
    Il progetto è rilasciato sotto Apache-2.0.
 3. **Il sorgente è la verità**: i file `.md` nella lingua sorgente non vengono mai modificati dal motore di traduzione.

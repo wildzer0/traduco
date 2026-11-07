@@ -12,7 +12,7 @@ Spunta i task (`- [x]`) nello stesso commit che li completa.
 - [x] Frontend: Vite + React + TS strict, Tailwind, Biome, vitest, layout vuoto a tre colonne, i18n it/en, tema chiaro/scuro
 - [x] `tools/fake-llm`: server OpenAI-compatibile (`/v1/chat/completions`, `/v1/models`) che restituisce
       `"[EN] " + testo`, preservando i segnaposto; modalità configurabili per simulare errori, lentezza, glossario violato
-- [ ] `Makefile` con `setup`, `dev`, `test`, `e2e`, `lint`, `licenses`
+- [x] `Makefile` con `setup`, `dev`, `test`, `e2e`, `lint`, `licenses`
 - [ ] `docker-compose.yml`: servizio `app` (backend che serve il frontend buildato, Pandoc, LibreOffice),
       servizio `ollama` sotto profilo `llm`
 - [ ] CI GitHub Actions: lint, test, build immagine, verifica licenze
