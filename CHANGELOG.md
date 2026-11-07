@@ -19,6 +19,10 @@ Milestone M6 - quality and polish.
 - Optional spelling and grammar check of the source with your own LanguageTool server.
 - User guide (`docs/guida-utente.md`) and a 300-section performance test.
 
+### Fixed
+- The text cursor was black in the Markdown editor and could not be seen on the dark theme.
+- Uploading a template right after opening the Templates panel could leave the list empty.
+
 ## [0.10.1] - 2026-11-07
 
 ### Fixed

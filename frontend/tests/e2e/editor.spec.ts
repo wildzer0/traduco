@@ -159,3 +159,35 @@ for (const kind of ["paste", "drop"] as const) {
     await expect.poll(() => readFile(`via${kind}`, FILE)).toContain("![](img/dal-mondo.png)");
   });
 }
+
+test("the cursor can be seen on the dark theme, in both editors", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await projectWithSection(page, "Cursore");
+  const dark = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const luminance = (rgb: string) => {
+    const [r = 0, g = 0, b = 0] = (rgb.match(/\d+/g) ?? []).map(Number);
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  };
+  expect(luminance(dark)).toBeLessThan(80); // really the dark theme
+
+  await page.getByRole("button", { name: "Markdown", exact: true }).click();
+  await page.locator(".cm-content").click();
+  const markdown = await page.evaluate(() => {
+    const cursor = document.querySelector(".cm-cursor");
+    const content = document.querySelector(".cm-content");
+    return {
+      cursor: cursor ? getComputedStyle(cursor).borderLeftColor : null,
+      caret: content ? getComputedStyle(content).caretColor : null,
+    };
+  });
+  for (const colour of [markdown.cursor, markdown.caret]) {
+    if (colour) expect(luminance(colour)).toBeGreaterThan(150); // light on dark, never black
+  }
+
+  await page.getByRole("button", { name: "Documento", exact: true }).click();
+  await page.locator(".ProseMirror").click();
+  const caret = await page.evaluate(
+    () => getComputedStyle(document.querySelector(".ProseMirror") as Element).caretColor,
+  );
+  expect(luminance(caret)).toBeGreaterThan(150);
+});
