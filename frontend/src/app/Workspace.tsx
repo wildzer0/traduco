@@ -6,6 +6,8 @@ import { EditorPane } from "../features/editor/EditorPane";
 import { ExportPanel } from "../features/export/ExportPanel";
 import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
 import { ImportPanel } from "../features/import/ImportPanel";
+import { CommentsPanel } from "../features/issues/CommentsPanel";
+import { IssuesPanel } from "../features/issues/IssuesPanel";
 import { Preview } from "../features/preview/Preview";
 import { reviewKey } from "../features/preview/segment-actions";
 import { ReviewTable } from "../features/review/ReviewTable";
@@ -29,8 +31,17 @@ export function Workspace() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const sidebarOpen = usePrefs((st) => st.sidebarOpen);
-  const { mode, setMode, setFocusKey, glossaryOpen, templatesOpen, exportOpen, importOpen } =
-    useView();
+  const {
+    mode,
+    setMode,
+    setFocusKey,
+    glossaryOpen,
+    templatesOpen,
+    exportOpen,
+    importOpen,
+    issuesOpen,
+    commentsOpen,
+  } = useView();
   const checkOpen = useAssist((st) => st.checkOpen);
   const lastF8 = useRef<{ path: string; key: string } | null>(null);
   const selected = s ?? null;
@@ -149,6 +160,8 @@ export function Workspace() {
       {templatesOpen && <TemplateDrawer projectId={projectId} />}
       {exportOpen && <ExportPanel projectId={projectId} selected={selected} />}
       {importOpen && <ImportPanel projectId={projectId} />}
+      {issuesOpen && <IssuesPanel projectId={projectId} />}
+      {commentsOpen && <CommentsPanel projectId={projectId} path={selected} />}
     </>
   );
 }

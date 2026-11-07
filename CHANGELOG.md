@@ -5,6 +5,12 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+### Added
+- Issues: freeze the document with a number and a date (both languages), browse them, restore a section from one.
+- Word-level comparison between two issues or with the draft, in the source or the official language, change by change.
+- Change table: the model summarises what changed in each section since the previous issue; correct it and write it into the revision table.
+- Review comments on segments with threads and an open/resolved status, stored beside the document and following their segment when the text changes.
+
 ## [0.7.0] - 2026-11-07
 
 Milestone M5 - PDF/ODT with updated fields, template wizard, import of revised documents.

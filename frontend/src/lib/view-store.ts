@@ -19,6 +19,10 @@ interface ViewState {
   /** Ctrl+E: open the panel and run the last choice at once. */
   exportAutoRun: boolean;
   setExportOpen: (open: boolean, autoRun?: boolean) => void;
+  issuesOpen: boolean;
+  setIssuesOpen: (open: boolean) => void;
+  commentsOpen: boolean;
+  setCommentsOpen: (open: boolean) => void;
   importOpen: boolean;
   setImportOpen: (open: boolean) => void;
   glossaryOpen: boolean;
@@ -40,6 +44,10 @@ export const useView = create<ViewState>((set) => ({
   exportOpen: false,
   exportAutoRun: false,
   setExportOpen: (exportOpen, autoRun = false) => set({ exportOpen, exportAutoRun: autoRun }),
+  issuesOpen: false,
+  setIssuesOpen: (issuesOpen) => set({ issuesOpen }),
+  commentsOpen: false,
+  setCommentsOpen: (commentsOpen) => set({ commentsOpen }),
   importOpen: false,
   setImportOpen: (importOpen) => set({ importOpen }),
   glossaryOpen: false,

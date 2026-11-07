@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearch } from "@tanstack/react-router";
-import { Download, PanelLeft } from "lucide-react";
+import { Download, History, MessageSquare, PanelLeft } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
@@ -55,6 +55,7 @@ export function TopBar() {
       <span className="ml-auto" />
       {projectId && <ProjectTone projectId={projectId} />}
       {projectId && <ViewSwitch />}
+      {projectId && <PanelButtons />}
       {projectId && <ExportButton />}
       {projectId && (
         <span
@@ -169,5 +170,25 @@ function ExportButton() {
       <Download size={14} strokeWidth={1.5} aria-hidden />
       {t("export.title")}
     </button>
+  );
+}
+
+function PanelButtons() {
+  const t = useT();
+  const setIssuesOpen = useView((s) => s.setIssuesOpen);
+  const setCommentsOpen = useView((s) => s.setCommentsOpen);
+  const style =
+    "flex items-center gap-1 rounded-ui border border-border px-2 py-1 hover:bg-surface-2";
+  return (
+    <>
+      <button type="button" onClick={() => setCommentsOpen(true)} className={style}>
+        <MessageSquare size={14} strokeWidth={1.5} aria-hidden />
+        {t("comments.open")}
+      </button>
+      <button type="button" onClick={() => setIssuesOpen(true)} className={style}>
+        <History size={14} strokeWidth={1.5} aria-hidden />
+        {t("issues.open")}
+      </button>
+    </>
   );
 }

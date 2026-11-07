@@ -367,3 +367,111 @@ export const createTemplateWithWizard = (
   id: string,
   body: { nome: string; opzioni: WizardOptions; logo_base64?: string },
 ): Promise<TemplateDetail> => api(`${base(id)}/templates/wizard`, json("POST", body));
+
+// --- issues, comparison, review comments -------------------------------------------------
+export interface IssueSummary {
+  rev: string;
+  data: string;
+  descrizione: string;
+  created_at: string;
+  sections: number;
+  changes: number;
+}
+
+export interface ChangeRow {
+  path: string;
+  title: string;
+  status: "added" | "removed" | "modified";
+  summary: string;
+}
+
+export interface IssueDetail {
+  rev: string;
+  data: string;
+  descrizione: string;
+  changes: ChangeRow[];
+}
+
+export interface DiffOp {
+  op: "equal" | "ins" | "del";
+  text: string;
+}
+
+export interface SectionDiff {
+  path: string;
+  title: string;
+  status: "added" | "removed" | "modified";
+  was: string | null;
+  words_added: number;
+  words_removed: number;
+  ops: DiffOp[];
+}
+
+export interface Comparison {
+  a: string;
+  b: string;
+  lang: "sorgente" | "ufficiale";
+  sections: SectionDiff[];
+  unchanged: number;
+}
+
+export interface CommentThread {
+  id: string;
+  status: "open" | "resolved";
+  key: string | null;
+  lost: boolean;
+  source: string;
+  messages: { author: string; at: string; text: string }[];
+}
+
+export const listIssues = (id: string): Promise<IssueSummary[]> => api(`${base(id)}/issues`);
+
+export const createIssue = (
+  id: string,
+  body: { rev: string; data?: string; descrizione: string },
+): Promise<unknown> => api(`${base(id)}/issues`, json("POST", body));
+
+export const getIssue = (id: string, rev: string): Promise<IssueDetail> =>
+  api(`${base(id)}/issues/${enc(rev)}`);
+
+export const generateChanges = (id: string, rev: string): Promise<IssueDetail> =>
+  api(`${base(id)}/issues/${enc(rev)}/changes`, json("POST", {}));
+
+export const saveChanges = (id: string, rev: string, changes: ChangeRow[]): Promise<IssueDetail> =>
+  api(`${base(id)}/issues/${enc(rev)}/changes`, json("PUT", { changes }));
+
+export const applyChanges = (id: string, rev: string): Promise<{ descrizione: string }> =>
+  api(`${base(id)}/issues/${enc(rev)}/changes/use`, { method: "POST" });
+
+export const restoreSection = (id: string, rev: string, path: string): Promise<unknown> =>
+  api(`${base(id)}/issues/${enc(rev)}/restore`, json("POST", { path }));
+
+export const compareIssues = (
+  id: string,
+  a: string,
+  b: string,
+  lang: "sorgente" | "ufficiale",
+): Promise<Comparison> => api(`${base(id)}/compare?a=${enc(a)}&b=${enc(b)}&lang=${lang}`);
+
+export const listComments = (
+  id: string,
+  path: string,
+): Promise<{ threads: CommentThread[]; counts: { open: number; resolved: number } }> =>
+  api(`${base(id)}/comments?path=${enc(path)}`);
+
+export const addComment = (
+  id: string,
+  body: { path: string; key: string; author: string; text: string },
+): Promise<unknown> => api(`${base(id)}/comments`, json("POST", body));
+
+export const replyComment = (
+  id: string,
+  thread: string,
+  body: { path: string; author: string; text: string },
+): Promise<unknown> => api(`${base(id)}/comments/${enc(thread)}/reply`, json("POST", body));
+
+export const setCommentStatus = (
+  id: string,
+  thread: string,
+  body: { path: string; status: "open" | "resolved" },
+): Promise<unknown> => api(`${base(id)}/comments/${enc(thread)}`, json("PATCH", body));
