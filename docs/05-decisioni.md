@@ -88,16 +88,6 @@ aperto prima dell'export (caso raro, segnalato).
 | Q3 | Si può scrivere direttamente nella lingua di destinazione? | Sì, con riallineamento proposto (ADR-010) |
 | Q4 | Collaborazione in tempo reale? | No nelle prime fasi; ciclo export/import, eventualmente in M7 |
 
-## ADR-028 — Scheletro di progetto da file di configurazione (RF-09)
-**Contesto**: molti documenti devono rispettare una struttura prescritta (es. ECSS: capitoli e paragrafi obbligatori).
-**Decisione**: un file YAML `scheletro.yaml` (nella radice del progetto, copiabile e condivisibile) descrive l'albero atteso:
-ogni nodo ha `id` stabile, `titolo` (nelle lingue del progetto), `obbligatorio`, `guida` (testo di aiuto, inserito come
-commento non esportato nella sezione) e figli. La creazione del progetto genera cartelle e file con i prefissi numerici; la
-conformità si verifica per `id` memorizzato nel front matter (`scheletro: <id>`), quindi resta valida se l'utente rinomina o
-riordina. L'app non impedisce di deviare dallo scheletro: segnala soltanto. Realizzata in M2b, dopo il motore di traduzione,
-perché non dipende dal modello.
-**Conseguenze**: il workspace guadagna un campo di front matter facoltativo e un file facoltativo, senza rompere il formato esistente.
-
 ## Domande aperte
 
 | # | Domanda | Proposta di default | Stato |
@@ -233,3 +223,13 @@ esplicito in `tools/check-licenses.py`.
   il round-trip non perde nulla (fixture `protected`). La sintassi sconosciuta non-HTML è un paragrafo di testo: non c'è un blocco "Markdown" dedicato.
 - I diagrammi non hanno una vista affiancata *nell'editor* (solo nell'anteprima): il codice Mermaid è un normale blocco di codice in entrambe le modalità.
 **Conseguenze**: tradurre le etichette dei diagrammi (`diagram_label`) e l'export dei PNG sono compiti di M2/M4.
+
+## ADR-028 — Scheletro di progetto da file di configurazione (RF-09)
+**Contesto**: molti documenti devono rispettare una struttura prescritta (es. ECSS: capitoli e paragrafi obbligatori).
+**Decisione**: un file YAML `scheletro.yaml` (nella radice del progetto, copiabile e condivisibile) descrive l'albero atteso:
+ogni nodo ha `id` stabile, `titolo` (nelle lingue del progetto), `obbligatorio`, `guida` (testo di aiuto, inserito come
+commento non esportato nella sezione) e figli. La creazione del progetto genera cartelle e file con i prefissi numerici; la
+conformità si verifica per `id` memorizzato nel front matter (`scheletro: <id>`), quindi resta valida se l'utente rinomina o
+riordina. L'app non impedisce di deviare dallo scheletro: segnala soltanto. Realizzata in M2b, dopo il motore di traduzione,
+perché non dipende dal modello.
+**Conseguenze**: il workspace guadagna un campo di front matter facoltativo e un file facoltativo, senza rompere il formato esistente.
