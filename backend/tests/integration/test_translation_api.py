@@ -165,7 +165,7 @@ def settled(c: TestClient, pid: str, sec: str) -> dict:  # type: ignore[type-arg
 
 
 def seg(v: dict, key: str) -> dict:  # type: ignore[type-arg]
-    return next(s for s in v["segments"] if s["key"] == key)  # type: ignore[no-any-return]
+    return next(s for s in v["segments"] if s["key"] == key)
 
 
 def put_segment(c: TestClient, pid: str, sec: str, key: str, body: dict) -> dict:  # type: ignore[type-arg]

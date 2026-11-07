@@ -255,7 +255,7 @@ async def test_alternatives_are_distinct_and_exclude_the_current_text(env, real_
     async def chat(messages: list[dict[str, str]], **kw: Any) -> str:
         return next(replies)
 
-    client.chat = chat  # type: ignore[method-assign]
+    client.chat = chat
     assert await actions.revise(root, PROJECT, REL, "p:0", "variants", alternatives=True) == [
         "A one",
         "A two",
