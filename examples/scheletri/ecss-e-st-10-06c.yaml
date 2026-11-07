@@ -1,0 +1,52 @@
+# Struttura abbreviata di una specifica tecnica dei requisiti (in stile ECSS-E-ST-10-06C, Annex A).
+# Esempio didattico: verifica sempre i requisiti contrattuali contro la norma originale.
+nome: Specifica dei requisiti tecnici (stile ECSS)
+versione: 1
+nodi:
+  - id: introduzione
+    titolo: { it: Introduzione, en: Introduction }
+    nodi:
+      - id: scopo
+        titolo: { it: Scopo e ambito, en: Scope and purpose }
+        guida: Descrivi lo scopo del documento, il sistema a cui si riferisce e i limiti di applicazione.
+      - id: definizioni
+        titolo: { it: "Termini, definizioni e abbreviazioni", en: "Terms, definitions and abbreviated terms" }
+        guida: Elenca i termini e le sigle usati. Riporta la fonte se sono ripresi da una norma.
+  - id: documenti
+    titolo: { it: Documenti, en: Documents }
+    nodi:
+      - id: applicabili
+        titolo: { it: Documenti applicabili, en: Applicable documents }
+        guida: Documenti che contribuiscono con i loro requisiti. Indica identificativo, titolo ed edizione.
+      - id: riferimento
+        titolo: { it: Documenti di riferimento, en: Reference documents }
+        obbligatorio: false
+        guida: Documenti citati solo come informazione.
+  - id: descrizione
+    titolo: { it: Descrizione del sistema, en: System description }
+    nodi:
+      - id: contesto
+        titolo: { it: Contesto e interfacce esterne, en: Context and external interfaces }
+        guida: Inquadra il sistema nel suo ambiente e descrivi le interfacce con altri sistemi.
+      - id: modi
+        titolo: { it: Modi operativi, en: Operational modes }
+        obbligatorio: false
+  - id: requisiti
+    titolo: { it: Requisiti, en: Requirements }
+    nodi:
+      - id: funzionali
+        titolo: { it: Requisiti funzionali e prestazionali, en: Functional and performance requirements }
+        guida: Ogni requisito ha un identificativo univoco e una sola prescrizione ("shall"). Indica padre e metodo di verifica.
+      - id: interfaccia
+        titolo: { it: Requisiti di interfaccia, en: Interface requirements }
+      - id: operativi
+        titolo: { it: Requisiti operativi, en: Operational requirements }
+        obbligatorio: false
+      - id: verifica
+        titolo: { it: Requisiti di verifica, en: Verification requirements }
+  - id: tracciabilita
+    titolo: { it: Tracciabilità, en: Traceability }
+    nodi:
+      - id: matrice
+        titolo: { it: Matrice di tracciabilità, en: Traceability matrix }
+        guida: Collega ogni requisito al requisito padre e al metodo di verifica (test, analisi, ispezione, dimostrazione).
