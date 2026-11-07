@@ -19,14 +19,18 @@ from app.core.segmentation.models import SegmentedDocument
 from app.core.segmentation.reconcile import reconcile
 from app.core.segmentation.segmenter import segment
 from app.core.workspace import frontmatter
+from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.fsio import sha256_text
 from app.core.workspace.manifest import Project
+from app.core.workspace.sections import read_section, write_section
+from app.core.workspace.tree import Node, build_tree
 
+from . import glossary as glossary_mod
 from . import store
 from .llm_client import LlmClient, LlmError, LlmUnavailable
 from .queue import TranslationQueue
 from .store import SegmentFile, StoredSegment
-from .translator import PROMPT_VERSION, Context, Outcome, translate
+from .translator import PROMPT_VERSION, Context, Outcome, revise, translate
 
 Emit = Callable[[Path, dict[str, Any]], None]
 PRIORITY_EDIT, PRIORITY_VISIBLE, PRIORITY_OPEN, PRIORITY_BULK = 1, 2, 3, 4
@@ -173,10 +177,6 @@ class TranslationService:
         old = previous.segments if previous else []
         match = reconcile([(s.key, s.source_hash) for s in old], list(doc.segments))
         by_key = {s.key: s for s in old}
-        base_url, model = self._config_for(project)
-        section_title = _section_title(doc, meta)
-        note = str(meta.get("contesto") or "")
-        tone = str(meta.get("tono") or project.tono)
 
         segments: list[StoredSegment] = []
         todo: list[tuple[StoredSegment, int]] = []
@@ -211,24 +211,71 @@ class TranslationService:
         for stale in (s for s in old if s.key not in live):
             self.queue.cancel(_job_id(root, lang, rel, stale.key))
 
-        sources = doc.by_key()
+        entries = self._glossary(root)
         for stored, prio in todo:
-            seg = sources[stored.key]
-            ctx = Context(
-                project.lingua_sorgente,
-                lang,
-                tone,
-                section_title,
-                note,
-                *_previous(doc, segments, stored.key),
-            )
-            job = Job(root, rel, lang, stored.key, seg.hash, seg.source, prio, ctx, base_url, model)
+            job = self._make_job(root, project, rel, doc, segments, stored.key, prio, meta, entries)
             self.queue.submit(_job_id(root, lang, rel, stored.key), prio, job)
             self._emit(
                 root, {"type": "segment.queued", "path": rel, "lang": lang, "key": stored.key}
             )
         self._emit(root, {"type": "job.progress", "pending": self.queue.pending()})
         return result
+
+    def _make_job(
+        self,
+        root: Path,
+        project: Project,
+        rel: str,
+        doc: SegmentedDocument,
+        stored: list[StoredSegment],
+        key: str,
+        priority: int,
+        meta: dict[str, Any] | None = None,
+        entries: list[glossary_mod.Entry] | None = None,
+    ) -> Job:
+        seg = doc.by_key()[key]
+        ctx = self._context(root, project, doc, stored, key, meta, entries)
+        base_url, model = self._config_for(project)
+        return Job(
+            root, rel, project.lingua_ufficiale, key, seg.hash, seg.source, priority, ctx,
+            base_url, model,
+        )  # fmt: skip
+
+    def _context(
+        self,
+        root: Path,
+        project: Project,
+        doc: SegmentedDocument,
+        stored: list[StoredSegment],
+        key: str,
+        meta: dict[str, Any] | None = None,
+        entries: list[glossary_mod.Entry] | None = None,
+    ) -> Context:
+        if meta is None:
+            try:
+                meta = frontmatter.parse(doc.text).meta
+            except frontmatter.FrontMatterError:
+                meta = {}
+        if entries is None:
+            entries = self._glossary(root)
+        seg = doc.by_key()[key]
+        return Context(
+            project.lingua_sorgente,
+            project.lingua_ufficiale,
+            str(meta.get("tono") or project.tono),
+            _section_title(doc, meta),
+            str(meta.get("contesto") or ""),
+            *_previous(doc, stored, key),
+            non_translate=glossary_mod.do_not_translate(entries),
+            glossary=tuple(glossary_mod.relevant(entries, seg.source)),
+        )
+
+    @staticmethod
+    def _glossary(root: Path) -> list[glossary_mod.Entry]:
+        try:
+            return glossary_mod.load(root)
+        except (WorkspaceError, ValueError):
+            return []  # a broken glossary must not stop the translation
 
     # -- jobs --------------------------------------------------------------------------------
     async def _run(self, job_id: str, job: Job) -> None:
@@ -342,13 +389,42 @@ class TranslationService:
                     "pending_target": st.pending_target if st else None,
                 }
             )
+        try:
+            meta = frontmatter.parse(text).meta
+        except frontmatter.FrontMatterError:
+            meta = {}
         return {
             "path": rel,
             "lang": lang,
+            "tone": meta.get("tono") or None,
+            "project_tone": project.tono,
+            "note": str(meta.get("contesto") or ""),
             "markdown": assemble(doc, targets),
             "segments": rows,
             "pending": sum(1 for r in rows if r["status"] == "queued"),
         }
+
+    def review(self, root: Path, project: Project) -> list[dict[str, Any]]:
+        """Every translated segment of the project, for the review mode (docs/03-ui.md)."""
+        rows: list[dict[str, Any]] = []
+
+        def visit(nodes: list[Node]) -> None:
+            for node in nodes:
+                if node.kind == "chapter":
+                    visit(node.children)
+                    continue
+                try:
+                    text = (root / node.path).read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError):
+                    continue
+                view = self.translation(root, project, node.path, text)
+                for row in view["segments"]:
+                    if row["status"] == "queued" and not row["target"]:
+                        continue
+                    rows.append({**row, "path": node.path, "section": node.title})
+
+        visit(build_tree(root))
+        return rows
 
     def retranslate(self, root: Path, project: Project, rels: list[str]) -> int:
         count = 0
@@ -379,3 +455,188 @@ def _previous(doc: SegmentedDocument, stored: list[StoredSegment], key: str) -> 
         if st is not None and st.target and st.status in ("translated", "approved"):
             return sources[earlier].source, st.target
     return "", ""
+
+
+# --- author actions on one segment (RF-23, 24, 26, 28) --------------------------------------
+
+
+def _queue(seg: StoredSegment) -> None:
+    seg.status = "queued"
+    seg.reason = ""
+
+
+class SegmentActions:
+    """Edits made by the author. They never wait for the model, except ``revise``."""
+
+    def __init__(self, service: TranslationService) -> None:
+        self.service = service
+
+    def _change(
+        self,
+        root: Path,
+        project: Project,
+        rel: str,
+        key: str,
+        mutate: Callable[[StoredSegment], None],
+    ) -> StoredSegment:
+        lang = project.lingua_ufficiale
+        changed: list[StoredSegment] = []
+
+        def apply(file: SegmentFile) -> None:
+            seg = file.get(key)
+            if seg is None:
+                raise WorkspaceError("not_found", f"segment not found: {key}")
+            mutate(seg)
+            seg.updated_at = store.now()
+            changed.append(seg)
+
+        if store.update(root, lang, rel, apply) is None:
+            raise WorkspaceError("not_found", f"no translation yet for {rel}")
+        self.service._emit(
+            root,
+            {"type": "segment.updated", "path": rel, "lang": lang, "key": key,
+             "status": changed[0].status},
+        )  # fmt: skip
+        return changed[0]
+
+    def edit(self, root: Path, project: Project, rel: str, key: str, target: str) -> StoredSegment:
+        def go(seg: StoredSegment) -> None:
+            seg.target = target
+            seg.origin = "manual"
+            seg.locked = True
+            seg.status = "translated"
+            seg.pending_target = None
+            seg.reason = ""
+
+        return self._change(root, project, rel, key, go)
+
+    def lock(self, root: Path, project: Project, rel: str, key: str, locked: bool) -> StoredSegment:
+        def go(seg: StoredSegment) -> None:
+            seg.locked = locked
+
+        return self._change(root, project, rel, key, go)
+
+    def approve(self, root: Path, project: Project, rel: str, key: str) -> StoredSegment:
+        def go(seg: StoredSegment) -> None:
+            if not seg.target:
+                raise WorkspaceError("invalid_state", "nothing to approve yet")
+            seg.status = "approved"
+            seg.reason = ""
+
+        return self._change(root, project, rel, key, go)
+
+    def accept_pending(self, root: Path, project: Project, rel: str, key: str) -> StoredSegment:
+        def go(seg: StoredSegment) -> None:
+            if seg.pending_target is None:
+                raise WorkspaceError("invalid_state", "there is no proposal to accept")
+            seg.target = seg.pending_target
+            seg.pending_target = None
+            seg.origin = "mt"
+            seg.status = "translated"
+            seg.reason = ""
+
+        return self._change(root, project, rel, key, go)
+
+    def dismiss_pending(self, root: Path, project: Project, rel: str, key: str) -> StoredSegment:
+        def go(seg: StoredSegment) -> None:
+            seg.pending_target = None
+            seg.status = "translated"
+            seg.reason = ""
+
+        return self._change(root, project, rel, key, go)
+
+    def mark_diverged(self, root: Path, project: Project, rel: str, key: str) -> StoredSegment:
+        def go(seg: StoredSegment) -> None:
+            seg.status = "diverged"
+
+        return self._change(root, project, rel, key, go)
+
+    def apply_source(
+        self, root: Path, project: Project, rel: str, key: str, new_source: str
+    ) -> None:
+        """Rewrite the *source* of one segment (the translation was edited directly, RF-24).
+
+        The segment keeps its translation: it is marked as matching the new source before the
+        file is written, so the change is not taken for an edit that needs retranslation.
+        """
+        lang = project.lingua_ufficiale
+        text, digest = read_section(root, rel)
+        doc = segment(text)
+        if key not in doc.by_key():
+            raise WorkspaceError("not_found", f"segment not found: {key}")
+        updated = assemble(doc, {key: new_source})
+        new_seg = segment(updated).by_key().get(key)
+        if new_seg is None:
+            raise WorkspaceError("invalid_state", "the new text does not stay a single segment")
+
+        def go(seg: StoredSegment) -> None:
+            seg.source_hash = new_seg.hash
+            seg.status = "translated"
+            seg.reason = ""
+
+        self._change(root, project, rel, key, go)
+
+        def fix_hash(file: SegmentFile) -> None:
+            file.source_file_hash = sha256_text(updated)
+
+        store.update(root, lang, rel, fix_hash)
+        write_section(root, rel, updated, digest)
+
+    def retranslate(self, root: Path, project: Project, rel: str, key: str) -> None:
+        """Translate one segment again now. A locked one only receives a proposal."""
+        svc = self.service
+        text = (root / rel).read_text(encoding="utf-8")
+        svc.sync(root, project, rel, text, PRIORITY_EDIT)  # make sure the store is current
+        lang = project.lingua_ufficiale
+        file = store.load(root, lang, rel)
+        seg = file.get(key) if file else None
+        if file is None or seg is None:
+            raise WorkspaceError("not_found", f"segment not found: {key}")
+        if not seg.locked:
+            self._change(root, project, rel, key, _queue)
+        job = svc._make_job(root, project, rel, segment(text), file.segments, key, PRIORITY_EDIT)
+        svc.queue.submit(_job_id(root, lang, rel, key), PRIORITY_EDIT, job)
+
+    async def revise(
+        self,
+        root: Path,
+        project: Project,
+        rel: str,
+        key: str,
+        instruction: str,
+        alternatives: bool = False,
+    ) -> list[str]:
+        """Propose a rewritten translation, never saved (``alternatives``: up to 3 variants)."""
+        text = (root / rel).read_text(encoding="utf-8")
+        doc = segment(text)
+        source = doc.by_key().get(key)
+        stored = store.load(root, project.lingua_ufficiale, rel)
+        current = stored.get(key) if stored else None
+        if source is None or current is None or not current.target:
+            raise WorkspaceError("not_found", f"segment not translated yet: {key}")
+        svc = self.service
+        base_url, model = svc._config_for(project)
+        client = svc._client(base_url, model)
+        ctx = svc._context(root, project, doc, stored.segments if stored else [], key)
+        if not alternatives:
+            outcome = await revise(client, source.source, current.target, instruction, ctx)
+            if not outcome.ok:
+                raise WorkspaceError("model_refused", outcome.reason)
+            return [outcome.target]
+        variants = [
+            "Give a clearly different wording from the obvious one.",
+            "Prefer a more concise wording.",
+            "Prefer a more natural, idiomatic wording.",
+        ]
+        results = await asyncio.gather(
+            *(
+                revise(client, source.source, current.target, instruction, ctx,
+                       variant=v, temperature=0.8)
+                for v in variants
+            )
+        )  # fmt: skip
+        seen: list[str] = []
+        for r in results:
+            if r.ok and r.target not in seen and r.target != current.target:
+                seen.append(r.target)
+        return seen

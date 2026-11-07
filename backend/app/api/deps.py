@@ -25,6 +25,8 @@ STATUS = {
     "too_large": 413,
     "unreadable": 422,
     "precondition_required": 428,
+    "invalid_state": 409,
+    "model_refused": 502,
 }
 
 _locks: defaultdict[str, threading.RLock] = defaultdict(threading.RLock)

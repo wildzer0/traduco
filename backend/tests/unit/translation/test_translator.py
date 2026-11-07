@@ -1,4 +1,5 @@
 from app.core.segmentation.protect import protect
+from app.core.translation.glossary import Entry
 from app.core.translation.translator import Context, build_messages, translate
 
 CTX = Context("it", "en", tone="formale", section_title="Scopo", note="tecnici")
@@ -61,3 +62,34 @@ async def test_text_without_words_skips_the_model() -> None:
 async def test_answer_wrapped_in_source_tags_is_unwrapped() -> None:
     llm = Scripted("<source>Hello world.</source>")
     assert (await translate(llm, "Ciao mondo.", CTX)).target == "Hello world."
+
+
+GLOSSARY = (Entry(sorgente="offerta", destinazione={"en": "proposal"}, vietati={"en": ["offer"]}),)
+GCTX = Context("it", "en", glossary=GLOSSARY)
+
+
+async def test_glossary_violation_triggers_a_corrective_retry() -> None:
+    llm = Scripted("Send the offer today.", "Send the proposal today.")
+    out = await translate(llm, "Invia l'offerta oggi.", GCTX)
+    assert out.ok and out.target == "Send the proposal today." and out.attempts == 2
+    assert 'Translate "offerta" as "proposal"' in llm.calls[0][0]["content"]
+    assert "broke the glossary" in llm.calls[1][1]["content"]
+
+
+async def test_persistent_glossary_violation_ends_in_review_with_reason() -> None:
+    llm = Scripted("Send the offer today.", "Send the offer now.")
+    out = await translate(llm, "Invia l'offerta oggi.", GCTX)
+    assert not out.ok and out.reason.startswith("glossary:") and "proposal" in out.reason
+    assert out.target == "Send the offer now."  # best effort stays visible
+
+
+async def test_untranslatable_term_is_protected_by_a_placeholder() -> None:
+    ctx = Context(
+        "it",
+        "en",
+        non_translate=("ACME Pump",),
+        glossary=(Entry(sorgente="ACME Pump", non_tradurre=True),),
+    )
+    llm = Scripted("The ⟦1⟧ is ready for the test.")
+    out = await translate(llm, "La ACME Pump è pronta per il test.", ctx)
+    assert out.ok and out.target == "The ACME Pump is ready for the test."

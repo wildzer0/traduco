@@ -8,6 +8,7 @@ from typing import Literal, Protocol
 
 from app.core.segmentation.protect import PlaceholderError, Protected, protect, restore
 
+from . import glossary as glossary_mod
 from . import prompts
 
 PROMPT_VERSION = "translate@1"
@@ -47,6 +48,7 @@ class Context:
     previous_source: str = ""
     previous_target: str = ""
     non_translate: tuple[str, ...] = ()
+    glossary: tuple[glossary_mod.Entry, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -67,7 +69,8 @@ def has_translatable_text(protected: Protected) -> bool:
 def build_messages(
     ctx: Context, protected: Protected, correction: str = ""
 ) -> list[dict[str, str]]:
-    extra = ""
+    rules = glossary_mod.prompt_rules(list(ctx.glossary), ctx.target_language)
+    extra = f"\n- Glossary (mandatory):\n{rules}" if rules else ""
     system = prompts.load("translate", 1).format(
         source_language=LANGUAGES.get(ctx.source_language, ctx.source_language),
         target_language=LANGUAGES.get(ctx.target_language, ctx.target_language),
@@ -139,8 +142,74 @@ async def translate(client: Chat, source: str, ctx: Context) -> Outcome:
         if not restored.strip():
             reason = "empty translation"
             continue
+        problems = glossary_mod.violations(list(ctx.glossary), restored, ctx.target_language)
+        if problems:
+            reason = "glossary: " + "; ".join(problems)
+            correction = (
+                "Your previous answer broke the glossary: " + "; ".join(problems) + ". "
+                "Translate again following the glossary exactly."
+            )
+            continue
         return Outcome(restored, True, model=client.model, attempts=attempt)
     return Outcome(best, False, reason, model=client.model, attempts=2)
+
+
+def build_revise_messages(
+    ctx: Context,
+    original: str,
+    protected: Protected,
+    instruction: str,
+    variant: str = "",
+) -> list[dict[str, str]]:
+    rules = glossary_mod.prompt_rules(list(ctx.glossary), ctx.target_language)
+    system = prompts.load("revise", 1).format(
+        source_language=LANGUAGES.get(ctx.source_language, ctx.source_language),
+        target_language=LANGUAGES.get(ctx.target_language, ctx.target_language),
+        tone_instruction=TONES.get(ctx.tone, TONES["neutro"]),
+        extra_rules=f"\n- Glossary (mandatory):\n{rules}" if rules else "",
+    )
+    parts = [f"<original>{original}</original>", f"Instruction: {instruction}"]
+    if variant:
+        parts.append(variant)
+    parts.append(f"<source>{protected.text}</source>")
+    return [{"role": "system", "content": system}, {"role": "user", "content": "\n\n".join(parts)}]
+
+
+async def revise(
+    client: Chat,
+    original: str,
+    current: str,
+    instruction: str,
+    ctx: Context,
+    *,
+    variant: str = "",
+    temperature: float = 0.2,
+) -> Outcome:
+    """Rewrite an existing translation following ``instruction`` (RF-26). Nothing is saved here."""
+    protected = protect(current, ctx.non_translate)
+    reason = ""
+    for attempt in (1, 2):
+        extra = "" if attempt == 1 else f"IMPORTANT: {reason}. Fix this."
+        messages = build_revise_messages(ctx, original, protected, instruction, variant or extra)
+        reply = _clean(
+            await client.chat(
+                messages, temperature=temperature, max_tokens=max(64, 3 * len(current))
+            )
+        )
+        try:
+            restored = restore(reply, protected)
+        except PlaceholderError as exc:
+            reason = f"your answer broke the placeholders ({exc})"
+            continue
+        problems = glossary_mod.violations(list(ctx.glossary), restored, ctx.target_language)
+        if problems:
+            reason = "your answer broke the glossary: " + "; ".join(problems)
+            continue
+        if not restored.strip():
+            reason = "your answer was empty"
+            continue
+        return Outcome(restored, True, model=client.model, attempts=attempt)
+    return Outcome(current, False, reason, model=client.model, attempts=2)
 
 
 Status = Literal["queued", "translated", "needs_review", "approved", "diverged"]
