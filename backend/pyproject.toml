@@ -73,3 +73,4 @@ ignore_missing_imports = true
 # the template factory is mostly literal Word XML
 "tests/support/*" = ["E501"]
 "app/core/templates/wizard.py" = ["E501"]  # literal Word XML
+"tests/integration/test_import_api.py" = ["F811"]  # fixtures imported by name

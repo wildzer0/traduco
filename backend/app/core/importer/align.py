@@ -57,9 +57,13 @@ class Change:
 
 
 def _pair(
-    a: Sequence[str], b: Sequence[str], a0: int, b0: int
+    a: Sequence[str], b: Sequence[str], a0: int, b0: int, inside: bool = False
 ) -> list[tuple[int | None, int | None]]:
     """Pair the units of a changed stretch by similarity, keeping their order."""
+    if inside and len(a) == len(
+        b
+    ):  # same number each side between two matching units: rewritten in place
+        return [(a0 + n, b0 + n) for n in range(len(a))]
     pairs: list[tuple[int | None, int | None]] = []
     j = 0
     for i, text in enumerate(a):
@@ -90,7 +94,13 @@ def align(exported: Sequence[str], found: Sequence[str]) -> list[Change]:
         elif tag == "insert":
             events.extend(("added", None, j) for j in range(j1, j2))
         else:
-            for old, new in _pair(exported[i1:i2], found[j1:j2], i1, j1):
+            for old, new in _pair(
+                exported[i1:i2],
+                found[j1:j2],
+                i1,
+                j1,
+                inside=i1 > 0 and j1 > 0 and i2 < len(exported) and j2 < len(found),
+            ):
                 state = (
                     "modified"
                     if old is not None and new is not None

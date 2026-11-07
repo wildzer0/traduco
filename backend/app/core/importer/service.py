@@ -19,7 +19,7 @@ from typing import Any
 from app.core.export.errors import ExportError
 from app.core.segmentation.segmenter import segment
 from app.core.translation.llm_client import LlmError
-from app.core.translation.service import PRIORITY_EDIT, TranslationService
+from app.core.translation.service import TranslationService
 from app.core.translation.translator import Context, translate
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.fsio import atomic_write_bytes, atomic_write_text
@@ -365,13 +365,10 @@ class ImportManager:
         except WorkspaceError as exc:
             p.status, p.note = "failed", exc.message
             raise
+        # the section changed on disk: the translation catches up (nothing to do if it was seeded)
+        content, _ = read_section(root, p.section)
         if needs_sync:
-            content, _ = read_section(root, p.section)
-            self._translation.sync(root, project, p.section, content, PRIORITY_EDIT)
-        else:
-            self._translation.schedule_sync(
-                root, project, p.section, read_section(root, p.section)[0]
-            )
+            self._translation.schedule_sync(root, project, p.section, content)
 
     @staticmethod
     def _resolve(root: Path, section: str, key: str | None, source_hash: str | None) -> str | None:

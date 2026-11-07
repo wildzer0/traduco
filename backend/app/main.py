@@ -26,11 +26,13 @@ from app.api import (
     translation,
 )
 from app.api import export as export_api
+from app.api import importer as importer_api
 from app.api import settings as settings_api
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.export.errors import ExportError
 from app.core.export.service import ExportManager
+from app.core.importer.service import ImportManager
 from app.core.skeleton.model import SkeletonError
 from app.core.translation.service import LlmConfig, TranslationService
 from app.core.workspace.errors import WorkspaceError
@@ -59,9 +61,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         service.set_gate(lambda: capabilities.model_download()["state"] == "downloading")
         exports = ExportManager(service, publish=hub.publish)
         app.state.exports = exports
+        imports = ImportManager(service, publish=hub.publish)
+        app.state.imports = imports
         service.start()
         yield
         await exports.close()
+        await imports.close()
         await service.close()
         await hub.close()
 
@@ -128,6 +133,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         skeleton.router,
         templates.router,
         export_api.router,
+        importer_api.router,
         translation.router,
         events.router,
     ):
