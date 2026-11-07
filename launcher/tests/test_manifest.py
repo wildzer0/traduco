@@ -34,3 +34,10 @@ def test_unknown_platform_raises() -> None:
 def test_port_range_and_disk() -> None:
     assert MANIFEST.port_range == (8000, 8100)
     assert MANIFEST.min_free_gb > 0
+
+
+def test_models_have_tags_and_sizes() -> None:
+    sizes = [MANIFEST.model(k).size_gb for k in ("small", "default", "large")]
+    assert sizes == sorted(sizes) and all(s > 0 for s in sizes)
+    assert all(MANIFEST.model(k).tag.startswith("gemma4:") for k in ("small", "default", "large"))
+    assert MANIFEST.ollama_host == "http://127.0.0.1:11434"

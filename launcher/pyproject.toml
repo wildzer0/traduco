@@ -29,3 +29,7 @@ strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# user-facing message tables are prose, not code
+"launcher/ui.py" = ["E501"]

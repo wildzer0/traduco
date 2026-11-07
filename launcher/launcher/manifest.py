@@ -15,6 +15,13 @@ class Artifact:
 
 
 @dataclass(frozen=True)
+class Model:
+    kind: str  # small | default | large
+    tag: str
+    size_gb: float
+
+
+@dataclass(frozen=True)
 class Manifest:
     data: dict[str, object]
 
@@ -26,6 +33,16 @@ class Manifest:
     def port_range(self) -> tuple[int, int]:
         rng: list[int] = self.data["port_range"]  # type: ignore[assignment]
         return int(rng[0]), int(rng[1])
+
+    def model(self, kind: str) -> Model:
+        models: dict[str, dict[str, object]] = self.data["models"]  # type: ignore[assignment]
+        entry = models[kind]
+        return Model(kind, str(entry["tag"]), float(entry["size_gb"]))  # type: ignore[arg-type]
+
+    @property
+    def ollama_host(self) -> str:
+        section: dict[str, str] = self.data["ollama"]  # type: ignore[assignment]
+        return section["host"]
 
     def artifact(self, component: str, platform: str) -> Artifact:
         section: dict[str, object] = self.data[component]  # type: ignore[assignment]

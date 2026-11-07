@@ -69,3 +69,71 @@ def server() -> Iterator[tuple[str, Behaviour]]:
     yield f"http://127.0.0.1:{httpd.server_address[1]}/file.bin", behaviour
     httpd.shutdown()
     httpd.server_close()
+
+
+class FakeOllama:
+    """A stand-in for Ollama's HTTP API: version, tags, the NDJSON pull, and the /v1 models list."""
+
+    def __init__(self) -> None:
+        self.models: list[str] = []
+        self.pull_events: list[dict[str, object]] = [
+            {"status": "pulling manifest"},
+            {"status": "pulling abc", "total": 1000, "completed": 250},
+            {"status": "pulling abc", "total": 1000, "completed": 1000},
+            {"status": "success"},
+        ]
+        self.pulled: list[str] = []
+        self.url = ""
+        self.httpd: ThreadingHTTPServer | None = None
+
+
+@pytest.fixture
+def fake_ollama() -> Iterator[FakeOllama]:
+    import json
+
+    fake = FakeOllama()
+
+    class H(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+
+        def log_message(self, *_: object) -> None:
+            pass
+
+        def _json(self, body: object) -> None:
+            data = json.dumps(body).encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def do_GET(self) -> None:
+            if self.path == "/api/version":
+                self._json({"version": "0.0-test"})
+            elif self.path == "/api/tags":
+                self._json({"models": [{"name": m} for m in fake.models]})
+            elif self.path == "/v1/models":
+                self._json({"data": [{"id": m} for m in fake.models]})
+            else:
+                self.send_response(404)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+
+        def do_POST(self) -> None:
+            length = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(length) or b"{}")
+            fake.pulled.append(str(body.get("model")))
+            payload = b"".join(json.dumps(e).encode() + b"\n" for e in fake.pull_events)
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            if all("error" not in e for e in fake.pull_events):
+                fake.models.append(str(body.get("model")))
+
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    fake.httpd = httpd
+    fake.url = f"http://127.0.0.1:{httpd.server_address[1]}"
+    Thread(target=httpd.serve_forever, daemon=True).start()
+    yield fake
+    httpd.shutdown()
+    httpd.server_close()

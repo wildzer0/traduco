@@ -18,10 +18,92 @@ from rich.progress import (
 MESSAGES: dict[str, dict[str, str]] = {
     "step.checks": {"it": "Controlli preliminari", "en": "Preliminary checks"},
     "step.backend": {"it": "Dipendenze del backend", "en": "Backend dependencies"},
-    "step.node": {"it": "Node.js portabile", "en": "Portable Node.js"},
+    "step.pandoc": {"it": "Pandoc portabile", "en": "Portable Pandoc"},
     "step.frontend": {"it": "Interfaccia web", "en": "Web interface"},
+    "step.hardware": {"it": "Hardware e modello", "en": "Hardware and model"},
+    "step.ollama": {"it": "Ollama", "en": "Ollama"},
+    "step.model": {"it": "Modello di traduzione", "en": "Translation model"},
+    "step.office": {"it": "LibreOffice (per PDF e ODT)", "en": "LibreOffice (for PDF and ODT)"},
     "step.start": {"it": "Avvio di Traduco", "en": "Starting Traduco"},
+    "hardware.found": {
+        "it": "{ram} GB di RAM, {gpu}",
+        "en": "{ram} GB of RAM, {gpu}",
+    },
+    "hardware.nogpu": {"it": "nessuna GPU rilevata", "en": "no GPU detected"},
+    "hardware.gpu": {"it": "{name} ({gb} GB)", "en": "{name} ({gb} GB)"},
+    "model.chosen": {
+        "it": "Modello scelto: {model} ({why})",
+        "en": "Chosen model: {model} ({why})",
+    },
+    "model.why.low_memory": {
+        "it": "poca memoria: qualità ridotta, puoi cambiarlo con --model",
+        "en": "little memory: reduced quality, change it with --model",
+    },
+    "model.why.ram_or_gpu": {"it": "adatto a questo computer", "en": "suits this computer"},
+    "model.why.gpu_large": {
+        "it": "GPU potente: modello più grande",
+        "en": "powerful GPU: larger model",
+    },
+    "model.why.requested": {"it": "scelto da te", "en": "chosen by you"},
+    "model.why.saved": {"it": "dalle tue impostazioni", "en": "from your settings"},
+    "ollama.external": {
+        "it": "Uso il server di modelli già configurato: {url}",
+        "en": "Using the model server already configured: {url}",
+    },
+    "ollama.running": {"it": "Ollama è già attivo", "en": "Ollama is already running"},
+    "ollama.starting": {"it": "Avvio di Ollama", "en": "Starting Ollama"},
+    "ollama.ask": {
+        "it": "Ollama (il programma che esegue il modello sul tuo computer) non è installato.\n"
+        "      Installarlo adesso? Comando: {command}",
+        "en": "Ollama (the program that runs the model on your computer) is not installed.\n"
+        "      Install it now? Command: {command}",
+    },
+    "ollama.prompt": {"it": "Installare Ollama? [s/N] ", "en": "Install Ollama? [y/N] "},
+    "ollama.nocommand": {
+        "it": "Ollama non è installato e non posso installarlo da solo su questo sistema: "
+        "scaricalo da https://ollama.com/download e rilancia, oppure imposta un altro server in Impostazioni.",
+        "en": "Ollama is not installed and I cannot install it by myself on this system: "
+        "download it from https://ollama.com/download and run again, or set another server in Settings.",
+    },
+    "ollama.declined": {
+        "it": "Ollama non installato: Traduco parte lo stesso. In Impostazioni puoi indicare un altro "
+        "server di modelli; per installare Ollama in seguito usa --update.",
+        "en": "Ollama not installed: Traduco starts anyway. In Settings you can point to another model "
+        "server; to install Ollama later use --update.",
+    },
+    "ollama.offline": {
+        "it": "Modalità --offline: Ollama non è disponibile, il modello non sarà usabile.",
+        "en": "--offline mode: Ollama is not available, the model will not be usable.",
+    },
+    "model.have": {
+        "it": "Il modello {model} è già scaricato",
+        "en": "Model {model} is already downloaded",
+    },
+    "model.background": {
+        "it": "Scarico {model} (circa {gb} GB) in sottofondo: puoi già usare l'editor, "
+        "la traduzione parte appena il modello è pronto.",
+        "en": "Downloading {model} (about {gb} GB) in the background: you can use the editor now, "
+        "translation starts as soon as the model is ready.",
+    },
+    "model.progress": {"it": "Modello {model}: {pct}%", "en": "Model {model}: {pct}%"},
+    "model.done": {"it": "Modello {model} pronto", "en": "Model {model} ready"},
+    "model.none": {"it": "Nessun modello da preparare", "en": "No model to prepare"},
+    "office.found": {"it": "Trovato: {path}", "en": "Found: {path}"},
+    "office.absent": {
+        "it": "Non installato: PDF e ODT resteranno disattivati (il DOCX funziona). "
+        "Per averli installa LibreOffice da https://www.libreoffice.org/download.",
+        "en": "Not installed: PDF and ODT stay disabled (DOCX works). "
+        "To get them install LibreOffice from https://www.libreoffice.org/download.",
+    },
+    "pandoc.have": {
+        "it": "Pandoc {version} già installato",
+        "en": "Pandoc {version} already installed",
+    },
     "done": {"it": "già pronto", "en": "already done"},
+    "prepared": {
+        "it": "Preparazione completata (--prepare-only): niente viene avviato.",
+        "en": "Preparation finished (--prepare-only): nothing is started.",
+    },
     "downloading": {"it": "Download di {name}", "en": "Downloading {name}"},
     "ready": {
         "it": "Traduco è attivo su {url} - premi Ctrl+C per fermarlo.",
@@ -32,10 +114,6 @@ MESSAGES: dict[str, dict[str, str]] = {
     "reset": {
         "it": "Ripristino di .runtime/ (i progetti non vengono toccati)",
         "en": "Resetting .runtime/ (your projects are not touched)",
-    },
-    "model_note": {
-        "it": "Nota: la scelta del modello e Ollama arrivano in una prossima versione.",
-        "en": "Note: model selection and Ollama arrive in a later version.",
     },
     "E001": {
         "it": "Sistema non supportato: {platform}.",
@@ -104,6 +182,37 @@ MESSAGES: dict[str, dict[str, str]] = {
     "E021.fix": {
         "it": "Riprova con --update; i dettagli sono nel log.",
         "en": "Try again with --update; details are in the log.",
+    },
+    "E040": {
+        "it": "Installazione di Ollama non riuscita ({what}).",
+        "en": "Ollama installation failed ({what}).",
+    },
+    "E040.fix": {
+        "it": "Installalo a mano da https://ollama.com/download e rilancia; oppure imposta un "
+        "altro server di modelli in Impostazioni.",
+        "en": "Install it by hand from https://ollama.com/download and run again; or set another "
+        "model server in Settings.",
+    },
+    "E041": {"it": "Ollama non si avvia.", "en": "Ollama does not start."},
+    "E041.fix": {
+        "it": "Guarda .runtime/logs/ollama.log; se la porta 11434 è occupata chiudi l'altro programma.",
+        "en": "See .runtime/logs/ollama.log; if port 11434 is in use close the other program.",
+    },
+    "E042": {
+        "it": "Download del modello {model} non riuscito ({reason}).",
+        "en": "Download of model {model} failed ({reason}).",
+    },
+    "E042.fix": {
+        "it": "Controlla la connessione (proxy: HTTPS_PROXY per Ollama) e rilancia: il download riprende.",
+        "en": "Check your connection (proxy: HTTPS_PROXY for Ollama) and run again: the download resumes.",
+    },
+    "E043": {
+        "it": "Spazio insufficiente per il modello {model}: servono circa {need} GB, disponibili {have} GB.",
+        "en": "Not enough space for model {model}: about {need} GB needed, {have} GB available.",
+    },
+    "E043.fix": {
+        "it": "Libera spazio oppure scegli un modello più piccolo con --model gemma4:e2b.",
+        "en": "Free up space or choose a smaller model with --model gemma4:e2b.",
     },
     "E099": {
         "it": "Errore imprevisto: {what}.",
@@ -176,9 +285,28 @@ class UI:
     def plan(self, total: int) -> None:
         self._total, self._n = total, 0
 
+    def skip(self, count: int) -> None:
+        """Steps that do not apply this time still count, so the numbering stays [n/total]."""
+        self._n += count
+
     def step(self, key: str) -> None:
         self._n += 1
         self.console.print(f"[bold][{self._n}/{self._total}][/bold] {self.t(key)}...")
+
+    def confirm(
+        self, question_key: str, prompt_key: str, assume_yes: bool, **params: object
+    ) -> bool:
+        """Ask a yes/no question. Without a terminal the answer is no, unless ``--yes`` was given."""
+        self.info(self.t(question_key, **params))
+        if assume_yes:
+            return True
+        if not sys.stdin or not sys.stdin.isatty():
+            return False
+        try:
+            answer = input("      " + self.t(prompt_key)).strip().lower()
+        except EOFError:
+            return False
+        return answer in ("s", "si", "sì", "y", "yes")
 
     def info(self, text: str) -> None:
         self.console.print(f"      {text}")

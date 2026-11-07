@@ -42,9 +42,17 @@ sha256 = "f436d18bebbfb3ddd326597686dacab9fac5dc23bd060495020f35a28a43a7c3"
 url = "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-windows-x86_64.zip"
 sha256 = "23e1f2e978a3df80db8bf65c9c59534f41a23140480cfb4f783a882ab7dc6a4e"
 
-# Ollama model tags (docs/02-architettura.md, hardware table). NOT VERIFIED against the Ollama library yet:
-# confirm before M4b.
-[models]
-small = "gemma4:e2b"
-default = "gemma4:e4b"
-large = "gemma4:26b-a4b"
+# Ollama model tags (docs/02-architettura.md, hardware table). The three tags were checked against the
+# Ollama library on 2026-11-07 (ollama.com/library/gemma4/tags); sizes are the download sizes, rounded up.
+[models.small]
+tag = "gemma4:e2b"
+size_gb = 5
+[models.default]
+tag = "gemma4:e4b"
+size_gb = 7
+[models.large]
+tag = "gemma4:26b-a4b"
+size_gb = 16
+
+[ollama]
+host = "http://127.0.0.1:11434"

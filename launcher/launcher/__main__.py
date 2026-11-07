@@ -25,7 +25,19 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--update", action="store_true", help="re-sync dependencies and rebuild the frontend"
     )
-    parser.add_argument("--model", metavar="TAG", help="LLM model tag (arrives with milestone M4b)")
+    parser.add_argument(
+        "--model",
+        metavar="TAG",
+        help="Ollama model to use instead of the one chosen for this computer",
+    )
+    parser.add_argument(
+        "--yes", action="store_true", help="answer yes to questions (install Ollama) without asking"
+    )
+    parser.add_argument(
+        "--prepare-only",
+        action="store_true",
+        help="install everything, do not start (offline bundle)",
+    )
     parser.add_argument(
         "--port", type=int, metavar="N", help="port to listen on (default: first free from 8000)"
     )
@@ -53,13 +65,11 @@ def run(args: argparse.Namespace, ui: UI, root: Path) -> int:
     )  # fmt: skip
     try:
         log.write(f"launcher start, args={sys.argv[1:]}")
-        if args.model:
-            ui.info(ui.t("model_note"))
         if args.reset:
             ui.info(ui.t("reset"))
             steps.reset_runtime(ctx)
             paths.ensure()
-        ui.plan(5)
+        ui.plan(9)
 
         ui.step("step.checks")
         port = steps.preflight(ctx)
@@ -68,19 +78,30 @@ def run(args: argparse.Namespace, ui: UI, root: Path) -> int:
         if not steps.backend_sync(ctx):
             ui.info(ui.t("done"))
 
-        build = steps.frontend_needs_build(ctx)
-        ui.step("step.node")
-        if not build or not steps.ensure_node(ctx):
+        ui.step("step.pandoc")
+        if not steps.ensure_pandoc(ctx):
             ui.info(ui.t("done"))
 
         ui.step("step.frontend")
-        if build:
+        if steps.frontend_needs_build(ctx):
+            steps.ensure_node(ctx)
             steps.build_frontend(ctx)
         else:
             ui.info(ui.t("done"))
 
+        if args.prepare_only:
+            ui.info(ui.t("prepared"))
+            return 0
+
+        ui.step("step.hardware")
+        ctx.llm = steps.setup_llm(ctx, args.model, args.yes)  # also runs the Ollama and model steps
+
+        ui.step("step.office")
+        office = steps.find_libreoffice()
+        ui.info(ui.t("office.found", path=office) if office else ui.t("office.absent"))
+
         ui.step("step.start")
-        return serve(ctx, port, open_browser=not args.no_browser)
+        return serve(ctx, port, open_browser=not args.no_browser, office=office)
     except LauncherError as err:
         log.write(f"error {err.code} {err.params}")
         ui.error(err, log.path)

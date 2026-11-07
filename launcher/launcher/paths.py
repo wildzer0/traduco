@@ -30,6 +30,24 @@ class Paths:
         return self.runtime / "node"
 
     @property
+    def pandoc(self) -> Path:
+        return self.runtime / "pandoc"
+
+    @property
+    def pandoc_bin(self) -> Path:
+        return self.pandoc / ("pandoc.exe" if sys.platform == "win32" else "bin/pandoc")
+
+    @property
+    def model_state(self) -> Path:
+        """Progress of the model download, read by the backend for the interface."""
+        return self.runtime / "model.json"
+
+    @property
+    def ollama_models(self) -> Path:
+        """Model files of an offline bundle, used when the launcher starts Ollama itself."""
+        return self.runtime / "ollama-models"
+
+    @property
     def state_file(self) -> Path:
         return self.runtime / "state.json"
 
