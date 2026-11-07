@@ -1,0 +1,14 @@
+nome: Manuale impianto di pompaggio
+lingua_sorgente: it
+lingua_ufficiale: en
+tono: formale
+template_predefinito: manuale
+metadati:
+  codice_documento: DOC-2026-014
+  revisione: "02"
+  cliente: ACME Ltd
+  autore: Mario Rossi
+  data: 2026-11-07
+revisioni:
+  - { rev: "01", data: 2026-09-15, descrizione: Prima emissione }
+  - { rev: "02", data: 2026-11-07, descrizione: Aggiornato capitolo 2 }

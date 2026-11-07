@@ -1,0 +1,13 @@
+- sorgente: offerta
+  destinazione: { en: proposal }
+  vietati: { en: [offer] }
+  note: Termine contrattuale concordato con il cliente
+- sorgente: ACME Pump
+  non_tradurre: true
+- sorgente: collaudo
+  destinazione: { en: acceptance test }
+  vietati: { en: [testing] }
+- sorgente: pompa di mandata
+  destinazione: { en: discharge pump }
+- sorgente: messa in servizio
+  destinazione: { en: commissioning }
