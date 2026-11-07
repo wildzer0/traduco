@@ -94,3 +94,29 @@ aperto prima dell'export (caso raro, segnalato).
 | --- | --- | --- | --- |
 | Q5 | Quali documenti e template reali usare come banco di prova? | Fixture inventate in M4, sostituite da quelle reali quando disponibili | rimandata |
 | Q6 | Nome definitivo del prodotto | "Traduco" provvisorio | rimandata |
+
+## ADR-013 — Font OFL ammessi come asset
+**Contesto**: `03-ui.md` impone Inter e IBM Plex Mono, licenza OFL-1.1, che non è nell'elenco di AGENTS.md.
+**Decisione**: OFL-1.1 è ammessa **solo per i file font** inclusi nel build (pacchetti `@fontsource/*`), non per librerie di codice.
+`tools/check-licenses.py` ha un'eccezione esplicita limitata a questi pacchetti.
+**Conseguenze**: nessun CDN; la licenza OFL va riportata in `NOTICE`/documentazione di terze parti al rilascio.
+
+## ADR-014 — Il launcher non è "codice di runtime"
+**Contesto**: la regola 1 vieta chiamate di rete esterne a runtime, ma il launcher deve scaricare uv, Node, Pandoc, modelli.
+**Decisione**: il launcher è tooling di installazione, vincolato da checksum SHA-256 e `--offline`; l'app (backend e frontend) non
+contatta mai la rete esterna.
+**Conseguenze**: i download sono confinati in `launcher/` e `downloads.py`; un test impedisce import di client HTTP di rete nel backend.
+
+## ADR-015 — Versioni toolchain fissate in M0
+**Decisione**: Python 3.12, Node 24 LTS, pnpm via corepack (`packageManager`), uv fissato nel bootstrap, Pandoc 3.13 (solo nel
+manifest in M0, installato dal launcher in M4b). Dipendenze con lockfile (`uv.lock`, `pnpm-lock.yaml`).
+Dipendenze UI (Radix, cmdk, lucide, dnd-kit, CodeMirror, Milkdown) aggiunte dalla milestone che le usa.
+**Conseguenze**: aggiornamenti di versione = nuovo ADR o nota nel changelog.
+
+## ADR-016 — Fake LLM con sola libreria standard
+**Decisione**: `tools/fake-llm` usa `http.server` (zero dipendenze) così il launcher e la CI lo avviano senza installare nulla.
+Modalità via `FAKE_LLM_MODE` (`ok|error|slow|glossary-violation`) e override per richiesta con l'header `X-Fake-Mode`.
+
+## ADR-017 — Versioning e rilasci
+**Decisione**: SemVer 0.x; tag annotato `vX.Y.0` a ogni milestone completata (M0 = v0.1.0, M1 = v0.2.0, …), voce in
+`CHANGELOG.md`. Lavoro su `main`, Conventional Commits in inglese. Il push (anche dei tag) avviene solo su conferma del committente.

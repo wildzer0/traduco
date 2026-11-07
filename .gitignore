@@ -1,0 +1,19 @@
+.runtime/
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+build/
+.env
+*.log
+.DS_Store
+# Workspace artefacts when a project lives inside the repo
+.traduco/cache/
+.traduco/tm.sqlite

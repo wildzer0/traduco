@@ -1,0 +1,6 @@
+Traduco
+Copyright 2026 The Traduco contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+Pandoc and LibreOffice (GPL/LGPL/MPL) are used only as external executables
+invoked as separate processes; they are not linked or distributed as libraries.
