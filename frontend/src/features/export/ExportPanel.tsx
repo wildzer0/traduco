@@ -186,6 +186,7 @@ export function ExportPanel({
           <option value="sorgente">
             {t("export.language.sorgente", { language: language(project?.lingua_sorgente) })}
           </option>
+          <option value="bilingue">{t("export.language.bilingue")}</option>
           {languages
             .filter((l) => l.role === "additional")
             .map((l) => (

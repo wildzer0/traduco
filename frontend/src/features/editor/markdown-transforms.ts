@@ -1,4 +1,5 @@
 import { type CommandId, DIAGRAM_TEMPLATE, TABLE_TEMPLATE } from "./commands";
+import { tableEdit } from "./table-edit";
 
 /** A text edit plus where to put the selection afterwards (offsets in the *new* document). */
 export interface Edit {
@@ -178,5 +179,9 @@ export function commandEdits(doc: string, from: number, to: number, cmd: Command
       return insertFootnote(doc, to);
     case "image":
       return null; // handled by the shell: needs a file
+    default: {
+      const edit = tableEdit(doc, from, cmd);
+      return edit ? [edit] : null;
+    }
   }
 }

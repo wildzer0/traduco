@@ -92,3 +92,29 @@ def test_exporting_in_an_additional_language(xapi: TestClient, tmp_path: Path) -
     assert "[EN]" in text  # the fake model's marker: translated text, not the source
     bad = run_export(xapi, pid, scope="project", language="fr")
     assert bad["state"] == "failed" and bad["error"]["code"] == "invalid_language"
+
+
+def test_the_bilingual_export_puts_source_and_translation_side_by_side(
+    xapi: TestClient, tmp_path: Path
+) -> None:
+    from tests.integration.test_export_api import draw_diagrams
+
+    pid = example(xapi)
+    draw_diagrams(xapi, pid, tmp_path / "ws")
+    status = run_export(xapi, pid, scope="project", language="bilingue")
+    assert status["state"] == "done", status
+    assert any("Two columns" in w for w in status["warnings"])
+    out = tmp_path / "bi.docx"
+    out.write_bytes(xapi.get(f"/api/projects/{pid}/export/{status['id']}/download").content)
+    doc = Document(str(out))
+    tables = [
+        t for t in doc.tables if len(t.columns) == 2 and t.rows[0].cells[0].text.strip() == "it"
+    ]
+    assert tables and tables[0].rows[0].cells[1].text.strip() == "en"
+    row = tables[0].rows[1]
+    assert row.cells[1].text.startswith("[EN]") and not row.cells[0].text.startswith("[EN]")
+    assert "|" not in row.cells[0].text
+    # a document of pairs cannot be imported back: no snapshot is kept for it
+    assert not any(
+        "bilingue" in f.read_text() for f in (tmp_path / "ws" / pid / ".traduco").rglob("map.json")
+    )

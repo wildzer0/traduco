@@ -14,7 +14,17 @@ export type CommandId =
   | "quote"
   | "link"
   | "rule"
-  | "diagram";
+  | "diagram"
+  | "tableRowAbove"
+  | "tableRowBelow"
+  | "tableColLeft"
+  | "tableColRight"
+  | "tableDeleteRow"
+  | "tableDeleteCol"
+  | "tableAlignLeft"
+  | "tableAlignCenter"
+  | "tableAlignRight"
+  | "tableDelete";
 
 /** What the editor shell needs from whichever mode is active. */
 export interface EditorHandle {

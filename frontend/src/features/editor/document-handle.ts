@@ -12,10 +12,22 @@ import {
   wrapInHeadingCommand,
   wrapInOrderedListCommand,
 } from "@milkdown/kit/preset/commonmark";
-import { insertTableCommand } from "@milkdown/kit/preset/gfm";
+import {
+  addColAfterCommand,
+  addColBeforeCommand,
+  addRowAfterCommand,
+  addRowBeforeCommand,
+  deleteSelectedCellsCommand,
+  insertTableCommand,
+  selectColCommand,
+  selectRowCommand,
+  selectTableCommand,
+  setAlignCommand,
+} from "@milkdown/kit/preset/gfm";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import { callCommand, insert } from "@milkdown/kit/utils";
 import { type CommandId, DIAGRAM_TEMPLATE, type EditorHandle } from "./commands";
+import { isTableCommand } from "./table-edit";
 
 /** Commands of Document (WYSIWYG) mode, implemented on Milkdown / ProseMirror. */
 export function createDocumentHandle(editor: Editor): EditorHandle {
@@ -43,7 +55,53 @@ export function createDocumentHandle(editor: Editor): EditorHandle {
     v.focus();
   };
 
+  /** Row and column of the cell holding the cursor, or null outside a table. */
+  const cell = (): { row: number; col: number } | null => {
+    const $from = view().state.selection.$from;
+    for (let depth = $from.depth; depth > 0; depth--) {
+      const name = $from.node(depth).type.name;
+      if (name === "table_row" || name === "table_header_row") {
+        return { row: $from.index(depth - 1), col: $from.index(depth) };
+      }
+    }
+    return null;
+  };
+
+  const table = (cmd: CommandId) => {
+    const at = cell();
+    if (!at) return;
+    const call = (key: Parameters<typeof callCommand>[0], payload?: unknown) =>
+      editor.action(callCommand(key, payload as never));
+    switch (cmd) {
+      case "tableRowAbove":
+        return void call(addRowBeforeCommand.key);
+      case "tableRowBelow":
+        return void call(addRowAfterCommand.key);
+      case "tableColLeft":
+        return void call(addColBeforeCommand.key);
+      case "tableColRight":
+        return void call(addColAfterCommand.key);
+      case "tableDeleteRow":
+        if (at.row === 0) return; // the header row stays
+        call(selectRowCommand.key, { index: at.row });
+        return void call(deleteSelectedCellsCommand.key);
+      case "tableDeleteCol":
+        call(selectColCommand.key, { index: at.col });
+        return void call(deleteSelectedCellsCommand.key);
+      case "tableAlignLeft":
+        return void call(setAlignCommand.key, "left");
+      case "tableAlignCenter":
+        return void call(setAlignCommand.key, "center");
+      case "tableAlignRight":
+        return void call(setAlignCommand.key, "right");
+      case "tableDelete":
+        call(selectTableCommand.key);
+        return void call(deleteSelectedCellsCommand.key);
+    }
+  };
+
   const exec = (cmd: CommandId) => {
+    if (isTableCommand(cmd)) return table(cmd);
     switch (cmd) {
       case "bold":
         return void editor.action(callCommand(toggleStrongCommand.key));

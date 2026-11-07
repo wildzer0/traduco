@@ -10,6 +10,7 @@ import {
   ListChecks,
   Superscript,
   Table,
+  Table2,
   Wand2,
 } from "lucide-react";
 import { type MessageKey, useT } from "../../lib/i18n";
@@ -151,6 +152,23 @@ export function Toolbar({ mode, onMode, onCommand, onAssist, onCheck }: Props) {
           item("diagram", "toolbar.diagram"),
           item("link", "toolbar.link"),
           item("rule", "toolbar.rule"),
+        ]}
+        onPick={onCommand}
+      />
+      <Menu
+        label={t("toolbar.tableMenu")}
+        icon={<Table2 {...ICON} />}
+        items={[
+          item("tableRowAbove", "toolbar.tableRowAbove"),
+          item("tableRowBelow", "toolbar.tableRowBelow"),
+          item("tableColLeft", "toolbar.tableColLeft"),
+          item("tableColRight", "toolbar.tableColRight"),
+          item("tableDeleteRow", "toolbar.tableDeleteRow"),
+          item("tableDeleteCol", "toolbar.tableDeleteCol"),
+          item("tableAlignLeft", "toolbar.tableAlignLeft"),
+          item("tableAlignCenter", "toolbar.tableAlignCenter"),
+          item("tableAlignRight", "toolbar.tableAlignRight"),
+          item("tableDelete", "toolbar.tableDelete"),
         ]}
         onPick={onCommand}
       />

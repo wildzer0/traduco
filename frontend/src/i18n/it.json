@@ -516,5 +516,17 @@
   "languages.add": "Aggiungi una lingua",
   "languages.save": "Salva",
   "languages.saved": "Salvato",
-  "palette.language": "Mostra la traduzione in {language}"
+  "palette.language": "Mostra la traduzione in {language}",
+  "export.language.bilingue": "Due colonne: sorgente | traduzione",
+  "toolbar.tableMenu": "Modifica la tabella sotto il cursore",
+  "toolbar.tableRowAbove": "Aggiungi una riga sopra",
+  "toolbar.tableRowBelow": "Aggiungi una riga sotto",
+  "toolbar.tableColLeft": "Aggiungi una colonna a sinistra",
+  "toolbar.tableColRight": "Aggiungi una colonna a destra",
+  "toolbar.tableDeleteRow": "Elimina la riga",
+  "toolbar.tableDeleteCol": "Elimina la colonna",
+  "toolbar.tableAlignLeft": "Allinea la colonna a sinistra",
+  "toolbar.tableAlignCenter": "Centra la colonna",
+  "toolbar.tableAlignRight": "Allinea la colonna a destra",
+  "toolbar.tableDelete": "Elimina la tabella"
 }

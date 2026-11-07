@@ -18,9 +18,9 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Literal
 
+from app.core.export import bilingual, office, web
 from app.core.export import combine as combine_mod
 from app.core.export import compose as compose_mod
-from app.core.export import office, web
 from app.core.export.errors import ExportError
 from app.core.export.pandoc import default_reference_doc, find_pandoc, run_pandoc
 from app.core.importer.snapshot import Part, build_units
@@ -170,7 +170,11 @@ class ExportManager:
     async def _build(
         self, job: ExportJob, root: Path, project: Project, req: ExportRequest
     ) -> Path:
-        if req.language not in ("ufficiale", "sorgente"):  # an additional language (RF-21b)
+        if req.language not in (
+            "ufficiale",
+            "sorgente",
+            "bilingue",
+        ):  # an additional language (RF-21b)
             try:
                 project = project.for_language(req.language)
             except ValueError as exc:
@@ -178,7 +182,8 @@ class ExportManager:
                     "invalid_language", f"Language not configured: {req.language}"
                 ) from exc
             req = replace(req, language="ufficiale")  # from here on it is "the target language"
-        official = req.language == "ufficiale"
+        two_columns = req.language == "bilingue"  # source | translation (RF-64)
+        official = req.language in ("ufficiale", "bilingue")
         lang = project.lingua_ufficiale if official else project.lingua_sorgente
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")  # also names the snapshot
         parts: list[Part] = []
@@ -202,11 +207,18 @@ class ExportManager:
                 continue
             source_text = (root / node.path).read_text(encoding="utf-8")
             text = source_text
+            view: dict[str, Any] = {}
             if official:
-                text = self._translation.translation(root, project, node.path, text)["markdown"]
+                view = self._translation.translation(root, project, node.path, text)
+                text = view["markdown"]
             doc = frontmatter.parse(text)
             title = str(doc.meta.get("title") or node.title)
-            items.append(combine_mod.Item("section", node.path, title, depth, doc.body))
+            body = doc.body
+            if two_columns:
+                body = bilingual.build_body(
+                    source_text, bilingual.targets_of(view), project.lingua_sorgente, lang
+                )
+            items.append(combine_mod.Item("section", node.path, title, depth, body))
             parts.append(Part("section", node.path, title, text, source_text))
 
         self._step(job, 65, "fields", root)
@@ -223,13 +235,18 @@ class ExportManager:
         self._step(job, 75, "document", root)
         combined = combine_mod.combine(root, items)
         job.warnings.extend(combined.warnings)
+        if two_columns:
+            job.warnings.append(
+                "Two columns: code blocks, tables and diagrams are not in the bilingual document."
+            )
         output = await asyncio.to_thread(
             self._render, root, project, req, combined, fields, revisions, lang, job, stamp
         )
         if req.format in WEB_FORMATS:
             return output  # nothing to import back from these: no snapshot, no conversion
-        self._step(job, 95, "snapshot", root)
-        self._snapshot(root, req, combined, output, build_units(parts), fields, lang, stamp)
+        if not two_columns:  # a table of pairs is not something a reviewer sends back to import
+            self._step(job, 95, "snapshot", root)
+            self._snapshot(root, req, combined, output, build_units(parts), fields, lang, stamp)
         if req.format != "docx":
             self._step(job, 97, "convert", root)
             output = await asyncio.to_thread(office.convert, output, req.format, output.parent)

@@ -113,3 +113,43 @@ describe("Document mode commands", () => {
     });
   });
 });
+
+describe("Document mode table commands (RF-12)", () => {
+  const TABLE = "| A | B |\n| --- | --- |\n| 1 | 2 |\n";
+  // offsets: ProseMirror positions are not text offsets, so find the cell holding "1"
+  async function inCell(cmd: CommandId, text: string): Promise<string> {
+    let out = "";
+    await withEditor(TABLE, (editor) => {
+      const v = editor.ctx.get(editorViewCtx);
+      let pos = -1;
+      v.state.doc.descendants((node, at) => {
+        if (node.isText && node.text === text) pos = at + 1;
+      });
+      select(editor, pos);
+      createDocumentHandle(editor).run(cmd);
+      out = canonicalize(serializeBody(editor));
+    });
+    return out;
+  }
+
+  it("adds a row and a column next to the cursor", async () => {
+    const rows = (await inCell("tableRowBelow", "1")).trim().split("\n");
+    expect(rows).toHaveLength(4);
+    const cols = (await inCell("tableColRight", "A")).trim().split("\n")[0] as string;
+    expect(cols.split("|").length - 2).toBe(3);
+  });
+
+  it("deletes a column but keeps the header row when asked to delete it", async () => {
+    const out = await inCell("tableDeleteCol", "B");
+    expect(out.trim().split("\n")[0]).toBe("| A |");
+    expect(await inCell("tableDeleteRow", "A")).toContain("| A | B |");
+  });
+
+  it("aligns a column", async () => {
+    expect((await inCell("tableAlignRight", "B")).split("\n")[1]).toMatch(/-:/);
+  });
+
+  it("does nothing when the cursor is not in a table", async () => {
+    expect(await apply("testo\n", "tableRowBelow", 2)).toBe("testo\n");
+  });
+});
