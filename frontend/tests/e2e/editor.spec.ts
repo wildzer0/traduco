@@ -123,7 +123,10 @@ test("a clash between unsaved typing and an outside change offers reload or keep
   await page.keyboard.type("Prima");
   await waitSaved(page);
   await page.keyboard.type(" e la mia aggiunta");
+  // Right after typing: the editor has not reported the text yet. The outside change must still
+  // be treated as a clash, never as "nothing unsaved" (which would reload and drop the keystrokes).
   writeProjectFile("conflitto", FILE, "---\ntitle: Scopo\n---\n\nVersione esterna\n");
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await expect(page.getByText("Questo file è stato modificato fuori dall'app.")).toBeVisible({
     timeout: 15_000,
   });

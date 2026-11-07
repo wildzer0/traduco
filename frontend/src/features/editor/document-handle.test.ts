@@ -82,6 +82,25 @@ describe("Document mode commands", () => {
     expect(out).not.toContain("\\[");
   });
 
+  it("reports an edit immediately, long before the debounced markdown arrives", async () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    const edits: string[] = [];
+    const changes: string[] = [];
+    const editor = await createDocumentEditor({
+      root,
+      markdown: "testo\n",
+      onEdit: () => edits.push("edit"),
+      onChange: (md) => changes.push(md),
+    });
+    select(editor, 1, 4); // a range: bold on a bare cursor only sets a stored mark
+    createDocumentHandle(editor).run("bold");
+    expect(edits.length).toBeGreaterThan(0);
+    expect(changes).toHaveLength(0); // the text arrives later (milkdown debounces it)
+    await editor.destroy();
+    root.remove();
+  });
+
   it("reports and restores the top-level block index", async () => {
     await withEditor("# T\n\nuno\n\ndue\n", (editor) => {
       const h = createDocumentHandle(editor);

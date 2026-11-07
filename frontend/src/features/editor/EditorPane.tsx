@@ -304,6 +304,7 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
             sectionPath={path}
             label={t("editor.body")}
             onChange={(body) => changed(front.current ? `${front.current}\n${body}` : body)}
+            onEdit={() => saver.touch()}
             onSlash={setSlash}
             onReady={(h) => {
               handle.current = h;

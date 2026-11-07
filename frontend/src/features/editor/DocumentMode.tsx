@@ -13,6 +13,8 @@ interface Props {
   projectId: string;
   sectionPath: string;
   onChange: (body: string) => void;
+  /** Immediate edit signal (see Autosaver.touch). */
+  onEdit: () => void;
   onReady: (handle: EditorHandle) => void;
   onSlash: (state: SlashState | null) => void;
   label: string;
@@ -26,13 +28,14 @@ export function DocumentMode({
   projectId,
   sectionPath,
   onChange,
+  onEdit,
   onReady,
   onSlash,
   label,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
-  const callbacks = useRef({ onChange, onReady, onSlash });
-  callbacks.current = { onChange, onReady, onSlash };
+  const callbacks = useRef({ onChange, onEdit, onReady, onSlash });
+  callbacks.current = { onChange, onEdit, onReady, onSlash };
 
   // Created once per mount; the shell remounts (key) to load other content.
   // biome-ignore lint/correctness/useExhaustiveDependencies: see above
@@ -49,6 +52,7 @@ export function DocumentMode({
       markdown,
       label,
       onChange: (md) => callbacks.current.onChange(md),
+      onEdit: () => callbacks.current.onEdit(),
     }).then((created) => {
       if (cancelled) return void created.destroy();
       editor = created;

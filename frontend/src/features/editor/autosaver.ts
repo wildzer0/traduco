@@ -27,6 +27,8 @@ export class Autosaver {
   private inFlight: Promise<void> | null = null;
   private conflict = false;
   private disposed = false;
+  /** An edit happened that the editor has not reported as text yet (editors debounce their change events). */
+  private pendingEdit = false;
   currentStatus: SaveStatus = "saved";
   /** Hash of the newer disk version that caused the conflict, when known. */
   conflictHash: string | null = null;
@@ -46,7 +48,15 @@ export class Autosaver {
   }
 
   get dirty(): boolean {
-    return this.latest !== this.saved;
+    return this.pendingEdit || this.latest !== this.saved;
+  }
+
+  /**
+   * The user edited but the text is not available yet. Counts as unsaved changes right away so an
+   * outside change arriving in that gap raises a conflict instead of discarding the keystroke.
+   */
+  touch(): void {
+    if (!this.disposed) this.pendingEdit = true;
   }
 
   private status(s: SaveStatus) {
@@ -57,6 +67,7 @@ export class Autosaver {
   /** The editor produced new text. */
   update(content: string): void {
     if (this.disposed) return;
+    this.pendingEdit = false;
     this.latest = content;
     if (this.conflict) return;
     if (!this.dirty) {
@@ -127,6 +138,7 @@ export class Autosaver {
     this.saved = content;
     this.disk = content;
     this.latest = content;
+    this.pendingEdit = false;
     this.conflict = false;
     this.conflictHash = null;
     this.status("saved");

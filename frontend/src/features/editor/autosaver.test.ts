@@ -176,6 +176,23 @@ describe("Autosaver", () => {
       expect(saver.noteExternalChange("other")).toBe("reload");
     });
 
+    it("treats an edit the editor has not reported yet as unsaved (no lost keystrokes)", () => {
+      const { saver } = setup();
+      saver.touch();
+      expect(saver.dirty).toBe(true);
+      expect(saver.noteExternalChange("other")).toBe("conflict");
+    });
+
+    it("an edit report or a reset clears the pending flag", () => {
+      const { saver } = setup();
+      saver.touch();
+      saver.update("a"); // same as saved: nothing to write
+      expect(saver.dirty).toBe(false);
+      saver.touch();
+      saver.reset("x", "h9");
+      expect(saver.dirty).toBe(false);
+    });
+
     it("raises a conflict when the user has unsaved changes", () => {
       const { saver, saves } = setup();
       saver.update("typing");
