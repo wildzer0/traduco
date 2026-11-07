@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import time
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 
 from ruamel.yaml import YAML
@@ -193,8 +194,14 @@ def _unique_name(directory: Path, name: str) -> str:
     raise WorkspaceError("exists", f"cannot find a free name for {name}")
 
 
-def move(root: Path, rel: str, parent: str | None, index: int | None = None) -> str:
-    """Move a node under ``parent`` at ``index`` (end if ``None``); returns its new path."""
+@dataclass(frozen=True)
+class Moved:
+    path: str  # new path of the moved node
+    renamed: dict[str, str]  # every path that changed (the node included), old -> new
+
+
+def move(root: Path, rel: str, parent: str | None, index: int | None = None) -> Moved:
+    """Move a node under ``parent`` at ``index`` (end if ``None``)."""
     node = resolve_node(root, rel)
     dest, level = resolve_parent(root, parent)
     if not node.is_dir() and parent is None:
@@ -211,7 +218,7 @@ def move(root: Path, rel: str, parent: str | None, index: int | None = None) -> 
         order = [n for n in siblings(dest, top) if n != node.name]
         order.insert(len(order) if index is None else max(0, min(index, len(order))), node.name)
         mapping = reorder(root, parent, order)
-        return mapping.get(rel, rel)
+        return Moved(mapping.get(rel, rel), mapping)
 
     moved_name = _unique_name(dest, split_prefix(node.name)[1])
     moved = dest / moved_name
@@ -225,7 +232,10 @@ def move(root: Path, rel: str, parent: str | None, index: int | None = None) -> 
     except BaseException:
         moved.rename(original)
         raise
-    return _rel(root, dest / plan.get(moved_name, moved_name))
+    new_rel = _rel(root, dest / plan.get(moved_name, moved_name))
+    renamed = _mapping(root, dest, {k: v for k, v in plan.items() if k != moved_name})
+    renamed[rel] = new_rel
+    return Moved(new_rel, renamed)
 
 
 # --- delete ----------------------------------------------------------------------------------

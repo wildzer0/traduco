@@ -24,7 +24,8 @@ def patch_node(root: Root, body: NodePatch) -> NodeResult:
         if body.path is None:
             raise WorkspaceError("invalid_path", "path is required")
         if body.move:
-            return NodeResult(path=ops.move(root, body.path, body.parent, body.index))
+            moved = ops.move(root, body.path, body.parent, body.index)
+            return NodeResult(path=moved.path, renamed=moved.renamed)
         if body.title is not None:
             renamed = ops.rename(root, body.path, body.title)
             return NodeResult(path=renamed.get(body.path, body.path), renamed=renamed)

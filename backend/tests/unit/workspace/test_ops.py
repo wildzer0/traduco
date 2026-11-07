@@ -207,7 +207,7 @@ def test_move_section_to_another_chapter_at_index(root: Path) -> None:
     s = ops.create_section(root, a, "Mobile")
     ops.create_section(root, b, "Primo")
     ops.create_section(root, b, "Secondo")
-    new = ops.move(root, s, parent=b, index=1)
+    new = ops.move(root, s, parent=b, index=1).path
     assert new == "capitoli/02-b/02-mobile.md"
     assert [n.title for n in build_tree(root)[1].children] == ["Primo", "Mobile", "Secondo"]
     assert build_tree(root)[0].children == []
@@ -217,23 +217,23 @@ def test_move_to_the_end_when_index_is_none(root: Path) -> None:
     a, b = ops.create_chapter(root, "A"), ops.create_chapter(root, "B")
     s = ops.create_section(root, a, "Mobile")
     ops.create_section(root, b, "Primo")
-    assert ops.move(root, s, parent=b) == "capitoli/02-b/02-mobile.md"
+    assert ops.move(root, s, parent=b).path == "capitoli/02-b/02-mobile.md"
 
 
 def test_move_within_same_parent_is_a_reorder(root: Path) -> None:
     a = ops.create_chapter(root, "A")
     ops.create_section(root, a, "Uno")
     s2 = ops.create_section(root, a, "Due")
-    assert ops.move(root, s2, parent=a, index=0) == f"{a}/01-due.md"
+    assert ops.move(root, s2, parent=a, index=0).path == f"{a}/01-due.md"
     assert [n.title for n in build_tree(root)[0].children] == ["Due", "Uno"]
 
 
 def test_move_chapter_to_top_level_and_into_another(root: Path) -> None:
     a, b = ops.create_chapter(root, "A"), ops.create_chapter(root, "B")
     sub = ops.create_chapter(root, "Sub", parent=a)
-    top = ops.move(root, sub, parent=None)
+    top = ops.move(root, sub, parent=None).path
     assert top == "capitoli/03-sub"
-    assert ops.move(root, top, parent=b) == "capitoli/02-b/01-sub"
+    assert ops.move(root, top, parent=b).path == "capitoli/02-b/01-sub"
 
 
 def test_cannot_move_a_chapter_into_itself_or_its_descendants(root: Path) -> None:
@@ -307,3 +307,16 @@ def test_two_deletes_of_same_name_do_not_collide(root: Path) -> None:
         ops.delete(root, ch)
     entries = list((root / ".traduco" / "cestino").iterdir())
     assert len(entries) == 2
+
+
+def test_move_reports_every_renamed_path_so_clients_can_follow(root: Path) -> None:
+    a, b = ops.create_chapter(root, "A"), ops.create_chapter(root, "B")
+    s = ops.create_section(root, a, "Mobile")
+    first = ops.create_section(root, b, "Primo")
+    moved = ops.move(root, s, parent=b, index=0)
+    assert moved.renamed == {s: "capitoli/02-b/01-mobile.md", first: "capitoli/02-b/02-primo.md"}
+    same = ops.move(root, "capitoli/02-b/02-primo.md", parent=b, index=0)
+    assert same.renamed == {
+        "capitoli/02-b/02-primo.md": "capitoli/02-b/01-primo.md",
+        "capitoli/02-b/01-mobile.md": "capitoli/02-b/02-mobile.md",
+    }

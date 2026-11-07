@@ -113,6 +113,7 @@ def test_reorder_rename_move_delete(api: TestClient) -> None:
 
     r = api.patch(url, json={"path": f"{a}/02-primo.md", "move": True, "parent": b, "index": 0})
     assert r.json()["path"] == f"{b}/01-primo.md"
+    assert r.json()["renamed"][f"{a}/02-primo.md"] == f"{b}/01-primo.md"
 
     r = api.delete(url, params={"path": b})
     assert r.status_code == 200 and r.json()["trash"].startswith(".traduco/cestino/")
