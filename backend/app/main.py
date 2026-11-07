@@ -56,6 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             hub.publish,
         )
         app.state.translation = service
+        service.set_gate(lambda: capabilities.model_download()["state"] == "downloading")
         exports = ExportManager(service, publish=hub.publish)
         app.state.exports = exports
         service.start()

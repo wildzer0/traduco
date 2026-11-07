@@ -84,6 +84,7 @@ class TranslationService:
         self._monitor: asyncio.Task[None] | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._roots: set[Path] = set()
+        self._gate: Callable[[], bool] = lambda: False
 
     def _emit(self, root: Path, event: dict[str, Any]) -> None:
         """Publish an event; endpoints run in threads, the hub's queues belong to the event loop."""
@@ -95,6 +96,10 @@ class TranslationService:
             self._raw_emit(root, event)
         else:
             self._loop.call_soon_threadsafe(self._raw_emit, root, event)
+
+    def set_gate(self, blocked: Callable[[], bool]) -> None:
+        """While ``blocked()`` is true (model still downloading) jobs wait, as when offline."""
+        self._gate = blocked
 
     # -- lifecycle ---------------------------------------------------------------------------
     def start(self) -> None:
@@ -309,6 +314,12 @@ class TranslationService:
     async def _run(self, job_id: str, job: Job) -> None:
         base_url, model = self.config.base_url, job.model or self.config.model
         client = self._client(base_url, model)
+        if self._gate():
+            self._set_online(False, model, "the model is being downloaded")
+            self.queue.pause(True)
+            self.queue.submit(job_id, job.priority, job)
+            self._start_monitor(base_url, model)
+            return
         try:
             outcome = await translate(client, job.source, job.ctx)
         except LlmUnavailable as exc:
@@ -376,6 +387,8 @@ class TranslationService:
             client = self._client(base_url, model)
             while True:
                 await asyncio.sleep(self._monitor_seconds)
+                if self._gate():
+                    continue
                 try:
                     await client.models()
                 except LlmError:

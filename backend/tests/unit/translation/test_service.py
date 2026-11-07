@@ -288,3 +288,16 @@ async def test_glossary_reaches_the_prompt_and_the_check(env, real_project) -> N
     await translated(svc, root, "Voglio uno.\n")
     seg = stored(root, REL)["p:0"]
     assert seg.status == "needs_review" and seg.reason.startswith("glossary:")
+
+
+async def test_jobs_wait_while_the_model_is_downloading_and_then_run(env) -> None:  # type: ignore[no-untyped-def]
+    svc, client, events, root = env
+    downloading = {"value": True}
+    svc.set_gate(lambda: downloading["value"])
+    svc.sync(root, PROJECT, "capitoli/01-a/01-s.md", "Ciao mondo.\n")
+    await asyncio.sleep(0.3)
+    assert client.calls == []  # nothing was sent to a model that is not there yet
+    assert stored(root)["p:0"].status == "queued"  # and nothing was marked as failed
+    downloading["value"] = False
+    await asyncio.wait_for(svc.queue.join(), 5)
+    assert stored(root)["p:0"].target == "[EN] Ciao mondo."
