@@ -14,7 +14,8 @@ import zlib
 from pathlib import Path
 
 from docx import Document
-from docx.enum.text import WD_BREAK
+from docx.document import Document as DocumentObject
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import Cm, Pt
@@ -55,7 +56,7 @@ def _paragraph_style(
     )
 
 
-def _numbering(doc: Document) -> None:
+def _numbering(doc: DocumentObject) -> None:
     """Heading outline (1 / 1.1 / 1.1.1) tied to the heading styles, a bullet list and a numbered list."""
     numbering = doc.part.numbering_part.element
     heading_levels = "".join(
@@ -88,7 +89,7 @@ def _numbering(doc: Document) -> None:
         )
 
 
-def _styles(doc: Document) -> None:
+def _styles(doc: DocumentObject) -> None:
     styles = doc.styles.element
     colour = '<w:color w:val="1F4E79"/>'
     for level, size in ((1, 32), (2, 28), (3, 24)):
@@ -220,7 +221,7 @@ def build_company_template(path: Path) -> Path:
     with tempfile.TemporaryDirectory() as tmp:
         logo = logo_png(Path(tmp) / "logo.png")
         cover_logo = doc.add_paragraph()
-        cover_logo.alignment = 1
+        cover_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
         cover_logo.add_run().add_picture(str(logo), width=Cm(6))
     doc.add_paragraph("{{nome}}", style="Azienda Copertina Titolo")
     for label, field in (
