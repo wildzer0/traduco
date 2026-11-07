@@ -290,3 +290,28 @@ def test_the_file_opens_in_libreoffice_and_converts_to_pdf(
     pdf = convert(docx, "pdf", tmp_path / "pdf")
     data = pdf.read_bytes()
     assert data.startswith(b"%PDF") and len(data) > 5_000
+
+
+def test_pdf_and_odt_have_a_real_table_of_contents(
+    project: Path, pandoc_bin: Path, soffice_bin: Path, company_template: Path, tmp_path: Path
+) -> None:
+    """Plain conversion keeps Word's hint text in the TOC; the macro fills it in (M5)."""
+    import re
+    import zipfile
+
+    from app.core.export.office import convert
+
+    docx = build(project, pandoc_bin, company_template, tmp_path)
+    odt = convert(docx, "odt", tmp_path / "odt")
+    with zipfile.ZipFile(odt) as z:
+        content = z.read("content.xml").decode()
+    toc = re.search(r"<text:table-of-content .*?</text:table-of-content>", content, re.DOTALL)
+    assert toc, "the table of contents field was not imported as an index"
+    body = re.sub(r"<[^>]+>", " ", toc.group(0))
+    assert "Update the field" not in body and "Aggiorna il campo" not in body
+    for title in ("Introduzione", "Scopo del documento", "Installazione", "Requisiti"):
+        assert re.search(rf"{title}\s+\d+", body), (
+            f"{title} is not listed with a page number: {body[:300]}"
+        )
+    pdf = convert(docx, "pdf", tmp_path / "pdf")
+    assert pdf.read_bytes().startswith(b"%PDF")
