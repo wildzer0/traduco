@@ -166,7 +166,7 @@ def main() -> int:
     parser.add_argument(
         "--builtin",
         action="store_true",
-        help="check the built-in llama.cpp engine (real llama-server, tiny model) instead of Ollama",
+        help="check the built-in engine (real llama-server, tiny model) instead of Ollama",
     )
     parser.add_argument("--port", type=int, default=8123)
     parser.add_argument("--first-timeout", type=float, default=900)
