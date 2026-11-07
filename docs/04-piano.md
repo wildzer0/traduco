@@ -48,10 +48,10 @@ riordinare via drag & drop rinumera i file; un'immagine incollata compare in `im
 
 ## M2 — Motore di traduzione (RF-20…22, 28, 30)
 
-- [ ] `segmenter.py`: segmenti per tutti i tipi elencati in architettura, con chiavi e hash
-- [ ] `protect.py`: segnaposto per inline non traducibili e formattazione; ripristino con verifica
-- [ ] `assembler.py`: ricostruzione del Markdown tradotto; **test di proprietà** (hypothesis) identità → stesso HTML
-- [ ] Riconciliazione segmenti dopo modifica (hash, poi posizione)
+- [x] `segmenter.py`: segmenti per tutti i tipi elencati in architettura, con chiavi e hash
+- [x] `protect.py`: segnaposto per inline non traducibili e formattazione; ripristino con verifica
+- [x] `assembler.py`: ricostruzione del Markdown tradotto; **test di proprietà** (hypothesis) identità → stesso HTML
+- [x] Riconciliazione segmenti dopo modifica (hash, poi posizione)
 - [ ] `llm_client.py` OpenAI-compatibile con timeout, retry, annullamento
 - [ ] `store.py`: file JSON dei segmenti, scrittura atomica, chiavi ordinate
 - [ ] Coda con priorità e annullamento delle richieste superate

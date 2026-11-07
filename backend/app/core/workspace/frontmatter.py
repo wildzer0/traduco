@@ -53,6 +53,17 @@ def parse(text: str) -> Document:
     return Document(data, text[closing.end() :])
 
 
+def split_raw(text: str) -> tuple[str, str]:
+    """Split ``text`` into the raw front matter block (fences included) and the body."""
+    opening = _OPEN.match(text)
+    if opening is None:
+        return "", text
+    closing = _CLOSE.search(text, opening.end())
+    if closing is None:
+        return "", text
+    return text[: closing.end()], text[closing.end() :]
+
+
 def render(doc: Document) -> str:
     if not doc.meta:
         return doc.body
