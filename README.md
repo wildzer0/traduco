@@ -35,6 +35,8 @@ Per PDF e ODT serve LibreOffice (non viene installato da solo; il DOCX non lo ri
 **Senza rete**: `make bundle-offline OS=linux` (o `windows`, sul rispettivo sistema) crea uno ZIP che si avvia con
 `--offline`; con `MODEL=gemma4:e4b` include anche il modello se l'hai già scaricato con Ollama.
 
+Come si usa: [guida utente](docs/guida-utente.md).
+
 Per installazioni su server: `docker compose --profile llm up`. Per sviluppare: `make setup && make dev`.
 
 ## Documentazione per chi sviluppa

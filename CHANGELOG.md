@@ -5,6 +5,20 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-07
+
+Milestone M6 - quality and polish.
+
+### Added
+- Command palette (`Ctrl/Cmd+K`), search in the text of the project (`Ctrl/Cmd+Shift+F`), shortcut list (`?`) and `Alt+Up/Down` between sections.
+- Translation memory: approved or hand-written translations are reused for the same sentence, similar ones are suggested; TMX import and export.
+- Glossary import and export as CSV and TBX (merging, never overwriting).
+- Additional target languages, translated from the source in the background after the official one, each with its own tone and date format; language menu with progress, and export in any of them.
+- Two-column export (source | translation).
+- Visual table editing (rows, columns, alignment) in both editor modes.
+- Optional spelling and grammar check of the source with your own LanguageTool server.
+- User guide (`docs/guida-utente.md`) and a 300-section performance test.
+
 ## [0.10.1] - 2026-11-07
 
 ### Fixed

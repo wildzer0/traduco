@@ -171,16 +171,17 @@ al secondo inserimento `…00043`, anche dopo il riavvio.
 
 ## M6 — Qualità e rifinitura (RF-07, 12, 13, 16, 29, 44, 57, 64)
 
-- [ ] Lingue aggiuntive (RF-21b…e): cartelle segmenti per lingua, coda a bassa priorità, tono/glossario/formati per
-      lingua, opzione pivot sulla lingua ufficiale approvata, percentuali nel selettore lingua
-- [ ] Memoria di traduzione SQLite: esatte e simili, export/import TMX
-- [ ] Riferimenti incrociati tra sezioni risolti in export
-- [ ] Editor visuale tabelle
-- [ ] LanguageTool opzionale (servizio Docker facoltativo)
-- [ ] Palette comandi completa, `?` con scorciatoie, ricerca nel progetto
-- [ ] Export bilingue a due colonne
-- [ ] Test di prestazioni: progetto con 300 sezioni generate
-- [ ] Guida utente in `docs/guida-utente.md`
+- [x] Lingue aggiuntive (RF-21b…d): cartelle segmenti per lingua, coda a bassa priorità, tono/glossario/formati per
+      lingua, percentuali nel selettore lingua. **Non fatto**: opzione pivot sulla lingua ufficiale approvata (RF-21e, C)
+- [x] Memoria di traduzione SQLite: esatte e simili, export/import TMX (e glossario CSV/TBX, RF-44)
+- [x] Riferimenti incrociati tra sezioni risolti in export (già dall'M4; i frammenti `#titolo` portano all'inizio della sezione)
+- [x] Editor visuale tabelle
+- [x] LanguageTool opzionale (servizio Docker facoltativo)
+- [x] Palette comandi completa, `?` con scorciatoie, ricerca nel progetto
+- [x] Export bilingue a due colonne
+- [x] Test di prestazioni: progetto con 300 sezioni generate
+- [x] Guida utente in `docs/guida-utente.md`
+- [ ] Anteprima del template (PDF della prima pagina, RF-57): rinviata, serve LibreOffice (verificabile solo in CI)
 
 **Accettazione**: requisiti S elencati coperti da test; progetto da 300 sezioni apre l'albero in < 1 s e l'editor
 resta fluido.
