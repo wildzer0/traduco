@@ -7,7 +7,7 @@ Spunta i task (`- [x]`) nello stesso commit che li completa.
 
 ## M0 — Fondamenta
 
-- [ ] Struttura della repo come in `02-architettura.md`, licenza Apache-2.0
+- [x] Struttura della repo come in `02-architettura.md`, licenza Apache-2.0
 - [x] Backend: progetto uv, FastAPI con `/api/health`, configurazione con pydantic-settings, ruff + mypy + pytest
 - [x] Frontend: Vite + React + TS strict, Tailwind, Biome, vitest, layout vuoto a tre colonne, i18n it/en, tema chiaro/scuro
 - [x] `tools/fake-llm`: server OpenAI-compatibile (`/v1/chat/completions`, `/v1/models`) che restituisce
