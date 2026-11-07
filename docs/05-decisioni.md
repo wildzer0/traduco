@@ -271,3 +271,17 @@ per questo il controllo ortografico resta a LanguageTool (RF-16) e il companion 
 - Scheletri forniti con l'app in `examples/scheletri/` (uno stile ECSS abbreviato, **didattico**: va confrontato con la norma originale, che non è inclusa); si può caricare un file proprio alla creazione.
 **Limiti**: il riordino rinumera i file, quindi i segmenti tradotti in `.traduco/segmenti/` legati al vecchio percorso si rigenerano; la UI non permette ancora di modificare lo scheletro di un progetto esistente (l'API `PUT …/skeleton` sì).
 
+## ADR-032 — Controllo della traduzione e glossario (M3)
+**Decisione**:
+- **Stato del segmento** (store JSON, ADR-029): una modifica manuale imposta `origin: manual`, `locked: true`; un segmento bloccato non è mai riscritto da ritraduzioni di sezione, capitolo o progetto né da cambi di tono.
+  Se il suo sorgente cambia mantiene il testo dell'autore, passa a `needs_review` e la nuova traduzione del modello è in `pending_target` (Accetta/Ignora). Ignorare riporta a `translated` ma resta bloccato.
+- **Modifica diretta e sorgente** (RF-24): dopo aver salvato una correzione, per 10 s l'anteprima offre «Proponi un aggiornamento del sorgente» (ritraduzione inversa verso la lingua sorgente, modificabile) o «Ignora» (stato `diverged`).
+  «Applica» riscrive solo quel segmento nel file con la stessa scrittura atomica dell'editor (`If-Match`): lo store è aggiornato *prima* (hash del sorgente nuovo), così la modifica non genera una ritraduzione; l'editor aperto si ricarica dall'evento di file.
+- **Istruzioni** (RF-26): prompt `revise@1`; la risposta è solo una proposta, nulla è salvato finché l'utente non la usa (che la rende `manual`+`locked`). «Alternative» chiede 3 varianti in parallelo (temperatura 0,8) e scarta doppioni e testo identico.
+- **Glossario** (`glossario.yaml`, riscritto per intero a ogni salvataggio, quindi i commenti non sopravvivono; `sorgente` resta il primo campo): le voci pertinenti entrano nel prompt; «non tradurre» passa anche dai segnaposto.
+  Verifica in `core/translation/glossary.py` (il piano diceva `glossary_check.py`): termine imposto presente, vietati assenti, «non tradurre» invariato; confronto senza distinzione di maiuscole, parola intera, con `-s/-es` e vocale finale variabile (offerta/offerte). Una violazione dà un secondo tentativo con l'elenco dei problemi; se persiste: `needs_review` con motivo `glossary: …`, il testo migliore resta visibile.
+- **Tono**: del progetto (selettore in alto) e della sezione (menu nell'anteprima, scritto nel front matter `tono`, con la nota `contesto`); cambiarlo ritraduce sezione o progetto, solo i segmenti non bloccati.
+- **Modalità** `Ctrl+1/2/3` (Scrittura, Revisione, Concentrazione). La Revisione è una tabella di tutti i segmenti del progetto con filtri; `F8` salta al successivo «da rivedere» anche in un'altra sezione. L'elenco è calcolato leggendo i file e lo store di ogni sezione (nessun indice): da rivalutare nel test di prestazioni di M6.
+- La barra delle azioni resta sull'ultimo segmento toccato dal mouse (non si nasconde all'uscita) perché gli eventi di uscita non sono affidabili sulla barra stessa e nei test.
+**Limiti**: il menu «Aggiungi al glossario» precompila la parola selezionata come traduzione imposta; il termine sorgente va scritto a mano. Import/export TBX/CSV (RF-44) rimandato a M6. Le scorciatoie `E I L A` valgono solo con il focus sull'anteprima.
+

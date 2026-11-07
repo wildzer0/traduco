@@ -1,14 +1,18 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EditorPane } from "../features/editor/EditorPane";
+import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
 import { Preview } from "../features/preview/Preview";
+import { reviewKey } from "../features/preview/segment-actions";
+import { ReviewTable } from "../features/review/ReviewTable";
 import { keys } from "../features/tree/queries";
-import { getLlmStatus } from "../lib/api";
+import { getLlmStatus, getReview } from "../lib/api";
 import { emitFileEvent } from "../lib/file-events";
 import { useT } from "../lib/i18n";
 import { usePrefs } from "../lib/prefs";
 import { useTranslationState } from "../lib/translation-store";
+import { useView } from "../lib/view-store";
 import { useProjectEvents } from "../lib/ws";
 import { Sidebar } from "./Sidebar";
 
@@ -20,6 +24,8 @@ export function Workspace() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const sidebarOpen = usePrefs((st) => st.sidebarOpen);
+  const { mode, setMode, setFocusKey, glossaryOpen } = useView();
+  const lastF8 = useRef<{ path: string; key: string } | null>(null);
   const selected = s ?? null;
   const select = (path: string | null) =>
     navigate({
@@ -66,22 +72,72 @@ export function Workspace() {
     return () => window.removeEventListener("focus", recheck);
   }, [qc, projectId]);
 
+  // F8: next segment to review, across sections (docs/03-ui.md)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: select only calls the router
+  useEffect(() => {
+    const onKey = async (e: KeyboardEvent) => {
+      if (e.key !== "F8") return;
+      e.preventDefault();
+      const data = await qc.fetchQuery({
+        queryKey: reviewKey(projectId),
+        queryFn: () => getReview(projectId),
+        staleTime: 0,
+      });
+      const list = data.segments.filter((r) => r.status === "needs_review");
+      if (list.length === 0) return;
+      const last = lastF8.current;
+      let index = last ? list.findIndex((r) => r.path === last.path && r.key === last.key) : -1;
+      if (index < 0 && selected) {
+        const from = list.findIndex((r) => r.path >= selected);
+        index = from < 0 ? -1 : from - 1;
+      }
+      const next = list[(index + 1) % list.length];
+      if (!next) return;
+      lastF8.current = { path: next.path, key: next.key };
+      setMode("write");
+      select(next.path);
+      setFocusKey(next.key);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [qc, projectId, selected, setMode, setFocusKey]);
+
+  const editor = (
+    <main
+      aria-label={t("editor.label")}
+      className={`flex min-w-0 flex-1 flex-col ${mode === "focus" ? "" : "border-r border-border"}`}
+    >
+      {selected ? (
+        <EditorPane key={projectId} projectId={projectId} path={selected} />
+      ) : (
+        <p className="mx-auto w-full max-w-[72ch] p-6 text-[15px] text-muted">
+          {t("editor.noSection")}
+        </p>
+      )}
+    </main>
+  );
+
   return (
     <>
-      {sidebarOpen && <Sidebar projectId={projectId} selected={selected} onSelect={select} />}
-      <main
-        aria-label={t("editor.label")}
-        className="flex min-w-0 flex-1 flex-col border-r border-border"
-      >
-        {selected ? (
-          <EditorPane key={projectId} projectId={projectId} path={selected} />
-        ) : (
-          <p className="mx-auto w-full max-w-[72ch] p-6 text-[15px] text-muted">
-            {t("editor.noSection")}
-          </p>
-        )}
-      </main>
-      <Preview projectId={projectId} />
+      {sidebarOpen && mode !== "focus" && (
+        <Sidebar projectId={projectId} selected={selected} onSelect={select} />
+      )}
+      {mode === "review" ? (
+        <ReviewTable
+          projectId={projectId}
+          onOpen={(path, key) => {
+            setMode("write");
+            select(path);
+            setFocusKey(key);
+          }}
+        />
+      ) : (
+        <>
+          {editor}
+          {mode === "write" && <Preview projectId={projectId} />}
+        </>
+      )}
+      {glossaryOpen && <GlossaryDrawer projectId={projectId} />}
     </>
   );
 }

@@ -9,8 +9,11 @@ import { useNotices } from "../../lib/notices";
 import { usePrefs } from "../../lib/prefs";
 import { usePreview } from "../../lib/preview-store";
 import { useTranslationState } from "../../lib/translation-store";
+import { useView } from "../../lib/view-store";
 import { parseDocument } from "../editor/markdown-io";
 import { cacheDiagram, type DiagramTheme, renderDiagram, sha256Hex } from "./diagrams";
+import { SectionSettings } from "./SectionSettings";
+import { SegmentOverlay } from "./SegmentOverlay";
 import { useTranslation } from "./translation";
 
 const svgCache = new Map<string, string>();
@@ -101,6 +104,21 @@ export function Preview({ projectId }: { projectId: string }) {
     }
   }, [saved, html, projectId]);
 
+  // Jump to a segment asked for by F8 or the review table, and flash it.
+  const focusKey = useView((s) => s.focusKey);
+  const setFocusKey = useView((s) => s.setFocusKey);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: html changes whenever the blocks change
+  useEffect(() => {
+    if (!focusKey || !article.current) return;
+    const el = article.current.querySelector<HTMLElement>(`[data-seg="${CSS.escape(focusKey)}"]`);
+    if (!el) return;
+    el.scrollIntoView?.({ block: "center" });
+    el.classList.add("seg-flash");
+    const timer = setTimeout(() => el.classList.remove("seg-flash"), 1600);
+    setFocusKey(null);
+    return () => clearTimeout(timer);
+  }, [focusKey, html, setFocusKey]);
+
   // Keep the block at the top of the editor at the top of the preview.
   // biome-ignore lint/correctness/useExhaustiveDependencies: realign after the content is re-rendered
   useEffect(() => {
@@ -112,7 +130,7 @@ export function Preview({ projectId }: { projectId: string }) {
   }, [topBlock, html]);
 
   return (
-    <section aria-label={t("preview.label")} className="flex min-w-0 flex-1 flex-col">
+    <section aria-label={t("preview.label")} className="relative flex min-w-0 flex-1 flex-col">
       <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3 text-muted">
         <span className="truncate">
           {mode === "translated"
@@ -130,6 +148,9 @@ export function Preview({ projectId }: { projectId: string }) {
             <Languages size={14} strokeWidth={1.5} aria-hidden />
             {t(mode === "source" ? "preview.showTranslation" : "preview.showSource")}
           </button>
+          {path && translation && (
+            <SectionSettings projectId={projectId} path={path} view={translation} />
+          )}
           <RetranslateMenu projectId={projectId} path={path} />
         </div>
       </div>
@@ -143,12 +164,21 @@ export function Preview({ projectId }: { projectId: string }) {
       )}
       <div ref={scroller} className="editor-scroll relative min-h-0 flex-1 overflow-y-auto">
         {path ? (
-          <article
-            ref={article}
-            className="preview-body mx-auto box-border max-w-[calc(72ch+48px)] p-6"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: markdown-it with raw HTML disabled and validated links
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          <SegmentOverlay
+            enabled={mode === "translated" && translation !== undefined}
+            projectId={projectId}
+            path={path}
+            view={translation}
+            article={article}
+            html={html}
+          >
+            <article
+              ref={article}
+              className="preview-body box-border p-6"
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: markdown-it with raw HTML disabled and validated links
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </SegmentOverlay>
         ) : (
           <p className="p-6 text-muted">{t("preview.empty")}</p>
         )}

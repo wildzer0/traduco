@@ -1,9 +1,14 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { PanelLeft } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
+import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
+import { useNotices } from "../lib/notices";
 import { usePrefs } from "../lib/prefs";
 import { useTranslationState } from "../lib/translation-store";
+import type { Tone } from "../lib/types";
+import { useView, type ViewMode } from "../lib/view-store";
 import { findTrail } from "./trail";
 
 export function TopBar() {
@@ -47,6 +52,9 @@ export function TopBar() {
       ) : (
         <span className="text-muted">{t("topbar.noProject")}</span>
       )}
+      <span className="ml-auto" />
+      {projectId && <ProjectTone projectId={projectId} />}
+      {projectId && <ViewSwitch />}
       {projectId && (
         <span
           data-testid="llm-indicator"
@@ -58,7 +66,7 @@ export function TopBar() {
                 ? t("llm.online", { model })
                 : t("llm.offline")
           }
-          className="ml-auto flex items-center gap-1.5 text-muted"
+          className="flex items-center gap-1.5 text-muted"
         >
           <span
             aria-hidden
@@ -74,5 +82,75 @@ export function TopBar() {
         </span>
       )}
     </header>
+  );
+}
+
+const MODES: { mode: ViewMode; key: "view.write" | "view.review" | "view.focus"; hint: string }[] =
+  [
+    { mode: "write", key: "view.write", hint: "Ctrl+1" },
+    { mode: "review", key: "view.review", hint: "Ctrl+2" },
+    { mode: "focus", key: "view.focus", hint: "Ctrl+3" },
+  ];
+
+function ViewSwitch() {
+  const t = useT();
+  const { mode, setMode } = useView();
+  return (
+    <fieldset className="m-0 flex rounded-ui border border-border p-0.5">
+      <legend className="sr-only">{t("view.label")}</legend>
+      {MODES.map((m) => (
+        <button
+          key={m.mode}
+          type="button"
+          aria-pressed={mode === m.mode}
+          title={`${t(m.key)} (${m.hint})`}
+          onClick={() => setMode(m.mode)}
+          className={`rounded-ui px-2 py-0.5 ${mode === m.mode ? "bg-accent text-accent-fg" : "text-muted hover:text-fg"}`}
+        >
+          {t(m.key)}
+        </button>
+      ))}
+    </fieldset>
+  );
+}
+
+const TONES: Tone[] = ["formale", "neutro", "informale"];
+
+/** Project tone (RF-25): changing it retranslates what the author has not fixed by hand. */
+function ProjectTone({ projectId }: { projectId: string }) {
+  const t = useT();
+  const qc = useQueryClient();
+  const notify = useNotices((s) => s.show);
+  const { data } = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => getProject(projectId),
+  });
+  if (!data) return null;
+  return (
+    <label className="flex items-center gap-1 text-muted">
+      <span className="sr-only">{t("tone.project")}</span>
+      <select
+        aria-label={t("tone.project")}
+        title={t("tone.project")}
+        value={data.tono}
+        onChange={async (e) => {
+          try {
+            await patchProject(projectId, { tono: e.target.value as Tone });
+            await retranslate(projectId, "project");
+            await qc.invalidateQueries({ queryKey: ["project", projectId] });
+            await qc.invalidateQueries({ queryKey: ["translation", projectId] });
+          } catch (err) {
+            notify(err instanceof Error ? err.message : String(err));
+          }
+        }}
+        className="rounded-ui border border-border bg-surface px-1 py-0.5"
+      >
+        {TONES.map((tone) => (
+          <option key={tone} value={tone}>
+            {t(`tone.${tone}` as "tone.formale")}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

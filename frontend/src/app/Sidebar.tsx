@@ -2,6 +2,7 @@ import { SkeletonPanel } from "../features/tree/SkeletonPanel";
 import { Tree } from "../features/tree/Tree";
 import { useT } from "../lib/i18n";
 import { usePrefs } from "../lib/prefs";
+import { useView } from "../lib/view-store";
 
 interface Props {
   projectId: string;
@@ -14,6 +15,7 @@ const itemClass = "block w-full rounded-ui px-2 py-1 text-left";
 export function Sidebar({ projectId, selected, onSelect }: Props) {
   const t = useT();
   const setSettingsOpen = usePrefs((s) => s.setSettingsOpen);
+  const openGlossary = useView((s) => s.openGlossary);
   return (
     <nav
       aria-label={t("sidebar.label")}
@@ -25,17 +27,21 @@ export function Sidebar({ projectId, selected, onSelect }: Props) {
       <Tree projectId={projectId} selected={selected} onSelect={onSelect} />
       <SkeletonPanel projectId={projectId} onSelect={onSelect} />
       <div className="mt-2 border-t border-border pt-2">
-        {(["sidebar.glossary", "sidebar.templates"] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            disabled
-            title={t("sidebar.soon")}
-            className={`${itemClass} cursor-not-allowed text-muted opacity-60`}
-          >
-            {t(key)}
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={() => openGlossary()}
+          className={`${itemClass} hover:bg-surface`}
+        >
+          {t("sidebar.glossary")}
+        </button>
+        <button
+          type="button"
+          disabled
+          title={t("sidebar.soon")}
+          className={`${itemClass} cursor-not-allowed text-muted opacity-60`}
+        >
+          {t("sidebar.templates")}
+        </button>
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}

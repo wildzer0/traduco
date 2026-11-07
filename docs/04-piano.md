@@ -76,15 +76,15 @@ obbligatoria la segnala come mancante; un file di scheletro non valido dà un er
 
 ## M3 — Controllo della traduzione e glossario (RF-23…27, 40…43)
 
-- [ ] Modifica manuale in linea → `manual` + `locked`
-- [ ] Sorgente cambiato su segmento bloccato → `needs_review` + `pending_target`, UI Accetta/Ignora
-- [ ] Tono per progetto e per sezione; cambio tono → ritraduzione dei soli segmenti non bloccati
-- [ ] Istruzione su segmento con conferma; suggerimenti rapidi; alternative (3 varianti)
-- [ ] `glossario.yaml`: lettura/scrittura, pannello UI, aggiunta dal menu contestuale
-- [ ] `glossary_check.py`: imposti, vietati, non_tradurre; secondo tentativo correttivo; motivo in `needs_review`
-- [ ] Voci di glossario pertinenti inserite nel prompt
-- [ ] Modalità Revisione con filtri e approvazione; `F8` al successivo da rivedere
-- [ ] Modifica diretta in anteprima → proposta di aggiornamento del sorgente (Applica/Ignora), stato `diverged`
+- [x] Modifica manuale in linea → `manual` + `locked`
+- [x] Sorgente cambiato su segmento bloccato → `needs_review` + `pending_target`, UI Accetta/Ignora
+- [x] Tono per progetto e per sezione; cambio tono → ritraduzione dei soli segmenti non bloccati
+- [x] Istruzione su segmento con conferma; suggerimenti rapidi; alternative (3 varianti)
+- [x] `glossario.yaml`: lettura/scrittura, pannello UI, aggiunta dal menu contestuale
+- [x] `glossary_check.py`: imposti, vietati, non_tradurre; secondo tentativo correttivo; motivo in `needs_review`
+- [x] Voci di glossario pertinenti inserite nel prompt
+- [x] Modalità Revisione con filtri e approvazione; `F8` al successivo da rivedere
+- [x] Modifica diretta in anteprima → proposta di aggiornamento del sorgente (Applica/Ignora), stato `diverged`
 
 **Accettazione**: con il fake-llm in modalità "viola glossario" il segmento finisce in `needs_review` con motivo;
 una correzione manuale sopravvive a ritraduzione di progetto e cambio di tono; e2e del flusso modifica → blocco →

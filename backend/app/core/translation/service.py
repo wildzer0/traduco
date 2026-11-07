@@ -597,6 +597,20 @@ class SegmentActions:
         job = svc._make_job(root, project, rel, segment(text), file.segments, key, PRIORITY_EDIT)
         svc.queue.submit(_job_id(root, lang, rel, key), PRIORITY_EDIT, job)
 
+    async def back_translate(self, root: Path, project: Project, rel: str, key: str) -> str:
+        """Source-language proposal for a translation edited directly by the author (RF-24)."""
+        stored = store.load(root, project.lingua_ufficiale, rel)
+        current = stored.get(key) if stored else None
+        if current is None or not current.target:
+            raise WorkspaceError("not_found", f"segment not translated yet: {key}")
+        svc = self.service
+        client = svc._client(*svc._config_for(project))
+        ctx = Context(project.lingua_ufficiale, project.lingua_sorgente, project.tono)
+        outcome = await translate(client, current.target, ctx)
+        if not outcome.ok:
+            raise WorkspaceError("model_refused", outcome.reason)
+        return outcome.target
+
     async def revise(
         self,
         root: Path,

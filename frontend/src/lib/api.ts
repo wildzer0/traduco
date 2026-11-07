@@ -2,10 +2,14 @@ import type {
   AssetSaved,
   BundledSkeleton,
   FileContent,
+  GlossaryEntry,
   LlmStatus,
   NodeResult,
   ProjectSummary,
+  ReviewData,
+  SegmentRow,
   SkeletonReport,
+  Tone,
   TranslationView,
   TreeNode,
 } from "./types";
@@ -146,3 +150,61 @@ export const getSkeletonCheck = async (id: string): Promise<SkeletonReport | nul
 
 export const createMissing = (id: string): Promise<{ created: string[] }> =>
   api(`${base(id)}/skeleton/create-missing`, json("POST", {}));
+
+// --- glossary, segments, review ------------------------------------------------------------
+
+export const getGlossary = (id: string): Promise<GlossaryEntry[]> => api(`${base(id)}/glossary`);
+
+export const putGlossary = (id: string, entries: GlossaryEntry[]): Promise<GlossaryEntry[]> =>
+  api(`${base(id)}/glossary`, json("PUT", entries));
+
+export type SegmentChange =
+  | { target: string }
+  | { locked: boolean }
+  | { action: "approve" | "accept" | "dismiss" | "retranslate" | "diverge" };
+
+export const putSegment = (
+  id: string,
+  path: string,
+  key: string,
+  change: SegmentChange,
+): Promise<SegmentRow> =>
+  api(`${base(id)}/segments/${enc(key)}?path=${enc(path)}`, json("PUT", change));
+
+export const instructSegment = (
+  id: string,
+  path: string,
+  key: string,
+  instruction: string,
+  alternatives = false,
+): Promise<{ proposals: string[] }> =>
+  api(
+    `${base(id)}/segments/${enc(key)}/instruct?path=${enc(path)}`,
+    json("POST", { instruction, alternatives }),
+  );
+
+export const backTranslate = (id: string, path: string, key: string): Promise<{ text: string }> =>
+  api(`${base(id)}/segments/${enc(key)}/back-translate?path=${enc(path)}`, { method: "POST" });
+
+export const applySource = (
+  id: string,
+  path: string,
+  key: string,
+  text: string,
+): Promise<SegmentRow> =>
+  api(`${base(id)}/segments/${enc(key)}/apply-source?path=${enc(path)}`, json("POST", { text }));
+
+export const getReview = (id: string): Promise<ReviewData> => api(`${base(id)}/review`);
+
+export const patchSectionMeta = (
+  id: string,
+  path: string,
+  meta: { tono: Tone | null; contesto: string | null },
+): Promise<{ tono: Tone | null; contesto: string }> =>
+  api(`${base(id)}/sections/meta?path=${enc(path)}`, json("PATCH", meta));
+
+export const patchProject = (id: string, body: { tono: Tone }): Promise<Record<string, unknown>> =>
+  api(base(id), json("PATCH", body));
+
+export const getProject = (id: string): Promise<{ tono: Tone } & Record<string, unknown>> =>
+  api(base(id));

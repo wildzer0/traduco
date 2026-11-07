@@ -11,6 +11,9 @@ import { Preview } from "./Preview";
 const VIEW: TranslationView = {
   path: "capitoli/01-a/01-s.md",
   lang: "en",
+  tone: null,
+  project_tone: "formale",
+  note: "",
   markdown: "# Title\n\nSecond paragraph in Italian.\n",
   pending: 1,
   segments: [

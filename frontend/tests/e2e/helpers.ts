@@ -62,7 +62,7 @@ import { resolve } from "node:path";
 export const FAKE_LLM_PORT = 11500;
 
 /** Start the fake model on the port the e2e backend is configured to use; resolves when it answers. */
-export async function startFakeLlm(): Promise<ChildProcess> {
+export async function startFakeLlm(env: Record<string, string> = {}): Promise<ChildProcess> {
   const backend = resolve(process.cwd(), "../backend");
   const python =
     process.platform === "win32"
@@ -70,7 +70,7 @@ export async function startFakeLlm(): Promise<ChildProcess> {
       : join(backend, ".venv", "bin", "python");
   const child = spawn(python, ["-m", "fake_llm"], {
     cwd: resolve(process.cwd(), "../tools/fake-llm"),
-    env: { ...process.env, FAKE_LLM_PORT: String(FAKE_LLM_PORT) },
+    env: { ...process.env, FAKE_LLM_PORT: String(FAKE_LLM_PORT), ...env },
     stdio: "ignore",
   });
   for (let i = 0; i < 100; i++) {

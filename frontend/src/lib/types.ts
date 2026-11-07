@@ -54,6 +54,8 @@ export interface ProjectEvent {
   model?: string;
 }
 
+export type Tone = "formale" | "neutro" | "informale";
+
 export type SegmentStatus = "queued" | "translated" | "needs_review" | "approved" | "diverged";
 
 export interface SegmentRow {
@@ -72,6 +74,10 @@ export interface SegmentRow {
 export interface TranslationView {
   path: string;
   lang: string;
+  /** Tone set in the section front matter, or `null` to follow the project. */
+  tone: Tone | null;
+  project_tone: Tone;
+  note: string;
   /** The whole file with every translated segment substituted (untranslated ones keep the source). */
   markdown: string;
   segments: SegmentRow[];
@@ -106,4 +112,22 @@ export interface SkeletonReport {
 export interface BundledSkeleton {
   id: string;
   nome: string;
+}
+
+export interface GlossaryEntry {
+  sorgente: string;
+  destinazione: Record<string, string>;
+  vietati: Record<string, string[]>;
+  non_tradurre: boolean;
+  note: string;
+}
+
+export interface ReviewRow extends SegmentRow {
+  path: string;
+  section: string;
+}
+
+export interface ReviewData {
+  segments: ReviewRow[];
+  counts: Partial<Record<SegmentStatus, number>>;
 }

@@ -308,3 +308,13 @@ def test_section_tone_and_note_are_saved_in_the_front_matter(tapi: TestClient) -
     assert v["project_tone"] == "formale"
     tapi.patch(f"/api/projects/{pid}/sections/meta", params={"path": sec}, json={})
     assert view(tapi, pid, sec)["tone"] is None
+
+
+def test_back_translation_proposes_a_source_text(tapi: TestClient) -> None:
+    pid, sec, _ = setup_section(tapi, "Uno.\n")
+    settled(tapi, pid, sec)
+    put_segment(tapi, pid, sec, "p:0", {"target": "One, my way."})
+    r = tapi.post(f"/api/projects/{pid}/segments/p:0/back-translate", params={"path": sec})
+    assert (
+        r.status_code == 200 and r.json()["text"] == "[EN] One, my way."
+    )  # the fake model only prefixes

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { usePrefs } from "./prefs";
 import { usePreview } from "./preview-store";
+import { useView } from "./view-store";
 
 /** Single source of truth for keyboard shortcuts (docs/03-ui.md). */
 export const SHORTCUTS = {
@@ -17,6 +18,16 @@ export function useShortcuts(): void {
   const toggleSidebar = usePrefs((s) => s.toggleSidebar);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const mode = { "1": "write", "2": "review", "3": "focus" }[e.key] as
+        | "write"
+        | "review"
+        | "focus"
+        | undefined;
+      if (mode && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        useView.getState().setMode(mode);
+        return;
+      }
       const src = SHORTCUTS.toggleSource;
       if (e.key.toLowerCase() === src.key && (e.ctrlKey || e.metaKey) && e.shiftKey) {
         e.preventDefault();

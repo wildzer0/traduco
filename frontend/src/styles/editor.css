@@ -206,3 +206,15 @@
     animation: none;
   }
 }
+
+.preview-body .seg-flash {
+  animation: seg-flash 1.6s ease-out;
+}
+@keyframes seg-flash {
+  from {
+    background: color-mix(in srgb, var(--amber) 35%, transparent);
+  }
+  to {
+    background: transparent;
+  }
+}

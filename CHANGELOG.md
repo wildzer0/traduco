@@ -5,6 +5,22 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-07
+
+Milestone M3 - translation control and glossary.
+
+### Added
+- Edit a translation by hand: the segment is locked and survives retranslation of section, chapter or project and tone changes.
+  When the source of a locked segment changes, the new machine translation is offered as a proposal (Accept / Ignore).
+- Hover bar and context menu on the preview: edit, instruct the model ("more formal", "more concise", "simpler", your own words), three alternatives, lock, approve, retranslate, copy.
+- Direct edits can be turned into a proposed update of the source (back-translation, applied only on confirmation).
+- Glossary panel (`glossario.yaml`): required translation, forbidden terms, "do not translate", notes; checked after every translation with one corrective retry, then "needs review" with the reason.
+- Tone per project and per section, translator note in the section front matter.
+- Review mode (`Ctrl+2`): every segment with filters and quick approval; `F8` jumps to the next one to review; focus mode (`Ctrl+3`).
+
+### Fixed
+- `GET /tree` no longer fails when a folder is renamed while the tree is being read.
+
 ## [0.3.1] - 2026-11-07
 
 Milestone M2b - project skeleton.

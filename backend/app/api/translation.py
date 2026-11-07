@@ -155,6 +155,14 @@ async def instruct(
     return {"proposals": proposals}
 
 
+@router.post("/projects/{project_id}/segments/{key}/back-translate")
+async def back_translate(
+    root: Root, service: Service, key: str, path: str = Query(...)
+) -> dict[str, str]:
+    text = await SegmentActions(service).back_translate(root, load_project(root), path, key)
+    return {"text": text}
+
+
 @router.post("/projects/{project_id}/segments/{key}/apply-source")
 def apply_source(
     root: Root, service: Service, key: str, body: ApplySource, path: str = Query(...)
