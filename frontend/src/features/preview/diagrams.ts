@@ -12,9 +12,18 @@ let loaded: Promise<Mermaid> | null = null;
 let queue: Promise<unknown> = Promise.resolve();
 let counter = 0;
 
+/** The diagram engine itself could not be loaded (not a mistake in the diagram). */
+export class DiagramEngineError extends Error {}
+
 /** mermaid is large: load it only when a document actually has a diagram. */
 function loadMermaid(): Promise<Mermaid> {
-  loaded ??= import("mermaid").then((m) => m.default);
+  loaded ??= import("mermaid").then(
+    (m) => m.default,
+    (cause: unknown) => {
+      loaded = null; // try again next time
+      throw new DiagramEngineError(cause instanceof Error ? cause.message : String(cause));
+    },
+  );
   return loaded;
 }
 

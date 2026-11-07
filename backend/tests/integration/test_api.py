@@ -26,3 +26,16 @@ def test_path_traversal_does_not_leak(client_with_dist: TestClient) -> None:
 
 def test_no_frontend_when_dist_missing(client: TestClient) -> None:
     assert client.get("/").status_code == 404
+
+
+def test_the_page_is_never_cached_but_hashed_assets_are(client_with_dist: TestClient) -> None:
+    """A stale index.html asks for chunks that an update removed (seen as "invalid diagram")."""
+    page = client_with_dist.get("/")
+    assert page.headers["cache-control"] == "no-cache"
+    assert client_with_dist.get("/some/route").headers["cache-control"] == "no-cache"
+    asset = client_with_dist.get("/assets/a.js")
+    assert asset.status_code == 200
+    assert (
+        "immutable" in asset.headers["cache-control"]
+        and "max-age=31536000" in asset.headers["cache-control"]
+    )

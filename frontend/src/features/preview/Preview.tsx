@@ -11,7 +11,13 @@ import { usePreview } from "../../lib/preview-store";
 import { useTranslationState } from "../../lib/translation-store";
 import { useView } from "../../lib/view-store";
 import { parseDocument } from "../editor/markdown-io";
-import { cacheDiagram, type DiagramTheme, renderDiagram, sha256Hex } from "./diagrams";
+import {
+  cacheDiagram,
+  DiagramEngineError,
+  type DiagramTheme,
+  renderDiagram,
+  sha256Hex,
+} from "./diagrams";
 import { SectionSettings } from "./SectionSettings";
 import { SegmentOverlay } from "./SegmentOverlay";
 import { useTranslation } from "./translation";
@@ -86,10 +92,18 @@ export function Preview({ projectId }: { projectId: string }) {
           svgCache.set(key, svg);
           show(svg);
         } catch (e) {
-          if (el.isConnected) {
-            el.dataset.state = "error";
-            const message = e instanceof Error ? e.message : String(e);
-            el.setAttribute("title", t("preview.diagramError", { message }));
+          if (!el.isConnected) return;
+          const engine = e instanceof DiagramEngineError;
+          const message = engine
+            ? t("preview.diagramEngine")
+            : t("preview.diagramError", { message: e instanceof Error ? e.message : String(e) });
+          el.dataset.state = "error";
+          el.setAttribute("title", message);
+          if (!el.querySelector(".mermaid-error")) {
+            const note = document.createElement("p");
+            note.className = "mermaid-error";
+            note.textContent = message.split("\n")[0] ?? message;
+            el.append(note);
           }
         }
       });

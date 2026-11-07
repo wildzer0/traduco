@@ -6,9 +6,10 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
+from starlette.types import Scope
 
 from app.api import (
     assets,
@@ -135,10 +136,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     return app
 
 
+class _HashedAssets(StaticFiles):
+    """Files under /assets have the hash of their content in the name: they never change."""
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
+def _page(path: Path) -> FileResponse:
+    # The page itself must be asked for again every time: after an update it names new asset files,
+    # and a stale copy would look for chunks (such as the diagram engine) that no longer exist.
+    return FileResponse(path, headers={"Cache-Control": "no-cache"})
+
+
 def _mount_frontend(app: FastAPI, dist: Path) -> None:
     assets = dist / "assets"
     if assets.is_dir():
-        app.mount("/assets", StaticFiles(directory=assets), name="assets")
+        app.mount("/assets", _HashedAssets(directory=assets), name="assets")
 
     @app.get("/{path:path}", include_in_schema=False)
     def spa(path: str) -> FileResponse:
@@ -146,8 +163,8 @@ def _mount_frontend(app: FastAPI, dist: Path) -> None:
             raise HTTPException(status_code=404, detail="Not found")
         candidate = (dist / path).resolve()
         if path and candidate.is_file() and dist.resolve() in candidate.parents:
-            return FileResponse(candidate)
-        return FileResponse(dist / "index.html")
+            return _page(candidate)
+        return _page(dist / "index.html")
 
 
 app = create_app()
