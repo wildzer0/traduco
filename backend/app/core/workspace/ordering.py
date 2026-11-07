@@ -16,6 +16,12 @@ def split_prefix(name: str) -> tuple[int | None, str]:
     return (int(match[1]), match[2]) if match else (None, name)
 
 
+def prefix_of(name: str) -> str:
+    """The literal prefix of ``name`` including the dash (``'01-'``), or ``''``."""
+    match = _PREFIX.match(name)
+    return name[: match.start(2)] if match else ""
+
+
 def sort_key(name: str) -> tuple[int, int, str]:
     """Prefixed names first, in numeric order; the others after them, alphabetically."""
     number, rest = split_prefix(name)
