@@ -17,3 +17,4 @@ build/
 # Workspace artefacts when a project lives inside the repo
 .traduco/cache/
 .traduco/tm.sqlite
+.e2e-workspaces/

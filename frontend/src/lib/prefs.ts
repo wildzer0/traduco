@@ -38,6 +38,8 @@ export function applyPrefs({ theme, locale }: Stored): void {
 
 interface PrefsState extends Stored {
   sidebarOpen: boolean;
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
   setTheme: (theme: Theme) => void;
   setLocale: (locale: Locale) => void;
   toggleSidebar: () => void;
@@ -55,6 +57,8 @@ function persist({ theme, locale }: Stored): void {
 export const usePrefs = create<PrefsState>((set, get) => ({
   ...load(),
   sidebarOpen: true,
+  settingsOpen: false,
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setTheme: (theme) => {
     persist({ theme, locale: get().locale });
     set({ theme });

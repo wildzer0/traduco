@@ -1,13 +1,18 @@
+import { Tree } from "../features/tree/Tree";
 import { useT } from "../lib/i18n";
+import { usePrefs } from "../lib/prefs";
 
 interface Props {
-  onOpenSettings: () => void;
+  projectId: string;
+  selected: string | null;
+  onSelect: (path: string | null) => void;
 }
 
 const itemClass = "block w-full rounded-ui px-2 py-1 text-left";
 
-export function Sidebar({ onOpenSettings }: Props) {
+export function Sidebar({ projectId, selected, onSelect }: Props) {
   const t = useT();
+  const setSettingsOpen = usePrefs((s) => s.setSettingsOpen);
   return (
     <nav
       aria-label={t("sidebar.label")}
@@ -16,8 +21,8 @@ export function Sidebar({ onOpenSettings }: Props) {
       <h2 className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
         {t("sidebar.label")}
       </h2>
-      <p className="flex-1 px-2 py-1 text-muted">{t("sidebar.empty")}</p>
-      <div className="border-t border-border pt-2">
+      <Tree projectId={projectId} selected={selected} onSelect={onSelect} />
+      <div className="mt-2 border-t border-border pt-2">
         {(["sidebar.glossary", "sidebar.templates"] as const).map((key) => (
           <button
             key={key}
@@ -29,7 +34,11 @@ export function Sidebar({ onOpenSettings }: Props) {
             {t(key)}
           </button>
         ))}
-        <button type="button" onClick={onOpenSettings} className={`${itemClass} hover:bg-surface`}>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className={`${itemClass} hover:bg-surface`}
+        >
           {t("sidebar.settings")}
         </button>
       </div>
