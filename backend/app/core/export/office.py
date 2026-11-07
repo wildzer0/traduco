@@ -152,8 +152,11 @@ def convert(docx: Path, fmt: str, outdir: Path, *, update_fields: bool = True) -
     if update_fields and fmt in FILTERS:
         for call in _macro_calls(docx, produced, fmt):
             with tempfile.TemporaryDirectory(prefix="traduco-lo-") as profile:
+                env = f"-env:UserInstallation={Path(profile).as_uri()}"
+                # the macro only runs on a profile LibreOffice has already set up itself
+                _run([*base, env, "--terminate_after_init"])
                 _install_macro(Path(profile))
-                result = _run([*base, f"-env:UserInstallation={Path(profile).as_uri()}", call])
+                result = _run([*base, env, call])
             DIAGNOSTICS.append(
                 f"macro {call[-60:]!r}: exit {result.returncode}, file {produced.is_file()}, "
                 f"stderr {result.stderr.strip()[:200]!r}, stdout {result.stdout.strip()[:200]!r}"
