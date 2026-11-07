@@ -1,4 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
+import { CommandPalette } from "../features/command-palette/CommandPalette";
+import { ShortcutsHelp } from "../features/command-palette/ShortcutsHelp";
 import { usePrefs } from "../lib/prefs";
 import { useShortcuts } from "../lib/shortcuts";
 import { ModelBanner } from "./ModelBanner";
@@ -18,6 +20,8 @@ export function AppShell() {
         <Outlet />
       </div>
       <StatusBar />
+      <CommandPalette />
+      <ShortcutsHelp />
       {settingsOpen && <SettingsDrawer onClose={() => setSettingsOpen(false)} />}
     </div>
   );

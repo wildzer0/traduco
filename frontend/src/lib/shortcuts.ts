@@ -1,9 +1,23 @@
 import { useEffect } from "react";
+import type { MessageKey } from "./i18n";
 import { usePrefs } from "./prefs";
 import { usePreview } from "./preview-store";
 import { useView } from "./view-store";
 
 /** Single source of truth for keyboard shortcuts (docs/03-ui.md). */
+export const SHORTCUT_LIST: { keys: string; label: MessageKey }[] = [
+  { keys: "Ctrl/⌘ + K", label: "shortcuts.palette" },
+  { keys: "Ctrl/⌘ + Shift + F", label: "shortcuts.search" },
+  { keys: "?", label: "shortcuts.help" },
+  { keys: "Ctrl/⌘ + B", label: "shortcuts.sidebar" },
+  { keys: "Alt + ↑ / ↓", label: "shortcuts.sections" },
+  { keys: "Ctrl/⌘ + 1 / 2 / 3", label: "shortcuts.modes" },
+  { keys: "Ctrl/⌘ + Shift + P", label: "shortcuts.source" },
+  { keys: "F8", label: "shortcuts.review" },
+  { keys: "Ctrl/⌘ + E", label: "shortcuts.export" },
+  { keys: "Ctrl/⌘ + K + testo selezionato", label: "shortcuts.link" },
+];
+
 export const SHORTCUTS = {
   toggleSidebar: { key: "b", ctrlOrMeta: true },
   toggleSource: { key: "p", ctrlOrMeta: true, shift: true },
@@ -26,6 +40,27 @@ export function useShortcuts(): void {
       if (mode && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         useView.getState().setMode(mode);
+        return;
+      }
+      const plain = !e.altKey && !(e.ctrlKey || e.metaKey);
+      if (e.key === "?" && plain && !isEditable(e.target)) {
+        e.preventDefault();
+        useView.getState().setHelpOpen(!useView.getState().helpOpen);
+        return;
+      }
+      if (e.key.toLowerCase() === "k" && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        // with text selected in the editor, Ctrl+K is "link"
+        const selected = isEditable(e.target) && (window.getSelection()?.toString() ?? "") !== "";
+        if (!selected && location.pathname.startsWith("/p/")) {
+          e.preventDefault();
+          useView.getState().setPalette(true, "all");
+          return;
+        }
+      }
+      if (e.key.toLowerCase() === "f" && (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey) {
+        if (!location.pathname.startsWith("/p/")) return;
+        e.preventDefault();
+        useView.getState().setPalette(true, "text");
         return;
       }
       if (e.key.toLowerCase() === "e" && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {

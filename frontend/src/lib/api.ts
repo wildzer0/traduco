@@ -522,3 +522,17 @@ export const expandSnippet = (
   path: string | null,
 ): Promise<{ text: string }> =>
   api(`${base(id)}/snippets/${enc(alias)}/expand`, json("POST", path ? { path } : {}));
+
+// --- search ----------------------------------------------------------------------------------
+export interface SearchHit {
+  path: string;
+  title: string;
+  key: string;
+  field: "source" | "translation";
+  before: string;
+  match: string;
+  after: string;
+}
+
+export const searchProject = (id: string, q: string): Promise<{ hits: SearchHit[] }> =>
+  api(`${base(id)}/search?q=${enc(q)}`);

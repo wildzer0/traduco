@@ -21,6 +21,12 @@ interface ViewState {
   setExportOpen: (open: boolean, autoRun?: boolean) => void;
   requirementsOpen: boolean;
   setRequirementsOpen: (open: boolean) => void;
+  paletteOpen: boolean;
+  /** `text` opens the palette ready to search the text of the project (Ctrl+Shift+F). */
+  paletteMode: "all" | "text";
+  setPalette: (open: boolean, mode?: "all" | "text") => void;
+  helpOpen: boolean;
+  setHelpOpen: (open: boolean) => void;
   snippetsOpen: boolean;
   setSnippetsOpen: (open: boolean) => void;
   issuesOpen: boolean;
@@ -50,6 +56,11 @@ export const useView = create<ViewState>((set) => ({
   setExportOpen: (exportOpen, autoRun = false) => set({ exportOpen, exportAutoRun: autoRun }),
   requirementsOpen: false,
   setRequirementsOpen: (requirementsOpen) => set({ requirementsOpen }),
+  paletteOpen: false,
+  paletteMode: "all",
+  setPalette: (paletteOpen, paletteMode = "all") => set({ paletteOpen, paletteMode }),
+  helpOpen: false,
+  setHelpOpen: (helpOpen) => set({ helpOpen }),
   snippetsOpen: false,
   setSnippetsOpen: (snippetsOpen) => set({ snippetsOpen }),
   issuesOpen: false,
