@@ -52,10 +52,10 @@ riordinare via drag & drop rinumera i file; un'immagine incollata compare in `im
 - [x] `protect.py`: segnaposto per inline non traducibili e formattazione; ripristino con verifica
 - [x] `assembler.py`: ricostruzione del Markdown tradotto; **test di proprietà** (hypothesis) identità → stesso HTML
 - [x] Riconciliazione segmenti dopo modifica (hash, poi posizione)
-- [ ] `llm_client.py` OpenAI-compatibile con timeout, retry, annullamento
-- [ ] `store.py`: file JSON dei segmenti, scrittura atomica, chiavi ordinate
-- [ ] Coda con priorità e annullamento delle richieste superate
-- [ ] Prompt `translate@1` con tono, contesto, segmento precedente
+- [x] `llm_client.py` OpenAI-compatibile con timeout, retry, annullamento
+- [x] `store.py`: file JSON dei segmenti, scrittura atomica, chiavi ordinate
+- [x] Coda con priorità e annullamento delle richieste superate
+- [x] Prompt `translate@1` con tono, contesto, segmento precedente
 - [ ] Eventi WebSocket `segment.*`, `llm.status`
 - [ ] Frontend: anteprima tradotta, stato per segmento, indicatore modello, banner modello offline
 - [ ] Ritraduzione di sezione/capitolo/progetto
