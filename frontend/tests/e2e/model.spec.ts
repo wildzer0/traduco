@@ -57,7 +57,7 @@ test("translation waits for the model instead of failing, then runs by itself", 
 test("without Ollama the banner says so and the editor keeps working", async ({ page }) => {
   setModelState({ state: "unavailable", model: "gemma4:e4b" });
   await projectWithSection(page, "Senza Ollama");
-  await expect(page.getByTestId("model-banner")).toContainText("Ollama non è installato");
+  await expect(page.getByTestId("model-banner")).toContainText("--llm builtin");
   await page.getByTestId("model-banner").getByRole("button", { name: "Nascondi" }).click();
   await expect(page.getByTestId("model-banner")).toHaveCount(0);
   await expect(page.getByLabel("Testo della sezione")).toBeVisible();
