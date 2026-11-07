@@ -75,6 +75,43 @@ MESSAGES: dict[str, dict[str, str]] = {
         "it": "Modalità --offline: Ollama non è disponibile, il modello non sarà usabile.",
         "en": "--offline mode: Ollama is not available, the model will not be usable.",
     },
+    "builtin.ask": {
+        "it": "Posso usare il motore integrato di Traduco (llama.cpp) al posto di Ollama: "
+        "non serve installare nulla, scarica un programma piccolo e il modello {model} "
+        "(circa {gb} GB). Senza scheda grafica è più lento.",
+        "en": "I can use Traduco's built-in engine (llama.cpp) instead of Ollama: nothing to "
+        "install, it downloads a small program and the model {model} (about {gb} GB). "
+        "It is slower without a graphics card.",
+    },
+    "builtin.prompt": {
+        "it": "Usare il motore integrato? [s/N] ",
+        "en": "Use the built-in engine? [y/N] ",
+    },
+    "builtin.declined": {
+        "it": "Motore integrato non usato: Traduco parte lo stesso, senza traduzione automatica. "
+        "Per ripensarci usa --llm builtin.",
+        "en": "Built-in engine not used: Traduco starts anyway, without automatic translation. "
+        "To change your mind use --llm builtin.",
+    },
+    "builtin.chosen_by_you": {
+        "it": "Uso il motore integrato (llama.cpp), senza Ollama",
+        "en": "Using the built-in engine (llama.cpp), without Ollama",
+    },
+    "builtin.engine": {"it": "motore integrato", "en": "built-in engine"},
+    "builtin.background": {
+        "it": "Preparo il motore integrato e il modello {model} in sottofondo: "
+        "l'editor funziona già, la traduzione parte appena è pronto.",
+        "en": "Preparing the built-in engine and the model {model} in the background: "
+        "the editor works already, translation starts as soon as it is ready.",
+    },
+    "model.why.builtin_cpu": {
+        "it": "il più leggero, per girare senza scheda grafica",
+        "en": "the lightest, to run without a graphics card",
+    },
+    "model.why.builtin_metal": {
+        "it": "adatto a questo Mac (accelerazione Metal)",
+        "en": "suits this Mac (Metal acceleration)",
+    },
     "model.have": {
         "it": "Il modello {model} è già scaricato",
         "en": "Model {model} is already downloaded",
@@ -213,6 +250,22 @@ MESSAGES: dict[str, dict[str, str]] = {
     "E043.fix": {
         "it": "Libera spazio oppure scegli un modello più piccolo con --model gemma4:e2b.",
         "en": "Free up space or choose a smaller model with --model gemma4:e2b.",
+    },
+    "E050": {
+        "it": "Il motore integrato non si avvia ({what}).",
+        "en": "The built-in engine does not start ({what}).",
+    },
+    "E050.fix": {
+        "it": "Guarda .runtime/logs/llama-server.log; con poca memoria prova a chiudere altri programmi.",
+        "en": "See .runtime/logs/llama-server.log; if memory is short try closing other programs.",
+    },
+    "E051": {
+        "it": "Il motore integrato non è disponibile per questo sistema ({platform}).",
+        "en": "The built-in engine is not available for this system ({platform}).",
+    },
+    "E051.fix": {
+        "it": "Installa Ollama da https://ollama.com/download oppure imposta un altro server in Impostazioni.",
+        "en": "Install Ollama from https://ollama.com/download or set another server in Settings.",
     },
     "E099": {
         "it": "Errore imprevisto: {what}.",

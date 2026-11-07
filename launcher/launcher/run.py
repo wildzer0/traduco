@@ -10,7 +10,7 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-from launcher import ollama
+from launcher import builtin, ollama
 from launcher.model import Downloader, ModelState
 from launcher.paths import clean_env
 from launcher.steps import Context
@@ -82,7 +82,10 @@ def serve(ctx: Context, port: int, open_browser: bool, office: Path | None = Non
     llm = ctx.llm
     state = ModelState(p.model_state)
     downloader: Downloader | None = None
-    if llm is None or llm.external:
+    engine: builtin.Engine | None = None
+    if llm is not None and llm.builtin is not None:
+        engine = builtin.Engine(p, ctx.manifest, llm.builtin, state, ctx.ui, offline=ctx.offline)
+    elif llm is None or llm.external:
         state.write(
             "ready" if llm and llm.model else "unavailable", llm.model if llm and llm.model else ""
         )
@@ -103,6 +106,9 @@ def serve(ctx: Context, port: int, open_browser: bool, office: Path | None = Non
             ctx.ui.info(ctx.ui.t("ready", url=url))
             if downloader is not None:
                 downloader.start()
+            if engine is not None:
+                ctx.ui.info(ctx.ui.t("builtin.background", model=engine.name))
+                engine.start()
             if open_browser:
                 webbrowser.open(url)
             proc.wait()
@@ -113,6 +119,8 @@ def serve(ctx: Context, port: int, open_browser: bool, office: Path | None = Non
         finally:
             if downloader is not None:
                 downloader.stop()
+            if engine is not None:
+                engine.stop()
             stop(proc)
             if llm is not None and llm.server is not None:
                 ollama.stop_server(llm.server)  # only an Ollama the launcher started itself

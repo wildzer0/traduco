@@ -10,7 +10,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from launcher import hardware, ollama
+from launcher import builtin, hardware, ollama
 from launcher.downloads import download, install_archive
 from launcher.manifest import Manifest
 from launcher.model import ModelState
@@ -260,6 +260,7 @@ class Llm:
     base_url: str | None = None  # OpenAI-style URL handed to the backend
     external: bool = False  # the user already configured a server: the launcher leaves it alone
     server: subprocess.Popen[bytes] | None = None  # an Ollama started by the launcher
+    builtin: builtin.Plan | None = None  # the built-in engine (ADR-041) instead of Ollama
     pull: bool = False
     note: str = ""  # why there is no model (for the interface)
 
@@ -285,7 +286,9 @@ def configured_endpoint(workspace: Path) -> tuple[str | None, str | None]:
     return url, model
 
 
-def setup_llm(ctx: Context, requested_model: str | None, assume_yes: bool) -> Llm:
+def setup_llm(
+    ctx: Context, requested_model: str | None, assume_yes: bool, engine: str = "auto"
+) -> Llm:
     """Steps 5-7: choose the model, start or install Ollama, check the model is there."""
     ui, m = ctx.ui, ctx.manifest
     workspace = ctx.workspace or Path.home() / "Traduco"
@@ -317,6 +320,9 @@ def setup_llm(ctx: Context, requested_model: str | None, assume_yes: bool) -> Ll
     ui.info(ui.t("model.chosen", model=tag, why=ui.t(f"model.why.{reason}")))
 
     ui.step("step.ollama")
+    if engine == "builtin":
+        ui.info(ui.t("builtin.chosen_by_you"))
+        return _builtin_llm(ctx, hw)
     llm = Llm(model=tag, size_gb=size, host=host, base_url=f"{host.rstrip('/')}/v1")
     if ollama.is_up(host):
         ui.info(ui.t("ollama.running"))
@@ -325,6 +331,8 @@ def setup_llm(ctx: Context, requested_model: str | None, assume_yes: bool) -> Ll
         if binary is None:
             binary = _offer_install(ctx, assume_yes)
         if binary is None:
+            if engine == "auto" and _offer_builtin(ctx, hw, assume_yes):
+                return _builtin_llm(ctx, hw)
             ui.skip(1)
             return Llm(model=tag, note="unavailable")
         ui.info(ui.t("ollama.starting"))
@@ -355,6 +363,48 @@ def setup_llm(ctx: Context, requested_model: str | None, assume_yes: bool) -> Ll
         ModelState(ctx.paths.model_state).write("error", tag, error=message)
         return llm
     llm.pull = True
+    return llm
+
+
+def _offer_builtin(ctx: Context, hw: hardware.Hardware, assume_yes: bool) -> bool:
+    """Ollama is not available: offer the built-in engine (a download, no installation)."""
+    ui = ctx.ui
+    if ctx.state.get("builtin_declined") == "1" and not ctx.update and not assume_yes:
+        return False
+    model, _ = builtin.choose_model(hw, ctx.manifest)
+    if not ui.confirm(
+        "builtin.ask", "builtin.prompt", assume_yes, model=model.name, gb=f"{model.size_gb:g}"
+    ):
+        ctx.state.set("builtin_declined", "1")
+        ui.info(ui.t("builtin.declined"))
+        return False
+    ctx.state.set("builtin_declined", "0")
+    return True
+
+
+def _builtin_llm(ctx: Context, hw: hardware.Hardware) -> Llm:
+    """Step 7 with the built-in engine: choose the model and check there is room for it."""
+    ui = ctx.ui
+    model, why = builtin.choose_model(hw, ctx.manifest)
+    ui.step("step.model")
+    ui.info(ui.t("model.chosen", model=model.name, why=ui.t(f"model.why.{why}")))
+    plan = builtin.Plan(model, builtin.free_port())
+    llm = Llm(model=model.name, size_gb=model.size_gb, base_url=plan.openai_url, builtin=plan)
+    if builtin.installed(ctx.paths, ctx.manifest, model):
+        ui.info(ui.t("model.have", model=model.name))
+        return llm
+    if ctx.offline:
+        raise LauncherError("E012", name=f"{model.name} ({ui.t('builtin.engine')})")
+    have = shutil.disk_usage(ctx.paths.root).free / GB
+    if have < model.size_gb + 0.3:
+        llm.builtin = None
+        llm.note = "no_space"
+        err = LauncherError(
+            "E043", model=model.name, need=f"{model.size_gb + 0.3:g}", have=f"{have:.1f}"
+        )
+        message, fix = err.render(ui.lang)
+        ui.info(f"{message} {fix}")
+        ModelState(ctx.paths.model_state).write("error", model.name, error=message)
     return llm
 
 

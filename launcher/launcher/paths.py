@@ -38,6 +38,14 @@ class Paths:
         return self.pandoc / ("pandoc.exe" if sys.platform == "win32" else "bin/pandoc")
 
     @property
+    def llamacpp(self) -> Path:
+        return self.runtime / "llamacpp"
+
+    @property
+    def builtin_models(self) -> Path:
+        return self.runtime / "models"
+
+    @property
     def model_state(self) -> Path:
         """Progress of the model download, read by the backend for the interface."""
         return self.runtime / "model.json"

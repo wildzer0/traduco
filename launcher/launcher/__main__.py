@@ -31,6 +31,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Ollama model to use instead of the one chosen for this computer",
     )
     parser.add_argument(
+        "--llm",
+        choices=["auto", "ollama", "builtin"],
+        default="auto",
+        help="engine: ollama, builtin (llama.cpp) or auto (Ollama, else offer the built-in)",
+    )
+    parser.add_argument(
         "--yes", action="store_true", help="answer yes to questions (install Ollama) without asking"
     )
     parser.add_argument(
@@ -94,7 +100,9 @@ def run(args: argparse.Namespace, ui: UI, root: Path) -> int:
             return 0
 
         ui.step("step.hardware")
-        ctx.llm = steps.setup_llm(ctx, args.model, args.yes)  # also runs the Ollama and model steps
+        ctx.llm = steps.setup_llm(
+            ctx, args.model, args.yes, args.llm
+        )  # also runs the Ollama and model steps
 
         ui.step("step.office")
         office = steps.find_libreoffice()

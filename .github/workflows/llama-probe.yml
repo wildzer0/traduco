@@ -25,10 +25,17 @@ jobs:
       - name: Start the server and ask it something
         run: |
           cd "$RUNNER_TEMP/llama"; d=$(dirname "$(find . -maxdepth 2 -name llama-server | head -1)"); cd "$d"
-          ./llama-server -m ../tiny.gguf --host 127.0.0.1 --port 18080 --alias tiny -c 512 > server.log 2>&1 &
-          for i in $(seq 1 60); do curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:18080/health | grep -q 200 && break; sleep 1; done
-          echo "--- health"; curl -s http://127.0.0.1:18080/health; echo
-          echo "--- models"; curl -s http://127.0.0.1:18080/v1/models; echo
-          echo "--- chat"; curl -s http://127.0.0.1:18080/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"tiny","messages":[{"role":"user","content":"Hello"}],"max_tokens":16,"reasoning_effort":"none","stream":false}'; echo
-          echo "--- log tail"; tail -n 25 server.log
-          kill %1 || true
+          export LD_LIBRARY_PATH="$PWD"
+          ./llama-server -m ../tiny.gguf --host 127.0.0.1 --port 18080 --alias tiny -c 512 --no-webui > server.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 90); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18080/health || true)
+            [ "$code" = 200 ] && break
+            kill -0 $pid 2>/dev/null || { echo "server exited"; break; }
+            sleep 1
+          done
+          echo "--- health"; curl -s http://127.0.0.1:18080/health || true; echo
+          echo "--- models"; curl -s http://127.0.0.1:18080/v1/models || true; echo
+          echo "--- chat"; curl -s http://127.0.0.1:18080/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"tiny","messages":[{"role":"user","content":"Hello"}],"max_tokens":16,"reasoning_effort":"none","stream":false}' || true; echo
+          echo "--- log"; tail -n 40 server.log
+          kill $pid 2>/dev/null || true
