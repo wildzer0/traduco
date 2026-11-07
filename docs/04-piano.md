@@ -30,7 +30,7 @@ il secondo avvio impiega meno di 10 s; il fake-llm risponde a una richiesta di p
 
 ## M1 — Workspace ed editor (RF-01…06, 10, 11, 15)
 
-- [ ] `core/workspace`: lettura/scrittura `progetto.yaml`, albero capitoli/sezioni, ordinamento per prefisso, titoli da front matter
+- [x] `core/workspace`: lettura/scrittura `progetto.yaml`, albero capitoli/sezioni, ordinamento per prefisso, titoli da front matter
 - [ ] Operazioni: crea, rinomina, sposta, riordina (rinumerazione atomica dei prefissi), elimina (nel cestino `.traduco/cestino`)
 - [ ] Upload immagini in `img/` del capitolo
 - [ ] API projects, nodes, files, assets con controllo conflitti via hash (`If-Match`)

@@ -166,3 +166,10 @@ test) non sono nell'elenco di AGENTS.md pur essendo permissive.
 Il compose non fissa l'immagine Ollama (`OLLAMA_IMAGE`, predefinita `latest`).
 **Conseguenze**: l'immagine non è stata costruita in locale (Docker assente): la prima verifica reale è il job CI `docker`.
 La CI usa tag maggiori delle action (`@v4`, `@v6`), non SHA: da fissare prima del rilascio pubblico.
+
+## ADR-022 — Front matter con parser proprio su ruamel.yaml
+**Contesto**: `02-architettura.md` indica `python-frontmatter`, ma serve conservare il corpo byte per byte, commenti e ordine delle chiavi,
+e il pacchetto `app.core` è sotto `mypy --strict`.
+**Decisione**: `core/workspace/frontmatter.py` (circa 60 righe) usa ruamel.yaml in modalità round-trip; `python-frontmatter` non è una dipendenza.
+`progetto.yaml` conserva le chiavi sconosciute (`extra="allow"`) ma, essendo riscritto dal modello, può perdere i commenti YAML.
+**Conseguenze**: nessun commento perso nel front matter delle sezioni; nei `progetto.yaml` modificati dall'app i commenti non sono garantiti.
