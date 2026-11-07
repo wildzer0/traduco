@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import tempfile
 from dataclasses import asdict
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel, Field
 
 from app.api.deps import Root
 from app.config import Settings, get_settings
+from app.core.export.pandoc import default_reference_doc, find_pandoc
 from app.core.templates import store
 from app.core.templates.analyze import MAX_TEMPLATE_BYTES, Analysis
 from app.core.templates.mapping import ROLES, Mapping
+from app.core.templates.wizard import FONTS, WizardOptions
 from app.core.workspace.errors import WorkspaceError
 
 router = APIRouter(tags=["templates"])
@@ -51,6 +58,30 @@ async def upload_template(
         if len(data) > MAX_TEMPLATE_BYTES:
             raise WorkspaceError("too_large", "the template is larger than 50 MB")
     name = store.import_template(root, filename, bytes(data))
+    return _detail(name, *store.describe(root, name))
+
+
+class WizardBody(BaseModel):
+    nome: str = Field(default="template", min_length=1, max_length=60)
+    opzioni: WizardOptions = Field(default_factory=WizardOptions)
+    logo_base64: str | None = None
+
+
+@router.get("/template-wizard/fonts")
+def wizard_fonts() -> list[str]:
+    return list(FONTS)
+
+
+@router.post("/projects/{project_id}/templates/wizard", status_code=201)
+def create_with_wizard(root: Root, body: WizardBody) -> dict[str, Any]:
+    """Create a template from the wizard's four steps (RF-55)."""
+    try:
+        logo = base64.b64decode(body.logo_base64, validate=True) if body.logo_base64 else None
+    except (binascii.Error, ValueError) as exc:
+        raise WorkspaceError("invalid_image", "the logo is not valid base64") from exc
+    with tempfile.TemporaryDirectory(prefix="traduco-wizard-") as tmp:
+        reference = default_reference_doc(find_pandoc(), Path(tmp) / "reference.docx")
+        name = store.create_from_wizard(root, body.nome, body.opzioni, logo, reference)
     return _detail(name, *store.describe(root, name))
 
 

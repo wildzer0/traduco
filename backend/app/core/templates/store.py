@@ -22,6 +22,7 @@ from app.core.templates.mapping import (
     save_mapping,
     template_path,
 )
+from app.core.templates.wizard import WizardOptions, build_template
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.fsio import atomic_write_bytes
 from app.core.workspace.manifest import load_project, save_project
@@ -71,18 +72,21 @@ def _validate_docx(data: bytes) -> None:
         raise WorkspaceError("invalid_template", "this is not a Word document (.docx)") from exc
 
 
+def _free_name(root: Path, wanted: str) -> str:
+    name = slugify(wanted).replace(".", "-")[:60] or "template"
+    base, n = name, 1
+    while template_path(root, name).exists():
+        n += 1
+        name = f"{base}-{n}"
+    return check_name(name)
+
+
 def import_template(root: Path, filename: str, data: bytes) -> str:
     """Save an uploaded ``.docx`` and its proposed mapping; returns the template name."""
     if not filename.lower().endswith(".docx"):
         raise WorkspaceError("invalid_template", "only .docx templates are accepted")
     _validate_docx(data)
-    name = slugify(filename[: -len(".docx")]) or "template"
-    name = name.replace(".", "-")[:60]
-    base, n = name, 1
-    while template_path(root, name).exists():
-        n += 1
-        name = f"{base}-{n}"
-    check_name(name)
+    name = _free_name(root, filename[: -len(".docx")])
     atomic_write_bytes(template_path(root, name), data)
     try:
         analysis = analyze(template_path(root, name))
@@ -145,6 +149,19 @@ def add_example(root: Path, example_dir: Path) -> str:
         atomic_write_bytes(mapping_path(root, name), mapping.read_bytes())
     else:
         save_mapping(root, name, propose_mapping(analyze(template_path(root, name))))
+    current = load_project(root).template_predefinito
+    if current is None or not template_path(root, current).is_file():
+        set_default(root, name)
+    return name
+
+
+def create_from_wizard(
+    root: Path, wanted: str, options: WizardOptions, logo: bytes | None, reference: Path
+) -> str:
+    """Build a template from the wizard's choices and give it a proposed style mapping."""
+    name = _free_name(root, wanted)
+    build_template(options, reference, template_path(root, name), logo)
+    save_mapping(root, name, propose_mapping(analyze(template_path(root, name))))
     current = load_project(root).template_predefinito
     if current is None or not template_path(root, current).is_file():
         set_default(root, name)

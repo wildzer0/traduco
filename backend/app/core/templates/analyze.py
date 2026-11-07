@@ -175,7 +175,15 @@ def propose_mapping(analysis: Analysis) -> Mapping:
         paragraphs,
         [(r"(corpo|bodytext|testocorpo)", 10), (r"^(normal|normale)$", 5), (r"^testo", 4)],
     )
-    pick("didascalia", paragraphs, [(r"(didascalia|caption|legenda)", 10)])
+    pick(
+        "didascalia",
+        paragraphs,
+        [  # figures are captioned in the export: prefer the figure caption to the table one
+            (r"(imagecaption|figurecaption|didascaliafigura)", 12),
+            (r"^(didascalia|caption|legenda)$", 11),
+            (r"(didascalia|caption|legenda)", 10),
+        ],
+    )
     pick(
         "elenco_puntato", paragraphs, [(r"(elenco|list)(puntato|bullet)", 10), (r"^listbullet", 8)]
     )

@@ -258,3 +258,58 @@ def test_capabilities_report_tools_and_the_model_download(
     }
     (runtime / "model.json").write_text("{broken")
     assert xapi.get("/api/capabilities").json()["model"] == {"state": "none"}
+
+
+# --- template wizard (M5) --------------------------------------------------------------------
+
+
+def test_the_wizard_creates_a_template_that_exports(xapi: TestClient, tmp_path: Path) -> None:
+    import base64
+
+    pid = xapi.post("/api/projects", json={"nome": "Con wizard"}).json()["id"]
+    ch = xapi.post(f"/api/projects/{pid}/nodes", json={"kind": "chapter", "title": "Uno"}).json()[
+        "path"
+    ]
+    xapi.post(f"/api/projects/{pid}/nodes", json={"kind": "section", "title": "Due", "parent": ch})
+    logo = tmp_path / "logo.png"
+    logo_png(logo, 200, 60)
+    r = xapi.post(
+        f"/api/projects/{pid}/templates/wizard",
+        json={
+            "nome": "Mio stile",
+            "opzioni": {
+                "font_body": "Georgia",
+                "color": "#2E7D32",
+                "cover_fields": ["data", "cliente"],
+            },
+            "logo_base64": base64.b64encode(logo.read_bytes()).decode(),
+        },
+    )
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["name"] == "mio-stile" and body["problems"] == [] and body["has_content"]
+    assert body["mapping"]["stili"]["titolo_1"] == "Heading1"
+    assert xapi.get(f"/api/projects/{pid}/templates").json()[0]["default"] is True
+    # the fields of the cover need values: without them the export says which ones
+    first = run_export(xapi, pid, scope="project", language="sorgente")
+    assert first["error"]["code"] == "missing_fields"
+    assert first["error"]["details"]["fields"] == ["cliente", "codice_documento", "data"]
+    xapi.patch(
+        f"/api/projects/{pid}",
+        json={"metadati": {"codice_documento": "X-1", "cliente": "ACME", "data": "2026-11-07"}},
+    )
+    status = run_export(xapi, pid, scope="project", language="sorgente")
+    assert status["state"] == "done", status["error"]
+    assert not any("no template" in w for w in status["warnings"])
+
+
+def test_wizard_rejects_bad_input(xapi: TestClient) -> None:
+    pid = xapi.post("/api/projects", json={"nome": "X"}).json()["id"]
+    url = f"/api/projects/{pid}/templates/wizard"
+    assert xapi.post(url, json={"opzioni": {"color": "red"}}).status_code == 422
+    assert xapi.post(url, json={"logo_base64": "@@@"}).status_code == 415
+    assert (
+        xapi.post(url, json={"logo_base64": base64.b64encode(b"<svg/>").decode()}).status_code
+        == 415
+    )
+    assert xapi.get("/api/template-wizard/fonts").json()[0] == "Calibri"
