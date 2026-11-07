@@ -196,3 +196,17 @@ il client deve rileggere albero e file aperto a ogni (ri)connessione. I test rip
 **Decisione**: si fissa `mermaid@11.13.0`. `khroma` (dipendenza di mermaid) ha licenza MIT nel repository ma non nel `package.json`: è ammesso con un override
 esplicito in `tools/check-licenses.py`.
 **Conseguenze**: nessuna funzione di layout ELK (non usata). Passare a mermaid 12 richiede una decisione sull'EPL-2.0 (licenza copyleft debole, simile alla MPL-2.0).
+
+## ADR-026 — Editor M1: scelte implementative
+**Decisione**:
+- **Salvataggio**: `Autosaver` (debounce 1 s, un salvataggio alla volta, `If-Match` con l'hash noto). Il testo scritto su disco è sempre normalizzato con
+  `canonicalize()`; la vista CodeMirror non viene riscritta mentre l'utente digita. Il file è salvato anche al blur dell'editor, al cambio sezione e a `pagehide`.
+- **Modalità**: Markdown mostra l'intero file, front matter compreso; Documento mostra solo il corpo e conserva il front matter. Il cambio di modalità
+  salva in forma canonica e riporta il cursore al blocco di primo livello corrispondente (markdown-it per la mappa delle righe).
+- **Eventi esterni**: modifica di un file aperto senza testo non salvato → ricarica silenziosa; con testo non salvato (o 409 al salvataggio) → avviso
+  "Ricarica / Mantieni la mia versione". Albero e file aperto vengono riletti a ogni (ri)connessione del WebSocket e quando la finestra riprende il focus.
+- **Pulsanti della barra strumenti** non prendono il focus (`mousedown` annullato), così selezione e tastiera restano nell'editor.
+- **Menu `/`**: voci Titolo 1/2/3, Elenco, Tabella, Immagine, Diagramma, Nota, Citazione, Codice, Interruzione (il documento UI dice "Titolo": qui sono tre livelli).
+- L'albero è una lista di pulsanti, non un `role="tree"` ARIA, finché non esiste la navigazione a frecce.
+- Le immagini relative (`img/x.png`) sono riscritte nel DOM verso `/api/projects/{id}/assets` senza toccare il Markdown.
+**Dipendenza richiesta da uvicorn**: `websockets`. Senza, i WebSocket rispondono 404 nel server reale (il `TestClient` non lo rivela): c'è un test contro un server vero.

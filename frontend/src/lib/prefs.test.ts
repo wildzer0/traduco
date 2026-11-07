@@ -14,6 +14,14 @@ describe("prefs", () => {
     expect(JSON.parse(localStorage.getItem("traduco.prefs") ?? "{}").locale).toBe("en");
   });
 
+  it("persists only user preferences, not transient UI state", () => {
+    usePrefs.getState().setEditorMode("markdown");
+    const stored = JSON.parse(localStorage.getItem("traduco.prefs") ?? "{}");
+    expect(Object.keys(stored).sort()).toEqual(["editorMode", "locale", "theme"]);
+    expect(stored.editorMode).toBe("markdown");
+    usePrefs.getState().setEditorMode("document");
+  });
+
   it("applyPrefs does not throw when storage is unavailable", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("denied");

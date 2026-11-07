@@ -29,3 +29,23 @@ export async function addNode(page: Page, button: "+ Capitolo" | "+ Sezione", ti
   await input.press("Enter");
   await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
 }
+
+import { readFileSync, writeFileSync } from "node:fs";
+
+export const readFile = (id: string, rel: string) =>
+  readFileSync(join(projectDir(id), rel), "utf8");
+export const writeProjectFile = (id: string, rel: string, text: string) =>
+  writeFileSync(join(projectDir(id), rel), text, "utf8");
+
+/** Project with one chapter and one section, section open in the editor. */
+export async function projectWithSection(page: Page, nome: string, section = "Scopo") {
+  await createProject(page, nome);
+  await addNode(page, "+ Capitolo", "Cap");
+  await addNode(page, "+ Sezione", section);
+  await page.getByRole("button", { name: section, exact: true }).click();
+  await expect(page.getByLabel("Testo della sezione")).toBeVisible();
+}
+
+export async function waitSaved(page: Page) {
+  await expect(page.getByTestId("save-status")).toContainText("Salvato");
+}
