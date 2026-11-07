@@ -7,6 +7,7 @@ import {
   putSegment,
   type SegmentChange,
 } from "../../lib/api";
+import { recheckOpenFile } from "../../lib/file-events";
 import { useNotices } from "../../lib/notices";
 import { translationKey } from "./translation";
 
@@ -48,6 +49,7 @@ export function useSegmentActions(projectId: string, path: string) {
       backTranslate: (key: string) => guard(() => backTranslate(projectId, path, key)),
       applySource: async (key: string, text: string) => {
         const row = await guard(() => applySource(projectId, path, key, text));
+        recheckOpenFile();
         await refresh();
         return row;
       },

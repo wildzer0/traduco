@@ -415,7 +415,7 @@ def test_check_with_requirement_rules_stores_dismissable_suggestions(tapi: TestC
     assert r.status_code == 200, r.text
     items = r.json()["items"]
     assert {i["origin"] for i in items} == {"rule"}  # the fake model returns no JSON: no remarks
-    assert any("prescription" in i["message"] for i in items)
+    assert any("prescrizione" in i["message"] for i in items)
     stored = tapi.get(f"/api/projects/{pid}/check", params={"path": sec}).json()["items"]
     assert [i["id"] for i in stored] == [i["id"] for i in items]
     tapi.post(

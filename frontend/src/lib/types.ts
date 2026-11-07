@@ -131,3 +131,23 @@ export interface ReviewData {
   segments: ReviewRow[];
   counts: Partial<Record<SegmentStatus, number>>;
 }
+
+export type AssistAction =
+  | "correct"
+  | "rephrase"
+  | "concise"
+  | "simple"
+  | "formale"
+  | "neutro"
+  | "informale";
+
+export interface Suggestion {
+  id: string;
+  key: string;
+  source_hash: string;
+  category: string;
+  message: string;
+  suggestion: string;
+  origin: "model" | "rule" | "guide";
+  status: "open" | "dismissed" | "applied";
+}

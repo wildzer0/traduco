@@ -7,8 +7,10 @@ import {
   Image,
   Italic,
   List,
+  ListChecks,
   Superscript,
   Table,
+  Wand2,
 } from "lucide-react";
 import { type MessageKey, useT } from "../../lib/i18n";
 import type { EditorMode } from "../../lib/prefs";
@@ -18,6 +20,9 @@ interface Props {
   mode: EditorMode;
   onMode: (mode: EditorMode) => void;
   onCommand: (command: CommandId) => void;
+  /** Writing companion: improve the block under the cursor / check the whole section. */
+  onAssist?: () => void;
+  onCheck?: () => void;
 }
 
 const btn =
@@ -60,7 +65,7 @@ function Menu({
   );
 }
 
-export function Toolbar({ mode, onMode, onCommand }: Props) {
+export function Toolbar({ mode, onMode, onCommand, onAssist, onCheck }: Props) {
   const t = useT();
   const simple: { id: CommandId; label: MessageKey; icon: React.ReactNode }[] = [
     { id: "bold", label: "toolbar.bold", icon: <Bold {...ICON} /> },
@@ -149,6 +154,30 @@ export function Toolbar({ mode, onMode, onCommand }: Props) {
         ]}
         onPick={onCommand}
       />
+      {onAssist && (
+        <button
+          type="button"
+          aria-label={t("assist.toolbar")}
+          title={t("assist.toolbar")}
+          className={`${btn} ml-2`}
+          onMouseDown={keepFocus}
+          onClick={onAssist}
+        >
+          <Wand2 {...ICON} />
+        </button>
+      )}
+      {onCheck && (
+        <button
+          type="button"
+          aria-label={t("assist.check")}
+          title={t("assist.check")}
+          className={btn}
+          onMouseDown={keepFocus}
+          onClick={onCheck}
+        >
+          <ListChecks {...ICON} />
+        </button>
+      )}
       <fieldset className="m-0 ml-auto flex min-w-0 rounded-ui border border-border p-0.5">
         <legend className="sr-only">{t("mode.label")}</legend>
         {(["document", "markdown"] as const).map((m) => (

@@ -106,9 +106,9 @@ def test_weak_verbs_and_vague_words() -> None:
 
 def test_italian_rules() -> None:
     got = findings("Il sistema dovrebbe rispondere in modo adeguato.\n", "it")
-    assert any("Weak verb" in m for _, m in got) and any('"adeguato"' in m for _, m in got)
+    assert any("Verbo debole" in m for _, m in got) and any("«adeguato»" in m for _, m in got)
     assert any(
-        "More than one" in m
+        "Più di una prescrizione" in m
         for _, m in findings("La pompa deve partire e la valvola deve chiudersi.\n", "it")
     )
 

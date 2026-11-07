@@ -1,9 +1,12 @@
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import { Check, Lock, LockOpen, Pencil, Sparkles } from "lucide-react";
+import { Check, Lock, LockOpen, Pencil, Sparkles, Wand2 } from "lucide-react";
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useState } from "react";
+import { useAssist } from "../../lib/assist-store";
 import { useT } from "../../lib/i18n";
+import { useNotices } from "../../lib/notices";
 import type { SegmentRow, TranslationView } from "../../lib/types";
 import { useView } from "../../lib/view-store";
+import { AssistBox } from "./AssistBox";
 import { useSegmentActions } from "./segment-actions";
 
 interface Rect {
@@ -14,6 +17,7 @@ type Panel =
   | { kind: "edit"; key: string }
   | { kind: "instruct"; key: string; alternatives?: boolean }
   | { kind: "source"; key: string; text: string }
+  | { kind: "assist"; key: string }
   | null;
 
 const btn =
@@ -46,7 +50,7 @@ function useRects(article: RefObject<HTMLElement | null>, keys: string[], html: 
 const column = "relative mx-auto max-w-[calc(72ch+48px)] outline-none";
 
 interface Props {
-  /** Interactions only exist on the translation; the source view is a plain column. */
+  /** Translation actions only exist on the translated view; the source view offers the companion. */
   enabled: boolean;
   projectId: string;
   path: string;
@@ -96,8 +100,31 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
   const current = hovered ? rows.get(hovered) : undefined;
   const bar = current && rects[current.key] && !panel;
 
+  // "Improve the text" asked from the editor toolbar: resolve the block under the cursor to a segment
+  const request = useAssist((s) => s.request);
+  const clearRequest = useAssist((s) => s.clearRequest);
+  const notify = useNotices((s) => s.show);
+  // The request waits until the saved text has reached the preview (typing is flushed first).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-check whenever the preview changes
+  useEffect(() => {
+    if (!request) return;
+    const root = article.current;
+    const block = root?.querySelector<HTMLElement>(`[data-block="${request.blockIndex}"]`);
+    const el = block?.dataset.seg ? block : block?.querySelector<HTMLElement>("[data-seg]");
+    const key = el?.dataset.seg;
+    if (key && rows.has(key)) {
+      clearRequest();
+      setPanel({ kind: "assist", key });
+      return;
+    }
+    const timer = setTimeout(() => {
+      clearRequest();
+      notify(t("assist.noText"));
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [request, html, view]);
+
   const lockToggle = (row: SegmentRow) => actions.change(row.key, { locked: !row.locked });
-  if (!enabled) return <div className={column}>{children}</div>;
 
   return (
     <ContextMenu.Root>
@@ -114,7 +141,7 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
             setSelection(window.getSelection()?.toString().trim() ?? "");
           }}
           onKeyDown={(e) => {
-            const row = current;
+            const row = enabled ? current : undefined;
             if (!row || panel || e.ctrlKey || e.metaKey || e.altKey) return;
             if (e.target !== e.currentTarget && (e.target as HTMLElement).tagName !== "BODY")
               return;
@@ -139,45 +166,58 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
               <button
                 type="button"
                 className={btn}
-                title={`${t("segment.edit")} (E)`}
-                aria-label={t("segment.edit")}
-                onClick={() => setPanel({ kind: "edit", key: current.key })}
+                title={t("assist.open")}
+                aria-label={t("assist.open")}
+                onClick={() => setPanel({ kind: "assist", key: current.key })}
               >
-                <Pencil size={14} strokeWidth={1.5} aria-hidden />
+                <Wand2 size={14} strokeWidth={1.5} aria-hidden />
               </button>
-              <button
-                type="button"
-                className={btn}
-                title={`${t("segment.instruct")} (I)`}
-                aria-label={t("segment.instruct")}
-                onClick={() => setPanel({ kind: "instruct", key: current.key })}
-              >
-                <Sparkles size={14} strokeWidth={1.5} aria-hidden />
-              </button>
-              <button
-                type="button"
-                className={btn}
-                aria-pressed={current.locked}
-                title={`${t(current.locked ? "segment.unlock" : "segment.lock")} (L)`}
-                aria-label={t(current.locked ? "segment.unlock" : "segment.lock")}
-                onClick={() => void lockToggle(current)}
-              >
-                {current.locked ? (
-                  <Lock size={14} strokeWidth={1.5} aria-hidden />
-                ) : (
-                  <LockOpen size={14} strokeWidth={1.5} aria-hidden />
-                )}
-              </button>
-              <button
-                type="button"
-                className={btn}
-                title={`${t("segment.approve")} (A)`}
-                aria-label={t("segment.approve")}
-                disabled={!current.target}
-                onClick={() => void actions.change(current.key, { action: "approve" })}
-              >
-                <Check size={14} strokeWidth={1.5} aria-hidden />
-              </button>
+              {enabled && (
+                <>
+                  <button
+                    type="button"
+                    className={btn}
+                    title={`${t("segment.edit")} (E)`}
+                    aria-label={t("segment.edit")}
+                    onClick={() => setPanel({ kind: "edit", key: current.key })}
+                  >
+                    <Pencil size={14} strokeWidth={1.5} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className={btn}
+                    title={`${t("segment.instruct")} (I)`}
+                    aria-label={t("segment.instruct")}
+                    onClick={() => setPanel({ kind: "instruct", key: current.key })}
+                  >
+                    <Sparkles size={14} strokeWidth={1.5} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className={btn}
+                    aria-pressed={current.locked}
+                    title={`${t(current.locked ? "segment.unlock" : "segment.lock")} (L)`}
+                    aria-label={t(current.locked ? "segment.unlock" : "segment.lock")}
+                    onClick={() => void lockToggle(current)}
+                  >
+                    {current.locked ? (
+                      <Lock size={14} strokeWidth={1.5} aria-hidden />
+                    ) : (
+                      <LockOpen size={14} strokeWidth={1.5} aria-hidden />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className={btn}
+                    title={`${t("segment.approve")} (A)`}
+                    aria-label={t("segment.approve")}
+                    disabled={!current.target}
+                    onClick={() => void actions.change(current.key, { action: "approve" })}
+                  >
+                    <Check size={14} strokeWidth={1.5} aria-hidden />
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -224,6 +264,16 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
                 await actions.change(row.key, { target: text });
                 if (text.trim() !== row.target.trim()) setDiverged(row.key);
               }}
+            />
+          )}
+
+          {panel?.kind === "assist" && rects[panel.key] && (
+            <AssistBox
+              projectId={projectId}
+              path={path}
+              segKey={panel.key}
+              top={(rects[panel.key] as Rect).top}
+              onClose={() => setPanel(null)}
             />
           )}
 

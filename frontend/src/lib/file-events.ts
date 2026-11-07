@@ -12,3 +12,12 @@ export function onFileEvent(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+/**
+ * After the server rewrote the open section (accepted suggestion, source update), ask the editor
+ * to compare itself with the disk now instead of waiting for the file watcher, which can be slow
+ * (polling on WSL and network drives).
+ */
+export function recheckOpenFile(): void {
+  emitFileEvent({ type: "hello" });
+}

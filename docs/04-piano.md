@@ -94,12 +94,12 @@ modifica sorgente → proposta.
 
 Dopo M3: riusa la coda, la protezione dei segnaposto, il glossario e l'interfaccia Accetta/Ignora della M3.
 
-- [ ] Prompt `improve@1` (correggi, riformula, conciso, semplice, tono) e `check@1` con validazione dei segnaposto e della lunghezza
-- [ ] Endpoint `POST /projects/{id}/assist` (azione, segmento o selezione) e `POST …/check` (sezione); priorità 1 nella coda, nessun salvataggio automatico
-- [ ] Interfaccia: menu sulla selezione e sul segmento, diff per parola, Accetta/Ignora/Rigenera, scorciatoie
-- [ ] Controllo della sezione: pannello dei suggerimenti ancorati ai segmenti (condivide il modello dei commenti di RF-83)
-- [ ] La guida dello scheletro (RF-09) e il glossario entrano nel prompt; regole per i requisiti (RF-84)
-- [ ] Accettare un suggerimento modifica il sorgente e ritraduce solo quel segmento (nessun ciclo)
+- [x] Prompt `improve@1` (correggi, riformula, conciso, semplice, tono) e `check@1` con validazione dei segnaposto e della lunghezza
+- [x] Endpoint `POST /projects/{id}/assist` (azione, segmento o selezione) e `POST …/check` (sezione); priorità 1 nella coda, nessun salvataggio automatico
+- [x] Interfaccia: menu sulla selezione e sul segmento, diff per parola, Accetta/Ignora/Rigenera, scorciatoie
+- [x] Controllo della sezione: pannello dei suggerimenti ancorati ai segmenti (condivide il modello dei commenti di RF-83)
+- [x] La guida dello scheletro (RF-09) e il glossario entrano nel prompt; regole per i requisiti (RF-84)
+- [x] Accettare un suggerimento modifica il sorgente e ritraduce solo quel segmento (nessun ciclo)
 
 **Accettazione**: un suggerimento non cambia il file finché non è accettato; i segnaposto (codice, link, `{{campi}}`) restano intatti;
 accettare ritraduce un solo segmento; con il modello spento le azioni sono disattivate con un messaggio e l'editor non si blocca.

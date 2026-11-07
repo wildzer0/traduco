@@ -32,6 +32,18 @@ _VAGUE = {
         "il più possibile",
     ],
 }  # fmt: skip
+_TEXT = {
+    "en": (
+        "More than one prescription in a sentence: split it.",
+        "Weak verb in a requirement: use a single mandatory verb.",
+        'Vague wording: "{word}" cannot be verified.',
+    ),
+    "it": (
+        "Più di una prescrizione nella stessa frase: dividila.",
+        "Verbo debole in un requisito: usa un solo verbo di obbligo.",
+        "Formulazione vaga: «{word}» non è verificabile.",
+    ),
+}
 _SENTENCE = re.compile(r"(?<=[.!?;])\s+|\n+")
 _REQ_ID = re.compile(r"^\s*#?[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+")
 
@@ -53,6 +65,7 @@ def check_requirements(segments: list[Segment], language: str) -> list[Finding]:
     strong = re.compile(_STRONG[lang], re.IGNORECASE)
     weak = re.compile(_WEAK[lang], re.IGNORECASE)
     vague = [(w, re.compile(rf"(?<!\w){re.escape(w)}(?!\w)", re.IGNORECASE)) for w in _VAGUE[lang]]
+    many, weak_msg, vague_msg = _TEXT[lang]
     found: list[Finding] = []
     for seg in segments:
         if (
@@ -68,7 +81,7 @@ def check_requirements(segments: list[Segment], language: str) -> list[Finding]:
                     Finding(
                         seg.key,
                         "requirement",
-                        "More than one prescription in a sentence: split it.",
+                        many,
                     )
                 )
             if weak.search(sentence) and not strong.search(sentence):
@@ -76,13 +89,11 @@ def check_requirements(segments: list[Segment], language: str) -> list[Finding]:
                     Finding(
                         seg.key,
                         "requirement",
-                        "Weak verb in a requirement: use a single mandatory verb.",
+                        weak_msg,
                     )
                 )
             for word, pattern in vague:
                 if pattern.search(sentence) and word not in flagged:
                     flagged.add(word)
-                    found.append(
-                        Finding(seg.key, "vague", f'Vague wording: "{word}" cannot be verified.')
-                    )
+                    found.append(Finding(seg.key, "vague", vague_msg.format(word=word)))
     return found

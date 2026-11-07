@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getFile, putFile, uploadImage } from "../../lib/api";
+import { useAssist } from "../../lib/assist-store";
+import { editorBridge } from "../../lib/editor-bridge";
 import { useEditorStatus } from "../../lib/editor-status";
 import { onFileEvent } from "../../lib/file-events";
 import { useT } from "../../lib/i18n";
@@ -102,6 +104,15 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
     },
     [saver, setSave],
   );
+  // other parts of the app may ask for pending typing to be written (accepting a suggestion)
+  useEffect(() => {
+    editorBridge.flush = () => saver.flush();
+    editorBridge.blockIndex = () => handle.current?.blockIndex() ?? 0;
+    return () => {
+      editorBridge.flush = async () => {};
+      editorBridge.blockIndex = () => 0;
+    };
+  }, [saver]);
   useEffect(() => {
     const flush = () => void saver.flush();
     window.addEventListener("pagehide", flush);
@@ -242,7 +253,16 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
         for (const f of files) void upload(f, f.name);
       }}
     >
-      <Toolbar mode={mode} onMode={switchMode} onCommand={run} />
+      <Toolbar
+        mode={mode}
+        onMode={switchMode}
+        onCommand={run}
+        onAssist={() => {
+          const block = handle.current?.blockIndex() ?? 0;
+          void saver.flush().then(() => useAssist.getState().requestAssist(block));
+        }}
+        onCheck={() => useAssist.getState().setCheckOpen(true)}
+      />
       <input
         ref={fileInput}
         type="file"

@@ -123,3 +123,66 @@ describe("segment interactions", () => {
     );
   });
 });
+
+describe("writing companion", () => {
+  const assistApi = (changed = true) => [
+    (c: Call) =>
+      c.url === "/api/projects/demo/assist"
+        ? {
+            body: {
+              original: "Il sistema e' pronto",
+              proposal: changed ? "Il sistema è pronto" : "Il sistema e' pronto",
+              changed,
+            },
+          }
+        : undefined,
+    (c: Call) =>
+      c.url === "/api/projects/demo/assist/apply" ? { body: { path: "x", key: "p:0" } } : undefined,
+  ];
+
+  it("proposes a rewrite as a difference and changes nothing until Apply", async () => {
+    const user = userEvent.setup();
+    const calls = setup(
+      view([row("p:0", { source: "Il sistema e' pronto" })], "Target\n"),
+      assistApi(),
+    );
+    await user.hover(await screen.findByText("Target"));
+    await user.click(await screen.findByRole("button", { name: "Migliora il testo" }));
+    await user.click(await screen.findByRole("button", { name: "Correggi" }));
+    const diff = await screen.findByTestId("diff");
+    expect(diff.querySelector("del")?.textContent).toBe("e'");
+    expect(diff.querySelector("ins")?.textContent).toBe("è");
+    expect(calls.find((c) => c.url.endsWith("/assist"))?.body).toMatchObject({
+      key: "p:0",
+      action: "correct",
+    });
+    expect(calls.some((c) => c.url.endsWith("/assist/apply"))).toBe(false);
+    await user.click(screen.getByRole("button", { name: "Applica" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.url.endsWith("/assist/apply"))?.body).toMatchObject({
+        key: "p:0",
+        text: "Il sistema è pronto",
+      }),
+    );
+  });
+
+  it("says so when there is nothing to change", async () => {
+    const user = userEvent.setup();
+    setup(view([row("p:0", { source: "Il sistema e' pronto" })], "Target\n"), assistApi(false));
+    await user.hover(await screen.findByText("Target"));
+    await user.click(await screen.findByRole("button", { name: "Migliora il testo" }));
+    await user.click(await screen.findByRole("button", { name: "Più conciso" }));
+    expect(await screen.findByText("Il modello non propone modifiche.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Applica" })).not.toBeInTheDocument();
+  });
+
+  it("is disabled with a message while the model is unreachable", async () => {
+    const user = userEvent.setup();
+    setup(view([row("p:0")], "Target\n"), assistApi());
+    useTranslationState.setState({ online: false });
+    await user.hover(await screen.findByText("Target"));
+    await user.click(await screen.findByRole("button", { name: "Migliora il testo" }));
+    expect(await screen.findByText(/l'assistente è disattivato/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Correggi" })).toBeDisabled();
+  });
+});

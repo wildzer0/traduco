@@ -5,11 +5,19 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
-### Fixed
-- Translation with reasoning models (Gemma 4 on Ollama) returned empty text and stayed "translating": reasoning is switched off and the token budget is larger.
+## [0.4.1] - 2026-11-07
+
+Milestone M3b - writing companion.
 
 ### Added
+- Writing assistant on the source text: correct, rephrase, more concise, simpler, formal/neutral/informal tone, or your own instruction. The proposal is shown as a word-by-word
+  difference; the file changes only when you apply it, and only that segment is translated again. Controlled glossary terms, "do not translate" entries, code, links and `{{fields}}` are kept.
+- Section check: model remarks (grammar, clarity, ambiguity, style, terminology), coverage of the skeleton guide, and optional requirement rules (one prescription per sentence, weak verbs, vague words) in Italian and English.
 - Model settings in the app (server address, model, API key) with "Save and verify"; the "model unreachable" banner links to them. Changes apply without a restart.
+
+### Fixed
+- Translation with reasoning models (Gemma 4 on Ollama) returned empty text and stayed "translating": reasoning is switched off and the token budget is larger.
+- Jobs and events started from threaded endpoints (retranslate, first open of a section) could wait until something else woke the event loop.
 
 ## [0.4.0] - 2026-11-07
 

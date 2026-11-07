@@ -298,3 +298,18 @@ che distingue server irraggiungibile da modello assente e mostra i modelli dispo
 Se la risposta è vuota perché tagliata dal limite, una sola nuova richiesta con 6× i token. Il minimo di `max_tokens` sale da 64 a 256.
 **Conseguenze**: la traduzione di una sezione di esempio (5 segmenti) richiede circa 2 s sulla RTX 5070 Laptop. Le traduzioni fallite prima della correzione restano «da rivedere» finché non si usa «Ritraduci».
 
+## ADR-035 — Companion di scrittura (M3b, attua ADR-030)
+**Decisione**:
+- **Unità = segmento.** Le azioni (Correggi, Riformula, Più conciso, Più semplice, tono formale/neutro/informale, più un'istruzione libera) lavorano sul sorgente di un segmento, non su una selezione libera:
+  evita di mappare selezioni ProseMirror/CodeMirror su byte del file e rende ogni proposta applicabile in modo esatto. Dall'editor, il pulsante «Assistente» agisce sul blocco sotto il cursore (il suo primo segmento); dall'anteprima, la barra al passaggio del mouse e il menu contestuale.
+- **Proposta, mai applicazione.** `POST /assist` restituisce `{original, proposal}`; l'interfaccia mostra la differenza per parola (LCS sulle parole, `lib/diff.ts`). `POST /assist/apply` riscrive il solo segmento con la scrittura atomica `If-Match` e chiama la sincronizzazione normale:
+  si ritraduce quel solo segmento (un segmento bloccato riceve una proposta, come in M3). Prima di applicare l'editor scrive la digitazione non salvata (`editorBridge.flush`) e dopo chiede di rileggere il file subito (`recheckOpenFile`), senza attendere l'osservatore di file, lento su WSL.
+- **Validazione** della proposta (`companion/improve.py`): segnaposto integri (stessa protezione della traduzione), non vuota, lunghezza 0,3–2,5×, e i **termini del glossario** presenti nell'originale restano presenti (un solo tentativo correttivo). Le voci «non tradurre» sono protette.
+  La nota di contesto, il tono e la **guida dello scheletro** della sezione entrano nel prompt (`improve@1`).
+- **Controllo di sezione** (`POST /check`): una richiesta al modello per segmento (≥ 25 caratteri; due alla volta) con risposta JSON `{category, message, suggestion}`; un JSON illeggibile vale «nessun rilievo»; una correzione che rompe i segnaposto è scartata ma il rilievo resta. In più una richiesta per sezione sulla **copertura della guida** dello scheletro (`guide@1`).
+  Le **regole per i requisiti** (`companion/rules.py`: più prescrizioni in una frase, verbi deboli, parole vaghe; italiano e inglese) sono deterministiche e **facoltative** (casella nel pannello) perché la prosa normale le farebbe scattare.
+- **Persistenza**: `.traduco/cache/suggestions/<sezione>.json` (nel `.gitignore`); un suggerimento vale finché l'hash del segmento è lo stesso. Nessun suggerimento parte da solo (RF-89).
+- **Con il modello spento** pulsanti disattivati e messaggio; l'editor non è toccato.
+- **Correzione trasversale**: la coda e il servizio di traduzione erano usati da endpoint `def` di FastAPI, che girano in thread, mentre gli oggetti `asyncio` (eventi, code del WebSocket) non sono thread-safe: `submit/cancel/pause` ed `emit` ora passano sempre dal ciclo degli eventi (`call_soon_threadsafe`). Prima un lavoro inviato da un thread poteva restare fermo finché qualcos'altro non svegliava il ciclo.
+**Limiti**: niente selezione libera di testo; in una lista l'assistente dell'editor sceglie la prima voce del blocco; le regole per i requisiti non conoscono gli identificativi dei requisiti (RF-84) né le tracce tra documenti; la qualità dei rilievi dipende dal modello (con Gemma 4 E4B i rilievi di stile sono utili ma a volte generici).
+

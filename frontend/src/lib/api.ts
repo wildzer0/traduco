@@ -1,5 +1,6 @@
 import type {
   AssetSaved,
+  AssistAction,
   BundledSkeleton,
   FileContent,
   GlossaryEntry,
@@ -9,6 +10,7 @@ import type {
   ReviewData,
   SegmentRow,
   SkeletonReport,
+  Suggestion,
   Tone,
   TranslationView,
   TreeNode,
@@ -222,3 +224,29 @@ export const putSettings = (body: {
   llm_model?: string;
   llm_api_key?: string;
 }): Promise<ModelSettings> => api("/settings", json("PUT", body));
+
+// --- writing companion ---------------------------------------------------------------------
+
+export const assist = (
+  id: string,
+  body: { path: string; key: string; action: AssistAction; instruction?: string },
+): Promise<{ original: string; proposal: string; changed: boolean }> =>
+  api(`${base(id)}/assist`, json("POST", body));
+
+export const applyAssist = (
+  id: string,
+  body: { path: string; key: string; text: string; suggestion_id?: string },
+): Promise<{ path: string; key: string }> => api(`${base(id)}/assist/apply`, json("POST", body));
+
+export const runCheck = (
+  id: string,
+  path: string,
+  requirements: boolean,
+): Promise<{ items: Suggestion[] }> =>
+  api(`${base(id)}/check`, json("POST", { path, requirements }));
+
+export const getCheck = (id: string, path: string): Promise<{ items: Suggestion[] }> =>
+  api(`${base(id)}/check?path=${enc(path)}`);
+
+export const dismissSuggestion = (id: string, path: string, suggestionId: string) =>
+  api(`${base(id)}/check/dismiss`, json("POST", { path, suggestion_id: suggestionId }));

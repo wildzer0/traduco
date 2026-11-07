@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
+import { CheckPanel } from "../features/companion/CheckPanel";
 import { EditorPane } from "../features/editor/EditorPane";
 import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
 import { Preview } from "../features/preview/Preview";
@@ -8,6 +9,7 @@ import { reviewKey } from "../features/preview/segment-actions";
 import { ReviewTable } from "../features/review/ReviewTable";
 import { keys } from "../features/tree/queries";
 import { getLlmStatus, getReview } from "../lib/api";
+import { useAssist } from "../lib/assist-store";
 import { emitFileEvent } from "../lib/file-events";
 import { useT } from "../lib/i18n";
 import { usePrefs } from "../lib/prefs";
@@ -25,6 +27,7 @@ export function Workspace() {
   const qc = useQueryClient();
   const sidebarOpen = usePrefs((st) => st.sidebarOpen);
   const { mode, setMode, setFocusKey, glossaryOpen } = useView();
+  const checkOpen = useAssist((st) => st.checkOpen);
   const lastF8 = useRef<{ path: string; key: string } | null>(null);
   const selected = s ?? null;
   const select = (path: string | null) =>
@@ -138,6 +141,7 @@ export function Workspace() {
         </>
       )}
       {glossaryOpen && <GlossaryDrawer projectId={projectId} />}
+      {checkOpen && <CheckPanel projectId={projectId} path={selected} />}
     </>
   );
 }
