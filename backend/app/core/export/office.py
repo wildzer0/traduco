@@ -102,7 +102,7 @@ FILTERS = {"pdf": "writer_pdf_Export", "odt": "writer8"}
 
 def _install_macro(profile: Path) -> None:
     basic = profile / "user" / "basic"
-    (basic / "Standard").mkdir(parents=True)
+    (basic / "Standard").mkdir(parents=True, exist_ok=True)
     (basic / "script.xlc").write_text(_XLC, encoding="utf-8")
     (basic / "Standard" / "script.xlb").write_text(_XLB, encoding="utf-8")
     (basic / "Standard" / "dialog.xlb").write_text(_DLB, encoding="utf-8")

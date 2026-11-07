@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Find out which way of running a LibreOffice Basic macro headlessly works on this machine.
 
-Used by the manual workflow ``.github/workflows/lo-probe.yml`` while developing the PDF/ODT export;
-prints a report and never fails. Standard library plus the backend's code (run with the backend env).
+Used by the manual workflow lo-probe.yml while developing the PDF/ODT export;
+prints a report and never fails. Run it with the backend environment.
 """
 
 from __future__ import annotations
