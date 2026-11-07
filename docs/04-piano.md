@@ -10,7 +10,7 @@ Spunta i task (`- [x]`) nello stesso commit che li completa.
 - [ ] Struttura della repo come in `02-architettura.md`, licenza Apache-2.0
 - [x] Backend: progetto uv, FastAPI con `/api/health`, configurazione con pydantic-settings, ruff + mypy + pytest
 - [ ] Frontend: Vite + React + TS strict, Tailwind, Biome, vitest, layout vuoto a tre colonne, i18n it/en, tema chiaro/scuro
-- [ ] `tools/fake-llm`: server OpenAI-compatibile (`/v1/chat/completions`, `/v1/models`) che restituisce
+- [x] `tools/fake-llm`: server OpenAI-compatibile (`/v1/chat/completions`, `/v1/models`) che restituisce
       `"[EN] " + testo`, preservando i segnaposto; modalità configurabili per simulare errori, lentezza, glossario violato
 - [ ] `Makefile` con `setup`, `dev`, `test`, `e2e`, `lint`, `licenses`
 - [ ] `docker-compose.yml`: servizio `app` (backend che serve il frontend buildato, Pandoc, LibreOffice),
