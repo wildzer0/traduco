@@ -10,9 +10,10 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
-from app.api import assets, diagrams, events, files, health, nodes, projects
+from app.api import assets, diagrams, events, files, health, nodes, projects, translation
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
+from app.core.translation.service import LlmConfig, TranslationService
 from app.core.workspace.errors import WorkspaceError
 from app.events import EventHub
 
@@ -28,9 +29,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        app.state.hub = EventHub()
+        hub = EventHub()
+        app.state.hub = hub
+        service = TranslationService(
+            LlmConfig(settings.llm_base_url, settings.llm_model, settings.llm_api_key),
+            hub.publish,
+        )
+        app.state.translation = service
+        service.start()
         yield
-        await app.state.hub.close()
+        await service.close()
+        await hub.close()
 
     app = FastAPI(
         title="Traduco",
@@ -68,6 +77,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         files.router,
         assets.router,
         diagrams.router,
+        translation.router,
         events.router,
     ):
         app.include_router(router, prefix="/api")

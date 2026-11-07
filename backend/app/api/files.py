@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Header, Query, Response
+from fastapi import APIRouter, Header, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.api.deps import Root
 from app.core.workspace.errors import WorkspaceError
+from app.core.workspace.manifest import load_project
 from app.core.workspace.sections import ConflictError, read_section, write_section
 from app.schemas.projects import FileContent, FilePut, FileSaved
 
@@ -18,6 +19,7 @@ def get_file(root: Root, response: Response, path: str = Query(...)) -> FileCont
 
 @router.put("/projects/{project_id}/files", response_model=FileSaved)
 def put_file(
+    request: Request,
     root: Root,
     body: FilePut,
     response: Response,
@@ -38,4 +40,5 @@ def put_file(
             status_code=409,
         )  # fmt: skip
     response.headers["ETag"] = f'"{digest}"'
+    request.app.state.translation.schedule_sync(root, load_project(root), path, body.content)
     return FileSaved(path=path, hash=digest)

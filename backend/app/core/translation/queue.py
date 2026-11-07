@@ -39,6 +39,7 @@ class TranslationQueue[P]:
         self._idle.set()
         self._workers: list[asyncio.Task[None]] = []
         self._paused = False
+        self._stopping = False
 
     # -- control -----------------------------------------------------------------------------
     def start(self) -> None:
@@ -46,6 +47,7 @@ class TranslationQueue[P]:
             self._workers = [asyncio.create_task(self._work()) for _ in range(self._concurrency)]
 
     async def stop(self) -> None:
+        self._stopping = True
         for task in [*self._workers, *(t for t, _ in self._running.values())]:
             task.cancel()
         for task in [*self._workers, *(t for t, _ in self._running.values())]:
@@ -53,6 +55,7 @@ class TranslationQueue[P]:
                 await task
         self._workers.clear()
         self._running.clear()
+        self._stopping = False
 
     def pause(self, paused: bool) -> None:
         self._paused = paused
@@ -123,7 +126,7 @@ class TranslationQueue[P]:
             try:
                 await self._handler(entry.job_id, entry.payload)
             except asyncio.CancelledError:
-                if not self._workers:  # shutting down
+                if self._stopping:  # shutting down
                     raise
                 # only the job was cancelled: keep this worker alive
                 current = asyncio.current_task()

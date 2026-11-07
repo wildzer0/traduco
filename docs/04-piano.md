@@ -56,9 +56,9 @@ riordinare via drag & drop rinumera i file; un'immagine incollata compare in `im
 - [x] `store.py`: file JSON dei segmenti, scrittura atomica, chiavi ordinate
 - [x] Coda con priorità e annullamento delle richieste superate
 - [x] Prompt `translate@1` con tono, contesto, segmento precedente
-- [ ] Eventi WebSocket `segment.*`, `llm.status`
+- [x] Eventi WebSocket `segment.*`, `llm.status`
 - [ ] Frontend: anteprima tradotta, stato per segmento, indicatore modello, banner modello offline
-- [ ] Ritraduzione di sezione/capitolo/progetto
+- [x] Ritraduzione di sezione/capitolo/progetto (API; interfaccia in corso)
 
 **Accettazione**: scrivendo un paragrafo, l'anteprima mostra la traduzione (fake-llm) entro 1 s dal debounce;
 modificare un paragrafo ritraduce solo quello; codice, URL e `{{campi}}` restano identici; spegnendo il
