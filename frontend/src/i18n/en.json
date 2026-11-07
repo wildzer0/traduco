@@ -496,5 +496,12 @@
   "shortcuts.source": "Show source or translation in the preview",
   "shortcuts.review": "Next segment to review",
   "shortcuts.export": "Export again",
-  "shortcuts.link": "Link (editor, text selected)"
+  "shortcuts.link": "Link (editor, text selected)",
+  "segment.memory": "Translation memory",
+  "segment.memoryNone": "Nothing similar has been approved yet.",
+  "palette.tmxExport": "Export the translation memory (TMX)",
+  "palette.tmxImport": "Import a translation memory (TMX)",
+  "palette.tmxDone": "{count} entries imported",
+  "glossary.import": "Import CSV or TBX…",
+  "glossary.imported": "{added} new terms added ({seen} in the file); yours were kept."
 }

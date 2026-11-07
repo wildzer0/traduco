@@ -536,3 +536,41 @@ export interface SearchHit {
 
 export const searchProject = (id: string, q: string): Promise<{ hits: SearchHit[] }> =>
   api(`${base(id)}/search?q=${enc(q)}`);
+
+// --- translation memory -----------------------------------------------------------------------
+export interface MemoryMatch {
+  source: string;
+  target: string;
+  score: number;
+  origin: string;
+}
+
+export const suggestFromMemory = (
+  id: string,
+  path: string,
+  key: string,
+): Promise<{ matches: MemoryMatch[] }> =>
+  api(`${base(id)}/tm/suggest?path=${enc(path)}&key=${enc(key)}`);
+
+export const tmxUrl = (id: string): string => `/api${base(id)}/tm/export`;
+
+export const importTmx = (id: string, file: File): Promise<{ added: number }> =>
+  api(`${base(id)}/tm/import`, {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });
+
+export const glossaryExportUrl = (id: string, format: "csv" | "tbx"): string =>
+  `/api${base(id)}/glossary/export?format=${format}`;
+
+export const importGlossary = (
+  id: string,
+  file: File,
+  format: "csv" | "tbx",
+): Promise<{ added: number; seen: number; total: number }> =>
+  api(`${base(id)}/glossary/import?format=${format}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });

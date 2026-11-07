@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { getGlossary, putGlossary } from "../../lib/api";
+import { getGlossary, glossaryExportUrl, importGlossary, putGlossary } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import { useNotices } from "../../lib/notices";
 import type { GlossaryEntry } from "../../lib/types";
@@ -121,6 +121,48 @@ export function GlossaryDrawer({ projectId }: { projectId: string }) {
           <Plus size={14} strokeWidth={1.5} aria-hidden />
           {t("glossary.add")}
         </button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px]">
+        <label className="cursor-pointer rounded-ui border border-border px-2 py-1 hover:bg-surface-2">
+          {t("glossary.import")}
+          <input
+            type="file"
+            accept=".csv,.tbx,.xml"
+            className="sr-only"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              try {
+                const result = await importGlossary(
+                  projectId,
+                  file,
+                  file.name.toLowerCase().endsWith(".csv") ? "csv" : "tbx",
+                );
+                await qc.invalidateQueries({ queryKey: glossaryKey(projectId) });
+                setRows(null);
+                setDirty(false);
+                notify(t("glossary.imported", { added: result.added, seen: result.seen }));
+              } catch (err) {
+                notify(err instanceof Error ? err.message : String(err));
+              }
+            }}
+          />
+        </label>
+        <a
+          className="underline underline-offset-2"
+          href={glossaryExportUrl(projectId, "csv")}
+          download
+        >
+          CSV
+        </a>
+        <a
+          className="underline underline-offset-2"
+          href={glossaryExportUrl(projectId, "tbx")}
+          download
+        >
+          TBX
+        </a>
       </div>
       <ul className="m-0 mt-3 min-h-0 flex-1 list-none space-y-3 overflow-y-auto p-0">
         {visible.length === 0 && <li className="text-muted">{t("glossary.empty")}</li>}

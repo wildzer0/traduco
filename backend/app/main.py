@@ -29,6 +29,7 @@ from app.api import comments as comments_api
 from app.api import export as export_api
 from app.api import importer as importer_api
 from app.api import issues as issues_api
+from app.api import memory as memory_api
 from app.api import requirements as requirements_api
 from app.api import search as search_api
 from app.api import settings as settings_api
@@ -143,6 +144,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         comments_api.router,
         requirements_api.router,
         search_api.router,
+        memory_api.router,
         snippets_api.router,
         translation.router,
         events.router,

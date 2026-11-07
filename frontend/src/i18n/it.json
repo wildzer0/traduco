@@ -496,5 +496,12 @@
   "shortcuts.source": "Sorgente o traduzione nell'anteprima",
   "shortcuts.review": "Prossimo segmento da rivedere",
   "shortcuts.export": "Esporta di nuovo",
-  "shortcuts.link": "Collegamento (editor, testo selezionato)"
+  "shortcuts.link": "Collegamento (editor, testo selezionato)",
+  "segment.memory": "Memoria di traduzione",
+  "segment.memoryNone": "Nessuna frase simile è stata ancora approvata.",
+  "palette.tmxExport": "Esporta la memoria di traduzione (TMX)",
+  "palette.tmxImport": "Importa una memoria di traduzione (TMX)",
+  "palette.tmxDone": "{count} voci importate",
+  "glossary.import": "Importa CSV o TBX…",
+  "glossary.imported": "{added} nuovi termini aggiunti ({seen} nel file); i tuoi sono rimasti."
 }

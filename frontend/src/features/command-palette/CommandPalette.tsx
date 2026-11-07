@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { patchProject, retranslate, searchProject } from "../../lib/api";
+import { importTmx, patchProject, retranslate, searchProject, tmxUrl } from "../../lib/api";
 import { fuzzyScore } from "../../lib/fuzzy";
 import { type MessageKey, useT } from "../../lib/i18n";
+import { useNotices } from "../../lib/notices";
 import { usePrefs } from "../../lib/prefs";
 import { usePreview } from "../../lib/preview-store";
 import type { TreeNode } from "../../lib/types";
@@ -108,6 +109,31 @@ function Palette({ projectId, selected }: { projectId: string; selected: string 
         setMode(m === "source" ? "translated" : "source");
       }),
       act("help", t("shortcuts.title"), () => view.setHelpOpen(true)),
+      act("tmx-export", t("palette.tmxExport"), () => {
+        const link = document.createElement("a");
+        link.href = tmxUrl(projectId);
+        link.download = "memoria.tmx";
+        document.body.append(link);
+        link.click();
+        link.remove();
+      }),
+      act("tmx-import", t("palette.tmxImport"), () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".tmx,.xml";
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const show = useNotices.getState().show;
+          try {
+            const { added } = await importTmx(projectId, file);
+            show(t("palette.tmxDone", { count: added }));
+          } catch (e) {
+            show(e instanceof Error ? e.message : String(e));
+          }
+        };
+        input.click();
+      }),
       ...tones.map((tone) =>
         act(`tone:${tone}`, t("palette.tone", { tone }), () => {
           void patchProject(projectId, { tono: tone }).then(() =>

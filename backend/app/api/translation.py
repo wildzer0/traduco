@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.api.deps import Root
 from app.core.translation import glossary as glossary_mod
+from app.core.translation import glossary_io
 from app.core.translation.service import PRIORITY_OPEN, SegmentActions, TranslationService
 from app.core.translation.store import load as load_segments
 from app.core.workspace import frontmatter
@@ -75,6 +77,40 @@ async def llm_status(service: Service) -> dict[str, Any]:
 @router.get("/projects/{project_id}/glossary")
 def get_glossary(root: Root) -> list[dict[str, Any]]:
     return [e.model_dump() for e in glossary_mod.load(root)]
+
+
+@router.get("/projects/{project_id}/glossary/export")
+def export_glossary(root: Root, format: Literal["csv", "tbx"] = "csv") -> Response:
+    entries = glossary_mod.load(root)
+    if format == "tbx":
+        data = glossary_io.export_tbx(entries, load_project(root).lingua_sorgente)
+        return Response(
+            data,
+            media_type="application/x-tbx+xml",
+            headers={"Content-Disposition": 'attachment; filename="glossario.tbx"'},
+        )
+    return Response(
+        glossary_io.export_csv(entries),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="glossario.csv"'},
+    )
+
+
+@router.post("/projects/{project_id}/glossary/import")
+async def import_glossary(
+    root: Root, request: Request, format: Literal["csv", "tbx"] = "csv"
+) -> dict[str, Any]:
+    """Merge a CSV or TBX file into the glossary: the author's entries are never overwritten."""
+    data = await request.body()
+    incoming = (
+        glossary_io.import_tbx(data, load_project(root).lingua_sorgente)
+        if format == "tbx"
+        else glossary_io.import_csv(data)
+    )
+    before = glossary_mod.load(root)
+    merged = glossary_io.merge(before, incoming)
+    glossary_mod.save(root, merged)
+    return {"added": len(merged) - len(before), "seen": len(incoming), "total": len(merged)}
 
 
 @router.put("/projects/{project_id}/glossary")

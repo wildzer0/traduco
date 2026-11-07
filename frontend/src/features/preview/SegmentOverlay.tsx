@@ -1,5 +1,5 @@
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import { Check, Lock, LockOpen, Pencil, Sparkles, Wand2 } from "lucide-react";
+import { BookMarked, Check, Lock, LockOpen, Pencil, Sparkles, Wand2 } from "lucide-react";
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useState } from "react";
 import { useAssist } from "../../lib/assist-store";
 import { useT } from "../../lib/i18n";
@@ -7,6 +7,7 @@ import { useNotices } from "../../lib/notices";
 import type { SegmentRow, TranslationView } from "../../lib/types";
 import { useView } from "../../lib/view-store";
 import { AssistBox } from "./AssistBox";
+import { MemoryBox } from "./MemoryBox";
 import { useSegmentActions } from "./segment-actions";
 
 interface Rect {
@@ -18,6 +19,7 @@ type Panel =
   | { kind: "instruct"; key: string; alternatives?: boolean }
   | { kind: "source"; key: string; text: string }
   | { kind: "assist"; key: string }
+  | { kind: "memory"; key: string }
   | null;
 
 const btn =
@@ -195,6 +197,15 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
                   <button
                     type="button"
                     className={btn}
+                    title={t("segment.memory")}
+                    aria-label={t("segment.memory")}
+                    onClick={() => setPanel({ kind: "memory", key: current.key })}
+                  >
+                    <BookMarked size={14} strokeWidth={1.5} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className={btn}
                     aria-pressed={current.locked}
                     title={`${t(current.locked ? "segment.unlock" : "segment.lock")} (L)`}
                     aria-label={t(current.locked ? "segment.unlock" : "segment.lock")}
@@ -264,6 +275,21 @@ export function SegmentOverlay({ enabled, projectId, path, view, article, html, 
                 await actions.change(row.key, { target: text });
                 if (text.trim() !== row.target.trim()) setDiverged(row.key);
               }}
+            />
+          )}
+
+          {panel?.kind === "memory" && rects[panel.key] && (
+            <MemoryBox
+              projectId={projectId}
+              path={path}
+              segKey={panel.key}
+              top={(rects[panel.key] as Rect).top}
+              onUse={async (text) => {
+                const key = panel.key;
+                setPanel(null);
+                await actions.change(key, { target: text });
+              }}
+              onClose={() => setPanel(null)}
             />
           )}
 

@@ -26,7 +26,7 @@ from app.core.workspace.sections import read_section, write_section
 from app.core.workspace.tree import Node, build_tree
 
 from . import glossary as glossary_mod
-from . import guard, store
+from . import guard, store, tm
 from .llm_client import LlmClient, LlmError, LlmUnavailable
 from .queue import TranslationQueue
 from .store import SegmentFile, StoredSegment
@@ -216,6 +216,9 @@ class TranslationService:
             kept = by_key.get(m.old_key) if m else None
             if kept is None:
                 new = StoredSegment(seg.key, seg.hash, seg.kind, status="queued")
+                if not force and self._reuse(root, project, new, seg.source):
+                    segments.append(new)
+                    continue
                 todo.append((new, PRIORITY_EDIT))
                 segments.append(new)
                 continue
@@ -226,6 +229,8 @@ class TranslationService:
                 if current.locked:
                     current.status = "needs_review"
                     current.reason = "source changed"
+                elif self._reuse(root, project, current, seg.source):
+                    continue  # the new wording is already in the memory
                 else:
                     current.status = "queued"
                 todo.append((current, PRIORITY_EDIT))
@@ -251,6 +256,15 @@ class TranslationService:
             )
         self._emit(root, {"type": "job.progress", "pending": self.queue.pending()})
         return result
+
+    @staticmethod
+    def _reuse(root: Path, project: Project, seg: StoredSegment, source: str) -> bool:
+        """Fill ``seg`` from the translation memory when this exact source is already there."""
+        hit = tm.exact(root, project.lingua_sorgente, project.lingua_ufficiale, source)
+        if hit is None:
+            return False
+        seg.target, seg.origin, seg.status, seg.reason = hit.target, "tm", "translated", ""
+        return True
 
     def _make_job(
         self,
@@ -561,7 +575,24 @@ class SegmentActions:
             seg.pending_target = None
             seg.reason = ""
 
-        return self._change(root, project, rel, key, go)
+        row = self._change(root, project, rel, key, go)
+        self._remember(root, project, rel, key, row, "manual")
+        return row
+
+    def _remember(
+        self, root: Path, project: Project, rel: str, key: str, row: StoredSegment, origin: str
+    ) -> None:
+        """Keep an approved or hand-written translation in the memory (never a stale one)."""
+        seg = segment(read_section(root, rel)[0]).by_key().get(key)
+        if seg is not None and seg.hash == row.source_hash and row.target:
+            tm.remember(
+                root,
+                project.lingua_sorgente,
+                project.lingua_ufficiale,
+                seg.source,
+                row.target,
+                origin,
+            )
 
     def lock(self, root: Path, project: Project, rel: str, key: str, locked: bool) -> StoredSegment:
         def go(seg: StoredSegment) -> None:
@@ -576,7 +607,9 @@ class SegmentActions:
             seg.status = "approved"
             seg.reason = ""
 
-        return self._change(root, project, rel, key, go)
+        row = self._change(root, project, rel, key, go)
+        self._remember(root, project, rel, key, row, "approved")
+        return row
 
     def accept_pending(self, root: Path, project: Project, rel: str, key: str) -> StoredSegment:
         def go(seg: StoredSegment) -> None:
