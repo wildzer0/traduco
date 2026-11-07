@@ -124,14 +124,14 @@ presenti; il file si apre senza errori in LibreOffice (conversione a PDF riuscit
 
 ## M4b — Launcher completo (RF-70…79)
 
-- [ ] `hardware.py`: RAM, GPU (NVIDIA, AMD, Apple Silicon) e scelta del modello dalla tabella in architettura
-- [ ] `ollama.py`: rilevamento, installazione su conferma (winget / script ufficiale / app macOS), pull con avanzamento
-- [ ] Pandoc portabile per Windows x64, Linux x64/arm64, macOS
-- [ ] Rilevamento LibreOffice e flag di capacità esposto al frontend (`/api/capabilities`)
-- [ ] Opzioni `--update`, `--model`, `--port`, `--no-browser`, `--offline`, `--reset`, `--workspace`
-- [ ] Messaggi di errore con codice e soluzione, in italiano e inglese
-- [ ] `make bundle-offline` per Windows e Linux
-- [ ] Schermata di benvenuto e stato "modello in download" nella UI
+- [x] `hardware.py`: RAM, GPU (NVIDIA, AMD, Apple Silicon) e scelta del modello dalla tabella in architettura
+- [x] `ollama.py`: rilevamento, installazione su conferma (winget / script ufficiale / app macOS), pull con avanzamento
+- [x] Pandoc portabile per Windows x64, Linux x64/arm64, macOS
+- [x] Rilevamento LibreOffice e flag di capacità esposto al frontend (`/api/capabilities`)
+- [x] Opzioni `--update`, `--model`, `--port`, `--no-browser`, `--offline`, `--reset`, `--workspace`
+- [x] Messaggi di errore con codice e soluzione, in italiano e inglese
+- [x] `make bundle-offline` per Windows e Linux
+- [x] Schermata di benvenuto e stato "modello in download" nella UI
 
 **Accettazione**: su VM pulite Windows 11 e Ubuntu 24.04 il primo avvio installa tutto e traduce un paragrafo
 dell'esempio con il modello reale; con la rete scollegata il pacchetto offline parte e traduce; rifiutando

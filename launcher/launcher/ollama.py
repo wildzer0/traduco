@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from pathlib import Path
@@ -49,6 +50,18 @@ def models(host: str) -> list[str]:
 def has_model(host: str, tag: str) -> bool:
     wanted = tag if ":" in tag else f"{tag}:latest"
     return wanted in models(host)
+
+
+def same_server(url: str, host: str) -> bool:
+    """Do ``url`` and ``host`` name the same server (``localhost`` vs ``127.0.0.1``)?"""
+    loopback = {"localhost", "127.0.0.1", "::1", "[::1]"}
+
+    def parts(value: str) -> tuple[str, int]:
+        parsed = urllib.parse.urlparse(value if "://" in value else f"http://{value}")
+        name = "loopback" if (parsed.hostname or "") in loopback else (parsed.hostname or "")
+        return name, parsed.port or 80
+
+    return parts(url) == parts(host)
 
 
 def endpoint_answers(base_url: str) -> bool:

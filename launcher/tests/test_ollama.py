@@ -85,3 +85,12 @@ def test_a_failing_installer_is_reported(monkeypatch: pytest.MonkeyPatch) -> Non
     with pytest.raises(LauncherError) as info:
         ollama.install(["fake"])
     assert info.value.code == "E040" and "3" in str(info.value.params["what"])
+
+
+def test_localhost_and_127_are_the_same_server_but_other_ports_and_hosts_are_not() -> None:
+    host = "http://127.0.0.1:11434"
+    assert ollama.same_server("http://localhost:11434/v1", host)
+    assert ollama.same_server("http://127.0.0.1:11434/v1/", host)
+    assert not ollama.same_server("http://localhost:8080/v1", host)
+    assert not ollama.same_server("http://gpu-server:11434/v1", host)
+    assert not ollama.same_server("https://api.example.com/v1", host)

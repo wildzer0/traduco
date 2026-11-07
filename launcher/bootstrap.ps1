@@ -28,6 +28,9 @@ if (-not (Test-Path $Uv)) {
     }
 }
 
+# --offline: no network at all, not even for uv (the bundle carries Python, wheels and Pandoc)
+if ($LauncherArgs -contains '--offline') { $env:UV_OFFLINE = '1' }
+
 $env:TRADUCO_UV = $Uv
 & $Uv run --frozen --no-dev --project launcher python -m launcher @LauncherArgs
 exit $LASTEXITCODE

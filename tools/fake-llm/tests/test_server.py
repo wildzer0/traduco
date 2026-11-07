@@ -74,3 +74,23 @@ def test_invalid_request(base_url: str) -> None:
 def test_unknown_mode_falls_back_to_ok(base_url: str) -> None:
     status, data = post(base_url, "x", {"X-Fake-Mode": "bogus"})
     assert status == 200 and content(data) == "[EN] x"
+
+
+def test_it_speaks_enough_ollama_for_the_launcher(base_url: str) -> None:
+    import json
+    import urllib.request
+
+    def get(path: str) -> dict[str, object]:
+        with urllib.request.urlopen(base_url + path) as r:
+            return json.loads(r.read())  # type: ignore[no-any-return]
+
+    assert get("/api/version")["version"]
+    request = urllib.request.Request(
+        base_url + "/api/pull",
+        data=json.dumps({"model": "gemma4:e4b"}).encode(),
+        method="POST",
+    )
+    with urllib.request.urlopen(request) as r:
+        events = [json.loads(line) for line in r.read().splitlines()]
+    assert events[-1] == {"status": "success"} and events[1]["total"] == 1000
+    assert "gemma4:e4b" in [m["name"] for m in get("/api/tags")["models"]]  # type: ignore[attr-defined]

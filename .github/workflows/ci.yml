@@ -82,3 +82,37 @@ jobs:
       # No uv, Node or Python is set up on purpose: the start script must install everything itself.
       - name: First start, then restart in under 10 s
         run: python tools/ci-clean-start.py
+
+  bundle-offline:
+    name: offline package (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - name: Build the package (installs everything, then zips it)
+        run: python tools/bundle-offline.py --os ${{ matrix.target }} --out dist-bundle
+      - name: Unpack it somewhere else and start it with --offline
+        shell: bash
+        run: |
+          mkdir unpacked
+          if [ "${{ matrix.target }}" = "windows" ]; then
+            powershell -NoProfile -Command "Expand-Archive -Path dist-bundle/*.zip -DestinationPath unpacked"
+          else
+            unzip -q dist-bundle/*.zip -d unpacked
+          fi
+          python tools/ci-clean-start.py --root unpacked/traduco --port 8130
+      - uses: actions/upload-artifact@v4
+        with:
+          name: traduco-offline-${{ matrix.target }}
+          path: dist-bundle/*
+          retention-days: 7

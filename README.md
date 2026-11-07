@@ -20,7 +20,16 @@ Al primo avvio lo script installa tutto ciò che serve nella cartella del progra
 traduzione adatto al tuo computer) e apre il browser. Dagli avvii successivi parte in pochi secondi.
 Nessun diritto di amministratore richiesto, tranne per installare Ollama se non è già presente (ti viene chiesto).
 
-Opzioni: `--update` aggiorna, `--model <nome>` sceglie il modello, `--no-browser`, `--port <n>`, `--offline`.
+Opzioni: `--update` aggiorna, `--model <nome>` sceglie il modello, `--no-browser`, `--port <n>`, `--offline`
+(non scarica nulla), `--reset` ricrea `.runtime/`, `--workspace <cartella>` (dove stanno i progetti), `--yes`
+(risponde sì alle domande, ad esempio l'installazione di Ollama).
+
+Il modello si scarica **in sottofondo**: puoi già scrivere mentre l'interfaccia mostra l'avanzamento. Se non vuoi
+installare Ollama, l'app parte lo stesso e in Impostazioni puoi indicare un altro server compatibile OpenAI.
+Per PDF e ODT serve LibreOffice (non viene installato da solo; il DOCX non lo richiede).
+
+**Senza rete**: `make bundle-offline OS=linux` (o `windows`, sul rispettivo sistema) crea uno ZIP che si avvia con
+`--offline`; con `MODEL=gemma4:e4b` include anche il modello se l'hai già scaricato con Ollama.
 
 Per installazioni su server: `docker compose --profile llm up`. Per sviluppare: `make setup && make dev`.
 

@@ -5,6 +5,21 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-07
+
+Milestone M4b - complete launcher.
+
+### Added
+- First start in nine numbered steps: it checks the computer, installs Pandoc, picks the model for the hardware (RAM, NVIDIA/AMD GPU, Apple Silicon),
+  finds, starts or - only if you agree - installs Ollama, and downloads the model **in the background** while you already write.
+- The interface shows the model download (progress, failure, or "no Ollama") and translation waits for the model instead of failing; PDF and ODT export when LibreOffice is installed, with a clear message when it is not.
+- `/api/capabilities`, options `--yes` and `--prepare-only`, error codes E040-E043 in Italian and English.
+- Offline package: `make bundle-offline OS=linux|windows [MODEL=tag]`; CI builds it on Ubuntu and Windows and starts it with `--offline` from another folder.
+- Model tags `gemma4:e2b`, `gemma4:e4b`, `gemma4:26b-a4b` checked against the Ollama library.
+
+### Fixed
+- Stale pages after an update reported a missing diagram engine as an invalid diagram: `index.html` is never cached, a failed chunk reloads the page once.
+
 ### Fixed
 - Export no longer fails when the project's default template is not in its `template/` folder (projects made before the export existed): it uses the only template present, or Pandoc's styles, and says so.
 - A revisions table placed inside a table cell left the cell without a final paragraph, which Word treats as damaged.

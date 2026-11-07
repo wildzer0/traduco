@@ -25,5 +25,8 @@ if [ ! -x "$UV" ]; then
   fi
 fi
 
+# --offline: no network at all, not even for uv (the bundle carries Python, wheels and Pandoc)
+for arg in "$@"; do [ "$arg" = "--offline" ] && export UV_OFFLINE=1; done
+
 export TRADUCO_UV="$UV"
 exec "$UV" run --frozen --no-dev --project launcher python -m launcher "$@"

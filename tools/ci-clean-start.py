@@ -2,7 +2,9 @@
 """Clean-start check used by CI (Linux and Windows): start script -> /api/health -> stop -> restart.
 
 Asserts that the first start serves the frontend, and that the second start takes < 10 s
-(docs/04-piano.md, M0 acceptance). Standard library only.
+(docs/04-piano.md, M0 acceptance). A fake Ollama (tools/fake-llm) lets the first start also run the
+detection, the model "download" and the capability report (M4b). ``--root`` runs the same check
+on an unpacked offline bundle with ``--offline``. Standard library only.
 """
 
 from __future__ import annotations
@@ -17,13 +19,55 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[1]
+ROOT = REPO  # replaced by --root
 WINDOWS = sys.platform == "win32"
+EXTRA_ARGS: list[str] = []
+
+
+def free_port() -> int:
+    import socket
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return int(s.getsockname()[1])
+
+
+def start_fake_ollama(port: int) -> subprocess.Popen[bytes]:
+    env = {**os.environ, "FAKE_LLM_PORT": str(port)}
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "fake_llm"], cwd=REPO / "tools" / "fake-llm", env=env,
+        stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT,
+    )  # fmt: skip
+    base = f"http://127.0.0.1:{port}"
+    for _ in range(100):
+        try:
+            if get(base + "/api/version")[0] == 200:
+                return proc
+        except (urllib.error.URLError, OSError):
+            time.sleep(0.1)
+    proc.kill()
+    raise SystemExit("the fake Ollama did not start")
+
+
+def wait_for_model(base: str, timeout: float) -> dict[str, object]:
+    """Poll /api/capabilities until the background download has finished."""
+    import json
+
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        caps = json.loads(get(base + "/api/capabilities")[1])
+        if caps["model"]["state"] == "ready":
+            return caps  # type: ignore[no-any-return]
+        if caps["model"]["state"] == "error":
+            raise SystemExit(f"model download failed: {caps['model']}")
+        time.sleep(0.3)
+    raise SystemExit("the model never became ready")
 
 
 def launch(port: int, log: Path) -> subprocess.Popen[bytes]:
     script = ["cmd", "/c", "start.cmd"] if WINDOWS else ["./start.sh"]
-    cmd = [*script, "--no-browser", "--port", str(port)]
+    cmd = [*script, "--no-browser", "--port", str(port), *EXTRA_ARGS]
     out = log.open("wb")
     kwargs: dict[str, object] = {
         "cwd": ROOT,
@@ -77,12 +121,22 @@ def dump_logs(*files: Path) -> None:
 
 
 def main() -> int:
+    global ROOT
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--root", type=Path, help="unpacked offline bundle to start instead of the repository"
+    )
     parser.add_argument("--port", type=int, default=8123)
     parser.add_argument("--first-timeout", type=float, default=900)
     parser.add_argument("--second-limit", type=float, default=10)
     args = parser.parse_args()
+    if args.root:
+        ROOT = args.root.resolve()
+        EXTRA_ARGS.append("--offline")
     base = f"http://127.0.0.1:{args.port}"
+    ollama_port = free_port()
+    os.environ["TRADUCO_OLLAMA_HOST"] = f"http://127.0.0.1:{ollama_port}"
+    fake = start_fake_ollama(ollama_port)
     tmp = Path(os.environ.get("RUNNER_TEMP", ROOT / ".runtime"))
     tmp.mkdir(parents=True, exist_ok=True)
     logs = [tmp / "first-start.log", tmp / "second-start.log"]
@@ -92,6 +146,9 @@ def main() -> int:
         status, html = get(base + "/")
         assert status == 200 and '<div id="root">' in html, "frontend not served"
         print(f"first start healthy after {first:.1f}s")
+        caps = wait_for_model(base, 60)
+        assert caps["pandoc"]["available"], "Pandoc was not installed"  # type: ignore[index]
+        print(f"model ready, capabilities: {caps}")
         stop(proc)
         time.sleep(2)
 
@@ -105,6 +162,8 @@ def main() -> int:
     except BaseException:
         dump_logs(*logs)
         raise
+    finally:
+        fake.kill()
     print("clean start OK")
     return 0
 

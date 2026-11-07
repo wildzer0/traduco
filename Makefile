@@ -1,10 +1,10 @@
-.PHONY: setup tools dev test e2e lint licenses
+.PHONY: setup tools bundle-offline dev test e2e lint licenses
 .DEFAULT_GOAL := help
 PNPM = corepack pnpm
 FAKE = cd tools/fake-llm && uv run --project ../../backend python -m fake_llm
 
 help:
-	@echo "Targets: setup tools dev test e2e lint licenses (see AGENTS.md)"
+	@echo "Targets: setup tools bundle-offline dev test e2e lint licenses (see AGENTS.md)"
 
 setup:
 	cd backend && uv sync
@@ -13,6 +13,10 @@ setup:
 
 tools:
 	python3 tools/install-pandoc.py
+
+# Offline package (RF-78): make bundle-offline OS=linux|windows [MODEL=gemma4:e4b]
+bundle-offline:
+	python3 tools/bundle-offline.py --os $(OS) $(if $(MODEL),--with-model $(MODEL),)
 
 dev:
 	@trap 'kill 0' INT TERM EXIT; \

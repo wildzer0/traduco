@@ -293,8 +293,8 @@ def setup_llm(ctx: Context, requested_model: str | None, assume_yes: bool) -> Ll
     url, saved_model = configured_endpoint(workspace)
 
     # a server the user already configured and that answers is used as it is
-    default_url = f"{host.rstrip('/')}/v1"
-    if url and url.rstrip("/") != default_url and ollama.endpoint_answers(url):
+    # (the address of Ollama itself, written as localhost or 127.0.0.1, is not "another server")
+    if url and not ollama.same_server(url, host) and ollama.endpoint_answers(url):
         ui.info(ui.t("ollama.external", url=url))
         ui.skip(2)  # the Ollama and model steps do not apply
         return Llm(model=saved_model, base_url=url, external=True)
