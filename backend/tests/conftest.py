@@ -44,3 +44,34 @@ def company_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
     from tests.support.template_factory import build_company_template
 
     return build_company_template(tmp_path_factory.mktemp("tpl") / "manuale.docx")
+
+
+@pytest.fixture(scope="session")
+def pandoc_bin() -> Path:
+    """Pandoc for the export tests. Skipped when missing, except in CI (TRADUCO_REQUIRE_TOOLS=1)."""
+    import os
+
+    from app.core.export.errors import ExportError
+    from app.core.export.pandoc import find_pandoc
+
+    try:
+        return find_pandoc()
+    except ExportError:
+        if os.environ.get("TRADUCO_REQUIRE_TOOLS"):
+            raise
+        pytest.skip("Pandoc is not installed (set TRADUCO_PANDOC or use .runtime/pandoc)")
+
+
+@pytest.fixture(scope="session")
+def soffice_bin() -> Path:
+    """LibreOffice for the PDF check; skipped when missing, except in CI."""
+    import os
+
+    from app.core.export.office import find_soffice
+
+    found = find_soffice()
+    if found is None:
+        if os.environ.get("TRADUCO_REQUIRE_TOOLS"):
+            pytest.fail("LibreOffice is required in CI")
+        pytest.skip("LibreOffice is not installed (set TRADUCO_SOFFICE)")
+    return found
