@@ -25,8 +25,10 @@ from app.api import (
     templates,
     translation,
 )
+from app.api import comments as comments_api
 from app.api import export as export_api
 from app.api import importer as importer_api
+from app.api import issues as issues_api
 from app.api import settings as settings_api
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
@@ -134,6 +136,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         templates.router,
         export_api.router,
         importer_api.router,
+        issues_api.router,
+        comments_api.router,
         translation.router,
         events.router,
     ):

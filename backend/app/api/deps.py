@@ -16,6 +16,7 @@ from app.core.workspace.registry import project_root
 
 STATUS = {
     "invalid_path": 400,
+    "invalid_name": 400,
     "not_found": 404,
     "exists": 409,
     "depth_exceeded": 422,
