@@ -2,7 +2,19 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
-import { onDisk, projectDir, projectWithSection, waitSaved } from "./helpers";
+import {
+  onDisk,
+  projectWithSection as openSection,
+  projectDir,
+  showSource,
+  waitSaved,
+} from "./helpers";
+
+/** These tests look at the rendered source, so they switch the preview to it first. */
+async function projectWithSection(page: import("@playwright/test").Page, nome: string) {
+  await openSection(page, nome);
+  await showSource(page);
+}
 
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",

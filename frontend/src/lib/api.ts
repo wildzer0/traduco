@@ -1,4 +1,12 @@
-import type { AssetSaved, FileContent, NodeResult, ProjectSummary, TreeNode } from "./types";
+import type {
+  AssetSaved,
+  FileContent,
+  LlmStatus,
+  NodeResult,
+  ProjectSummary,
+  TranslationView,
+  TreeNode,
+} from "./types";
 
 export interface Health {
   status: string;
@@ -107,3 +115,15 @@ export const uploadImage = (
 /** URL of an image stored under a chapter's ``img/`` folder. */
 export const assetUrl = (id: string, path: string): string =>
   `/api${base(id)}/assets?path=${enc(path)}`;
+
+export const getTranslation = (projectId: string, path: string): Promise<TranslationView> =>
+  api(`${base(projectId)}/translation?path=${enc(path)}`);
+
+export const retranslate = (
+  projectId: string,
+  scope: "section" | "chapter" | "project",
+  path?: string,
+): Promise<{ sections: number; queued: number }> =>
+  api(`${base(projectId)}/retranslate`, json("POST", { scope, path }));
+
+export const getLlmStatus = (): Promise<LlmStatus> => api("/llm/status");

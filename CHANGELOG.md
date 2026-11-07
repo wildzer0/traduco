@@ -5,6 +5,19 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-07
+
+Milestone M2 - translation engine.
+
+### Added
+- Segmentation of sections (titles, paragraphs, list items, table cells, quotes, footnotes, front matter title) with stable keys and hashes;
+  code, Mermaid and raw HTML are never sent to the model. Placeholders protect links, images, inline code, URLs, `{{fields}}` and emphasis.
+- Assembler that rebuilds the translated Markdown without touching anything else; property tests prove identity translation gives the same file and HTML.
+- OpenAI-compatible client (timeout, retry, cancellation), priority queue that drops superseded requests, validation with one corrective retry.
+- Translation saved on every section save, stored in `.traduco/segmenti/<lang>/...json`; only changed paragraphs are retranslated, moved ones keep theirs.
+- Translated preview with per-segment state, model indicator, offline banner, retranslation of section/chapter/project, `Ctrl+Shift+P` to see the source.
+- Planning docs: project skeleton from a config file (RF-09), issues/change table/review comments/software-doc templates/export formats (RF-80..85), custom snippets (RF-86).
+
 ## [0.2.0] - 2026-11-07
 
 Milestone M1 - workspace and editor.

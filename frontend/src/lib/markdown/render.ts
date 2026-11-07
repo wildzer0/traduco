@@ -37,6 +37,59 @@ export function createRenderer(opts: RenderOptions): (body: string) => string {
     return true;
   });
 
+  // Give every translatable block the key the backend assigns to its segment (segmenter.py), so
+  // the translation status can be shown on it. Hidden paragraphs (tight lists) mark their item.
+  md.core.ruler.push("traduco_segments", (state) => {
+    const counters: Record<string, number> = {};
+    const next = (prefix: string) => {
+      counters[prefix] = (counters[prefix] ?? -1) + 1;
+      return `${prefix}:${counters[prefix]}`;
+    };
+    const stack: string[] = [];
+    const items: (typeof state.tokens)[number][] = [];
+    let table = -1;
+    let row = -1;
+    let col = -1;
+    for (const token of state.tokens) {
+      if (token.nesting === 1) stack.push(token.type.replace(/_open$/, ""));
+      else if (token.nesting === -1) stack.pop();
+      if (token.nesting === 1 && token.type === "list_item_open") items.push(token);
+      if (token.nesting === -1 && token.type === "list_item_close") items.pop();
+      if (token.type === "table_open") {
+        table += 1;
+        row = -1;
+      } else if (token.type === "tr_open") {
+        row += 1;
+        col = -1;
+      } else if (token.type === "th_open" || token.type === "td_open") {
+        col += 1;
+        token.attrSet(
+          "data-seg",
+          token.type === "th_open" ? `th:${table}:${col}` : `td:${table}:${row - 1}:${col}`,
+        );
+      } else if (token.type === "heading_open") {
+        token.attrSet("data-seg", next("h"));
+      } else if (token.type === "paragraph_open") {
+        const inside = stack
+          .slice(0, -1)
+          .filter((n) => /^(list_item|blockquote|footnote)$/.test(n));
+        const kind = inside.at(-1);
+        const key = next(
+          kind === "footnote"
+            ? "fn"
+            : kind === "list_item"
+              ? "li"
+              : kind === "blockquote"
+                ? "q"
+                : "p",
+        );
+        const target = token.hidden ? items.at(-1) : token;
+        target?.attrSet("data-seg", key);
+      }
+    }
+    return true;
+  });
+
   const defaultImage = md.renderer.rules.image;
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx];

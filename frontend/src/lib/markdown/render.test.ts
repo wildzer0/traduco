@@ -5,10 +5,31 @@ const render = createRenderer({ projectId: "demo", sectionPath: "capitoli/01-a/0
 describe("preview renderer", () => {
   it("numbers top-level blocks like the editor does", () => {
     const html = render("# T\n\npar\n\n- a\n- b\n\n| x |\n| - |\n| 1 |\n");
-    expect(html).toContain('<h1 data-block="0">');
-    expect(html).toContain('<p data-block="1">');
+    expect(html).toMatch(/<h1 data-block="0"/);
+    expect(html).toMatch(/<p data-block="1"/);
     expect(html).toContain('<ul data-block="2">');
     expect(html).toContain('<table data-block="3">');
+  });
+
+  it("tags translatable blocks with the key the backend gives their segment", () => {
+    const html = render(
+      "# T\n\npar\n\n- a\n- b\n\n> q\n\n| x | y |\n| - | - |\n| 1 | 2 |\n\nNota[^1]\n\n[^1]: nota\n",
+    );
+    for (const key of [
+      "h:0",
+      "p:0",
+      "li:0",
+      "li:1",
+      "q:0",
+      "th:0:0",
+      "th:0:1",
+      "td:0:0:0",
+      "td:0:0:1",
+      "p:1",
+      "fn:0",
+    ]) {
+      expect(html, key).toContain(`data-seg="${key}"`);
+    }
   });
 
   it("escapes raw HTML instead of emitting it", () => {

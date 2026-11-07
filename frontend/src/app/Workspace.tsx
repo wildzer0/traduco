@@ -4,9 +4,11 @@ import { useEffect } from "react";
 import { EditorPane } from "../features/editor/EditorPane";
 import { Preview } from "../features/preview/Preview";
 import { keys } from "../features/tree/queries";
+import { getLlmStatus } from "../lib/api";
 import { emitFileEvent } from "../lib/file-events";
 import { useT } from "../lib/i18n";
 import { usePrefs } from "../lib/prefs";
+import { useTranslationState } from "../lib/translation-store";
 import { useProjectEvents } from "../lib/ws";
 import { Sidebar } from "./Sidebar";
 
@@ -29,10 +31,19 @@ export function Workspace() {
 
   useProjectEvents(projectId, {
     onEvent: (event) => {
+      const state = useTranslationState.getState();
+      if (event.type === "llm.status") state.setLlm(event.online === true, event.model ?? "");
+      if (event.type === "job.progress") state.setPending(event.pending ?? 0);
       emitFileEvent(event);
       qc.invalidateQueries({ queryKey: keys.tree(projectId) });
     },
     onConnect: () => {
+      getLlmStatus()
+        .then((st) => {
+          useTranslationState.getState().setLlm(st.online, st.model);
+          useTranslationState.getState().setPending(st.pending ?? 0);
+        })
+        .catch(() => useTranslationState.getState().setLlm(false, ""));
       // changes may have happened while disconnected: refetch the tree, let the open file re-check itself
       qc.invalidateQueries({ queryKey: keys.tree(projectId) });
       emitFileEvent({ type: "hello" });

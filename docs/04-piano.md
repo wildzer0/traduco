@@ -57,8 +57,8 @@ riordinare via drag & drop rinumera i file; un'immagine incollata compare in `im
 - [x] Coda con priorità e annullamento delle richieste superate
 - [x] Prompt `translate@1` con tono, contesto, segmento precedente
 - [x] Eventi WebSocket `segment.*`, `llm.status`
-- [ ] Frontend: anteprima tradotta, stato per segmento, indicatore modello, banner modello offline
-- [x] Ritraduzione di sezione/capitolo/progetto (API; interfaccia in corso)
+- [x] Frontend: anteprima tradotta, stato per segmento, indicatore modello, banner modello offline
+- [x] Ritraduzione di sezione/capitolo/progetto
 
 **Accettazione**: scrivendo un paragrafo, l'anteprima mostra la traduzione (fake-llm) entro 1 s dal debounce;
 modificare un paragrafo ritraduce solo quello; codice, URL e `{{campi}}` restano identici; spegnendo il

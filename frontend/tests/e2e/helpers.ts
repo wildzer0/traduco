@@ -49,3 +49,44 @@ export async function projectWithSection(page: Page, nome: string, section = "Sc
 export async function waitSaved(page: Page) {
   await expect(page.getByTestId("save-status")).toContainText("Salvato");
 }
+
+export async function showSource(page: Page) {
+  await page.getByRole("button", { name: "Mostra il sorgente" }).click();
+  await expect(page.getByText("Anteprima · sorgente")).toBeVisible();
+}
+
+// --- fake OpenAI-compatible model server (tools/fake-llm) ---------------------------------------
+import { type ChildProcess, spawn } from "node:child_process";
+import { resolve } from "node:path";
+
+export const FAKE_LLM_PORT = 11500;
+
+/** Start the fake model on the port the e2e backend is configured to use; resolves when it answers. */
+export async function startFakeLlm(): Promise<ChildProcess> {
+  const backend = resolve(process.cwd(), "../backend");
+  const python =
+    process.platform === "win32"
+      ? join(backend, ".venv", "Scripts", "python.exe")
+      : join(backend, ".venv", "bin", "python");
+  const child = spawn(python, ["-m", "fake_llm"], {
+    cwd: resolve(process.cwd(), "../tools/fake-llm"),
+    env: { ...process.env, FAKE_LLM_PORT: String(FAKE_LLM_PORT) },
+    stdio: "ignore",
+  });
+  for (let i = 0; i < 100; i++) {
+    try {
+      const r = await fetch(`http://127.0.0.1:${FAKE_LLM_PORT}/health`);
+      if (r.ok) return child;
+    } catch {
+      // not listening yet
+    }
+    await new Promise((res) => setTimeout(res, 100));
+  }
+  child.kill();
+  throw new Error("fake-llm did not start");
+}
+
+export async function stopFakeLlm(child: ChildProcess) {
+  child.kill("SIGTERM");
+  await new Promise((res) => (child.exitCode !== null ? res(null) : child.once("exit", res)));
+}

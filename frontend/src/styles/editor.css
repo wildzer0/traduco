@@ -178,3 +178,31 @@
   padding: 0 0.25em;
   white-space: pre-wrap;
 }
+
+/* translation state of a segment in the preview (docs/03-ui.md) */
+.preview-body [data-status] {
+  border-left: 2px solid transparent;
+  padding-left: 0.6em;
+  margin-left: -0.6em;
+}
+.preview-body [data-status="queued"] {
+  border-left-color: var(--muted);
+  animation: seg-pulse 1.2s ease-in-out infinite;
+}
+.preview-body [data-status="needs_review"],
+.preview-body [data-status="diverged"] {
+  border-left-color: var(--amber);
+}
+.preview-body [data-status="approved"] {
+  border-left-color: var(--green);
+}
+@keyframes seg-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .preview-body [data-status="queued"] {
+    animation: none;
+  }
+}

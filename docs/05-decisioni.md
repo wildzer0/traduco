@@ -233,3 +233,19 @@ conformità si verifica per `id` memorizzato nel front matter (`scheletro: <id>`
 riordina. L'app non impedisce di deviare dallo scheletro: segnala soltanto. Realizzata in M2b, dopo il motore di traduzione,
 perché non dipende dal modello.
 **Conseguenze**: il workspace guadagna un campo di front matter facoltativo e un file facoltativo, senza rompere il formato esistente.
+
+## ADR-029 — Motore di traduzione M2: scelte implementative
+**Decisione**:
+- **Segmentazione** con `markdown-it-py` (+ `mdit-py-plugins`, note a piè di pagina). Ogni segmento ricorda le righe del file, il prefisso del contenitore (`- `, `> `, `[^1]: `) per riga e il suffisso;
+  l'assemblaggio riscrive solo quelle righe, quindi tutto il resto del file resta identico byte per byte. Le celle di tabella sono localizzate per (riga, colonna) e il `|` nel testo tradotto viene riscritto come `\|`.
+  Chiavi: `h:n`, `p:n`, `li:n`, `q:n`, `fn:n`, `th:t:c`, `td:t:r:c`, `fm:title`; il contatore avanza anche per i segmenti scartati, il frontend ricalcola le stesse chiavi per marcare lo stato sull'anteprima.
+- **Segnaposto**: `⟦n⟧` per gli atomi; coppie `⟦n⟧testo⟦/n⟧` con numerazione unica per link, immagini (il testo e l'alt si traducono, l'URL no), grassetto, corsivo, barrato. Sostituisce la sigla `⟦b⟧` del documento di architettura.
+  Controllo: ognuno presente una volta, coppie annidate, nessun identificativo inventato; altrimenti un secondo tentativo con istruzione correttiva, poi `needs_review` con il motivo.
+- **Riconciliazione**: prima per hash (stesso codice, poi più vicino), poi per posizione solo tra segmenti dello stesso tipo, senza `difflib` (l'ordine basta e non introduce accoppiamenti spuri).
+- **Coda**: `asyncio`, 2 lavoratori, priorità 1 modifica · 2 visibili · 3 resto del file · 4 massa. Un nuovo invio con lo stesso id sostituisce il precedente e annulla la richiesta in volo. Se il modello non risponde la coda si ferma, un monitor interroga `/models` ogni 3 s e la riavvia.
+- **Traduzione avviata dal salvataggio** (`PUT /files`) e, se il file non ha ancora segmenti aggiornati, dalla lettura di `GET /translation`. Lo store è `.traduco/segmenti/<lingua>/<percorso>.json` con chiavi ordinate; un file illeggibile vale come assente.
+- **Segmento bloccato** (già gestito dal motore, l'interfaccia è M3): se il sorgente cambia mantiene il testo e riceve `pending_target` con stato `needs_review`.
+- **Anteprima**: due modalità (traduzione predefinita, sorgente con `Ctrl+Shift+P`). La traduzione mostrata è quella assemblata dal server; i segmenti non ancora pronti mostrano il sorgente con bordo animato.
+- **e2e**: i test avviano da soli il fake-llm sulla porta 11500 per poterlo spegnere.
+**Limiti noti**: validazione di glossario e memoria di traduzione sono M3/M6; una sola lingua (la ufficiale); la modifica non salvata non è tradotta (si traduce al salvataggio, dopo 1 s di pausa).
+

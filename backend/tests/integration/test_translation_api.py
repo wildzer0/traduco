@@ -6,6 +6,7 @@ import threading
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -25,7 +26,7 @@ def free_port() -> int:
 class FakeLlm:
     def __init__(self, port: int) -> None:
         self.port = port
-        self.server = None
+        self.server: Any = None
         self.thread: threading.Thread | None = None
 
     def start(self) -> None:

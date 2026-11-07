@@ -3,11 +3,13 @@ import { PanelLeft } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { useT } from "../lib/i18n";
 import { usePrefs } from "../lib/prefs";
+import { useTranslationState } from "../lib/translation-store";
 import { findTrail } from "./trail";
 
 export function TopBar() {
   const t = useT();
   const toggleSidebar = usePrefs((s) => s.toggleSidebar);
+  const { online, model } = useTranslationState();
   const { projectId } = useParams({ strict: false }) as { projectId?: string };
   const { s } = useSearch({ strict: false }) as { s?: string };
   const { data: projects } = useProjects();
@@ -44,6 +46,32 @@ export function TopBar() {
         </nav>
       ) : (
         <span className="text-muted">{t("topbar.noProject")}</span>
+      )}
+      {projectId && (
+        <span
+          data-testid="llm-indicator"
+          data-online={String(online)}
+          title={
+            online === null
+              ? t("llm.unknown")
+              : online
+                ? t("llm.online", { model })
+                : t("llm.offline")
+          }
+          className="ml-auto flex items-center gap-1.5 text-muted"
+        >
+          <span
+            aria-hidden
+            className={`size-2 rounded-full ${online === null ? "bg-amber" : online ? "bg-green" : "bg-red"}`}
+          />
+          <span className="sr-only">
+            {online === null
+              ? t("llm.unknown")
+              : online
+                ? t("llm.online", { model })
+                : t("llm.offline")}
+          </span>
+        </span>
       )}
     </header>
   );
