@@ -112,7 +112,15 @@ export function ExportPanel({
   }, [close]);
 
   const field = "mt-1 w-full rounded-ui border border-border bg-bg px-2 py-1";
-  const language = (code: string | undefined) => names.of(code ?? "") ?? code ?? "";
+  // the project list may not be loaded yet: DisplayNames.of("") throws, so an unknown code is shown empty
+  const language = (code: string | undefined) => {
+    if (!code) return "";
+    try {
+      return names.of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
   const diagrams = (status?.error?.details?.diagrams as { section: string }[] | undefined) ?? [];
 
   return (
