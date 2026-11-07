@@ -30,7 +30,7 @@ test("toolbar bold and table work in Document mode and reach the file", async ({
   await expect.poll(() => readFile("toolbar", FILE)).toContain("**testo**");
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
-  await page.getByRole("button", { name: "Tabella" }).click();
+  await page.getByRole("button", { name: "Tabella", exact: true }).click();
   await expect
     .poll(() => readFile("toolbar", FILE))
     .toMatch(/\*\*testo\*\*\n\n\|[ ]+\|[ ]+\|\n\| :?-+/);

@@ -60,6 +60,8 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
   }, [close]);
 
   const refresh = async () => {
+    // a list requested before the change may still be on its way: its old answer must not win
+    await qc.cancelQueries({ queryKey: templatesKey(projectId) });
     await qc.invalidateQueries({ queryKey: templatesKey(projectId) });
     await qc.invalidateQueries({ queryKey: ["template", projectId] });
     await qc.invalidateQueries({ queryKey: ["project", projectId] });
