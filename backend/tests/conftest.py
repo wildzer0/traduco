@@ -36,3 +36,11 @@ def api(tmp_path: Path) -> Iterator[TestClient]:
     ws = tmp_path / "workspaces"
     with TestClient(create_app(Settings(workspaces_dir=ws, frontend_dist=None))) as c:
         yield c
+
+
+@pytest.fixture(scope="session")
+def company_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A realistic Italian company template (see tests/support/template_factory.py)."""
+    from tests.support.template_factory import build_company_template
+
+    return build_company_template(tmp_path_factory.mktemp("tpl") / "manuale.docx")
