@@ -611,3 +611,19 @@ export const setAdditionalLanguages = (
   languages: AdditionalLanguage[],
 ): Promise<Record<string, unknown>> =>
   api(base(id), json("PATCH", { lingue_aggiuntive: languages }));
+
+// --- spelling (LanguageTool, optional) ----------------------------------------------------------
+export interface SpellIssue {
+  key: string;
+  offset: number;
+  length: number;
+  message: string;
+  rule: string;
+  category: string;
+  replacements: string[];
+  context: string;
+  word: string;
+}
+
+export const spellcheck = (id: string, path: string): Promise<{ issues: SpellIssue[] }> =>
+  api(`${base(id)}/spellcheck`, json("POST", { path }));

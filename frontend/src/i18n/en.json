@@ -528,5 +528,8 @@
   "toolbar.tableAlignLeft": "Align the column left",
   "toolbar.tableAlignCenter": "Center the column",
   "toolbar.tableAlignRight": "Align the column right",
-  "toolbar.tableDelete": "Delete the table"
+  "toolbar.tableDelete": "Delete the table",
+  "spell.title": "Spelling and grammar (LanguageTool)",
+  "spell.run": "Check spelling",
+  "spell.none": "No spelling or grammar problems found."
 }

@@ -528,5 +528,8 @@
   "toolbar.tableAlignLeft": "Allinea la colonna a sinistra",
   "toolbar.tableAlignCenter": "Centra la colonna",
   "toolbar.tableAlignRight": "Allinea la colonna a destra",
-  "toolbar.tableDelete": "Elimina la tabella"
+  "toolbar.tableDelete": "Elimina la tabella",
+  "spell.title": "Ortografia e grammatica (LanguageTool)",
+  "spell.run": "Controlla l'ortografia",
+  "spell.none": "Nessun problema di ortografia o grammatica."
 }

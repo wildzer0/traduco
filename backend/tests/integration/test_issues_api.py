@@ -164,3 +164,10 @@ def test_web_formats_open_without_a_server(xapi: TestClient, tmp_path: Path) -> 
         io.BytesIO(xapi.get(f"/api/projects/{pid}/export/{epub['id']}/download").content)
     )
     assert "mimetype" in book.namelist() and any(n.endswith(".xhtml") for n in book.namelist())
+
+
+def test_spelling_is_off_until_a_server_is_configured(xapi: TestClient) -> None:  # noqa: F811
+    pid = example(xapi)
+    assert xapi.get("/api/capabilities").json()["languagetool"] == {"available": False}
+    off = xapi.post(f"/api/projects/{pid}/spellcheck", json={"path": SECTION})
+    assert off.status_code == 409 and "LanguageTool" in off.json()["error"]["message"]

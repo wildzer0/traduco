@@ -1,6 +1,8 @@
 # Server installations. Desktop users run ./start.sh or start.cmd instead (ADR-011).
 #   docker compose up                  -> app only (point TRADUCO_LLM_BASE_URL at your endpoint)
 #   docker compose --profile llm up    -> app + Ollama
+#   docker compose --profile languagetool up   -> app + LanguageTool for the spelling check; set
+#                                         TRADUCO_LANGUAGETOOL_URL=http://languagetool:8010 (RF-16)
 services:
   app:
     build:
@@ -12,6 +14,7 @@ services:
       TRADUCO_LLM_BASE_URL: ${TRADUCO_LLM_BASE_URL:-http://ollama:11434/v1}
       TRADUCO_LLM_MODEL: ${TRADUCO_LLM_MODEL:-gemma4:e4b}
       TRADUCO_LLM_API_KEY: ${TRADUCO_LLM_API_KEY:-}
+      TRADUCO_LANGUAGETOOL_URL: ${TRADUCO_LANGUAGETOOL_URL:-}
     volumes:
       - workspaces:/workspaces
     restart: unless-stopped
@@ -21,6 +24,11 @@ services:
     image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
     volumes:
       - ollama:/root/.ollama
+    restart: unless-stopped
+
+  languagetool:
+    profiles: ["languagetool"]
+    image: ${LANGUAGETOOL_IMAGE:-erikvl87/languagetool:latest}
     restart: unless-stopped
 
 volumes:

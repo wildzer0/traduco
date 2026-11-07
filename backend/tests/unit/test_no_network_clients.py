@@ -3,7 +3,12 @@
 from pathlib import Path
 
 FORBIDDEN = ("urllib.request", "import requests", "import aiohttp", "import httpx")
-ALLOWED = {"app/core/translation/llm_client.py"}
+# The model client, and the optional LanguageTool client for a server the author runs themselves
+# (off by default, never an external address that was not configured; ADR-044).
+ALLOWED = {
+    "app/core/translation/llm_client.py",
+    "app/core/spellcheck/languagetool.py",
+}
 
 
 def test_no_network_imports() -> None:

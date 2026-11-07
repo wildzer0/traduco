@@ -9,13 +9,15 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.config import Settings, get_settings
 from app.core.export import office
 from app.core.export.errors import ExportError
 from app.core.export.pandoc import find_pandoc
+from app.core.spellcheck import languagetool
 
 router = APIRouter(tags=["capabilities"])
 
@@ -41,7 +43,9 @@ def model_download() -> dict[str, Any]:
 
 
 @router.get("/capabilities")
-def capabilities() -> dict[str, Any]:
+async def capabilities(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, Any]:
     try:
         find_pandoc()
         pandoc = True
@@ -54,6 +58,7 @@ def capabilities() -> dict[str, Any]:
     return {
         "pandoc": {"available": pandoc},
         "libreoffice": {"available": has_office},
+        "languagetool": {"available": await languagetool.available(settings.languagetool_url)},
         "formats": formats,
         "model": model_download(),
     }

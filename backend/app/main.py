@@ -35,6 +35,7 @@ from app.api import requirements as requirements_api
 from app.api import search as search_api
 from app.api import settings as settings_api
 from app.api import snippets as snippets_api
+from app.api import spellcheck as spellcheck_api
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.export.errors import ExportError
@@ -148,6 +149,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         memory_api.router,
         languages_api.router,
         snippets_api.router,
+        spellcheck_api.router,
         translation.router,
         events.router,
     ):

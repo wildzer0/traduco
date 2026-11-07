@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     llm_base_url: str = "http://localhost:11434/v1"
     llm_model: str = "gemma4:e4b"
     llm_api_key: str = ""
+    # Address of the author's own LanguageTool server; empty = spelling check off (RF-16).
+    languagetool_url: str = ""
     # Built frontend served by the backend; ``None`` disables static serving.
     frontend_dist: Path | None = None
     # Demo project offered by "Open example"; defaults to <repo>/examples/progetto-esempio.

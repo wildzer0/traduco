@@ -213,6 +213,7 @@ export interface ModelDownload {
 export interface Capabilities {
   pandoc: { available: boolean };
   libreoffice: { available: boolean };
+  languagetool?: { available: boolean };
   formats: ExportFormat[];
   model: ModelDownload;
 }

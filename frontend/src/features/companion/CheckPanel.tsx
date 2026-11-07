@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { applyAssist, dismissSuggestion, getCheck, runCheck } from "../../lib/api";
 import { useAssist } from "../../lib/assist-store";
+import { useCapabilities } from "../../lib/capabilities";
 import { editorBridge } from "../../lib/editor-bridge";
 import { recheckOpenFile } from "../../lib/file-events";
 import { useT } from "../../lib/i18n";
@@ -11,6 +12,7 @@ import type { Suggestion } from "../../lib/types";
 import { useView } from "../../lib/view-store";
 import { Diff } from "../preview/AssistBox";
 import { translationPrefix, useTranslation } from "../preview/translation";
+import { SpellPanel } from "./SpellPanel";
 
 const checkKey = (id: string, path: string) => ["check", id, path] as const;
 
@@ -24,6 +26,7 @@ export function CheckPanel({ projectId, path }: { projectId: string; path: strin
   const online = useTranslationState((s) => s.online) !== false;
   const [requirements, setRequirements] = useState(false);
   const [busy, setBusy] = useState(false);
+  const spelling = useCapabilities().data?.languagetool?.available ?? false;
   const view = useTranslation(projectId, path).data;
   const { data } = useQuery({
     queryKey: checkKey(projectId, path ?? ""),
@@ -158,6 +161,7 @@ export function CheckPanel({ projectId, path }: { projectId: string; path: strin
           </li>
         ))}
       </ul>
+      {spelling && <SpellPanel projectId={projectId} path={path} />}
     </aside>
   );
 }
