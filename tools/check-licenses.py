@@ -25,6 +25,9 @@ ALLOWED = {
 # ADR-013: OFL-1.1 only for font assets.
 FONT_ONLY = {"OFL-1.1": re.compile(r"^@fontsource/")}
 SKIP = {"traduco-backend", "traduco-frontend"}
+# Packages whose metadata lacks a license field although the repository ships an MIT license file
+# (verified by hand; see ADR-025).
+OVERRIDES = {"khroma": "MIT"}
 
 CLASSIFIERS = {
     "License :: OSI Approved :: MIT License": "MIT",
@@ -89,7 +92,8 @@ def check_frontend() -> list[str]:
     bad = []
     for lic, packages in json.loads(out.stdout).items():
         for pkg in packages:
-            if pkg["name"] not in SKIP and not expression_ok(lic, pkg["name"]):
+            lic_eff = OVERRIDES.get(pkg["name"], lic)
+            if pkg["name"] not in SKIP and not expression_ok(lic_eff, pkg["name"]):
                 bad.append(f"frontend: {pkg['name']} ({lic})")
     return bad
 

@@ -1,3 +1,5 @@
+import type { AssetSaved, FileContent, NodeResult, ProjectSummary, TreeNode } from "./types";
+
 export interface Health {
   status: string;
   version: string;
@@ -12,6 +14,7 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    readonly details: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -22,16 +25,85 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     let code = `http_${res.status}`;
     let message = res.statusText;
+    let details: Record<string, unknown> = {};
     try {
       const body = (await res.json()) as ApiErrorBody;
       code = body.error.code;
       message = body.error.message;
+      details = body.error.details ?? {};
     } catch {
       // non-JSON error body: keep the HTTP status text
     }
-    throw new ApiError(res.status, code, message);
+    throw new ApiError(res.status, code, message, details);
   }
   return (await res.json()) as T;
 }
 
 export const getHealth = (): Promise<Health> => api<Health>("/health");
+
+function json(method: string, body: unknown, headers: Record<string, string> = {}): RequestInit {
+  return {
+    method,
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  };
+}
+
+const enc = encodeURIComponent;
+const base = (id: string) => `/projects/${enc(id)}`;
+
+export const listProjects = (): Promise<ProjectSummary[]> => api("/projects");
+
+export const createProject = (body: {
+  nome?: string;
+  lingua_sorgente?: string;
+  lingua_ufficiale?: string;
+  esempio?: boolean;
+}): Promise<ProjectSummary> => api("/projects", json("POST", body));
+
+export const getTree = (id: string): Promise<{ nodes: TreeNode[] }> => api(`${base(id)}/tree`);
+
+export const createNode = (
+  id: string,
+  body: { kind: "chapter" | "section"; title: string; parent: string | null },
+): Promise<NodeResult> => api(`${base(id)}/nodes`, json("POST", body));
+
+export const renameNode = (id: string, path: string, title: string): Promise<NodeResult> =>
+  api(`${base(id)}/nodes`, json("PATCH", { path, title }));
+
+export const moveNode = (
+  id: string,
+  path: string,
+  parent: string | null,
+  index: number | null,
+): Promise<NodeResult> =>
+  api(`${base(id)}/nodes`, json("PATCH", { path, move: true, parent, index }));
+
+export const deleteNode = (id: string, path: string): Promise<{ trash: string }> =>
+  api(`${base(id)}/nodes?path=${enc(path)}`, { method: "DELETE" });
+
+export const getFile = (id: string, path: string): Promise<FileContent> =>
+  api(`${base(id)}/files?path=${enc(path)}`);
+
+export const putFile = (
+  id: string,
+  path: string,
+  content: string,
+  hash: string,
+): Promise<{ path: string; hash: string }> =>
+  api(`${base(id)}/files?path=${enc(path)}`, json("PUT", { content }, { "If-Match": `"${hash}"` }));
+
+export const uploadImage = (
+  id: string,
+  section: string,
+  file: Blob,
+  filename: string,
+): Promise<AssetSaved> =>
+  api(`${base(id)}/assets?section=${enc(section)}&filename=${enc(filename)}`, {
+    method: "POST",
+    body: file,
+  });
+
+/** URL of an image stored under a chapter's ``img/`` folder. */
+export const assetUrl = (id: string, path: string): string =>
+  `/api${base(id)}/assets?path=${enc(path)}`;

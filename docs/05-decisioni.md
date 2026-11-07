@@ -190,3 +190,9 @@ il client ignora gli eventi con l'hash dei propri salvataggi. File nascosti, tem
 Il WebSocket rifiuta le connessioni il cui `Origin` non coincide con l'`Host` (i browser non applicano la same-origin policy ai WebSocket).
 **Conseguenze**: su WSL e unità di rete `watchfiles` passa al polling e può perdere una modifica fatta nel primo secondo dopo la connessione:
 il client deve rileggere albero e file aperto a ogni (ri)connessione. I test ripetono la modifica finché l'evento arriva.
+
+## ADR-025 — Mermaid 11.13 invece della serie 12
+**Contesto**: `mermaid` 12.x dipende da `elkjs`, con licenza `EPL-2.0 OR GPL-3.0-or-later`, non ammessa da AGENTS.md. La serie 11.x non la include.
+**Decisione**: si fissa `mermaid@11.13.0`. `khroma` (dipendenza di mermaid) ha licenza MIT nel repository ma non nel `package.json`: è ammesso con un override
+esplicito in `tools/check-licenses.py`.
+**Conseguenze**: nessuna funzione di layout ELK (non usata). Passare a mermaid 12 richiede una decisione sull'EPL-2.0 (licenza copyleft debole, simile alla MPL-2.0).
