@@ -28,3 +28,11 @@ def client() -> Iterator[TestClient]:
 def client_with_dist(dist: Path) -> Iterator[TestClient]:
     with TestClient(create_app(Settings(frontend_dist=dist))) as c:
         yield c
+
+
+@pytest.fixture
+def api(tmp_path: Path) -> Iterator[TestClient]:
+    """App with an empty workspaces folder under ``tmp_path`` and the real example available."""
+    ws = tmp_path / "workspaces"
+    with TestClient(create_app(Settings(workspaces_dir=ws, frontend_dist=None))) as c:
+        yield c

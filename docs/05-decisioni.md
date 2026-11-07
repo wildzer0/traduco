@@ -173,3 +173,12 @@ e il pacchetto `app.core` è sotto `mypy --strict`.
 **Decisione**: `core/workspace/frontmatter.py` (circa 60 righe) usa ruamel.yaml in modalità round-trip; `python-frontmatter` non è una dipendenza.
 `progetto.yaml` conserva le chiavi sconosciute (`extra="allow"`) ma, essendo riscritto dal modello, può perdere i commenti YAML.
 **Conseguenze**: nessun commento perso nel front matter delle sezioni; nei `progetto.yaml` modificati dall'app i commenti non sono garantiti.
+
+## ADR-023 — API M1: forma delle richieste
+**Decisione**: id progetto = nome della cartella in `~/Traduco` (solo `[A-Za-z0-9._-]`; le cartelle con altri nomi non sono elencate).
+`PATCH /nodes` esegue una sola operazione: rinomina (`path`+`title`), sposta (`path`+`move:true`+`parent`[+`index`]) o riordina (`parent`+`order`).
+`PUT /files` richiede `If-Match` con l'hash restituito da `GET` (428 se assente, 409 `conflict` con `details.current_hash` se non coincide).
+`POST /assets` riceve i byte grezzi dell'immagine (`?section=&filename=`) invece di multipart, evitando una dipendenza; `GET /assets` serve solo
+immagini sotto `img/` con `Content-Security-Policy: sandbox` e `nosniff`. Il tipo è dedotto dal contenuto; SVG con script è rifiutato.
+Il cestino sta in `.traduco/cestino/<timestamp>/<percorso originale>` ed è nel `.gitignore` del progetto.
+**Conseguenze**: "Apri cartella esistente" (schermata di benvenuto, `03-ui.md`) richiede un registro di cartelle esterne a `~/Traduco`: non previsto in M1.

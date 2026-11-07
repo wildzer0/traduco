@@ -15,7 +15,15 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     # Built frontend served by the backend; ``None`` disables static serving.
     frontend_dist: Path | None = None
+    # Demo project offered by "Open example"; defaults to <repo>/examples/progetto-esempio.
+    examples_dir: Path | None = None
     version: str = "0.1.0"
+
+    @property
+    def example_project(self) -> Path | None:
+        base = self.examples_dir or Path(__file__).resolve().parents[2] / "examples"
+        example = base / "progetto-esempio"
+        return example if (example / "progetto.yaml").is_file() else None
 
     @property
     def workspaces_path(self) -> Path:

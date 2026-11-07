@@ -3,11 +3,15 @@
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 
-from app.api import health
+from app.api import assets, files, health, nodes, projects
+from app.api.deps import STATUS
 from app.config import Settings, get_settings
+from app.core.workspace.errors import WorkspaceError
 
 
 def _error(code: str, message: str, status: int) -> JSONResponse:
@@ -30,7 +34,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def http_error(_: Request, exc: HTTPException) -> JSONResponse:
         return _error(f"http_{exc.status_code}", str(exc.detail), exc.status_code)
 
-    app.include_router(health.router, prefix="/api")
+    @app.exception_handler(WorkspaceError)
+    async def workspace_error(_: Request, exc: WorkspaceError) -> JSONResponse:
+        return _error(exc.code, exc.message, STATUS.get(exc.code, 400))
+
+    @app.exception_handler(ValidationError)
+    async def model_error(_: Request, exc: ValidationError) -> JSONResponse:
+        first = exc.errors()[0]
+        message = str(first.get("msg", "invalid data")).removeprefix("Value error, ")
+        return _error("validation_error", message, 422)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+        first = exc.errors()[0] if exc.errors() else {}
+        where = ".".join(str(p) for p in first.get("loc", ()))
+        return _error("validation_error", f"{where}: {first.get('msg', 'invalid request')}", 422)
+
+    for router in (health.router, projects.router, nodes.router, files.router, assets.router):
+        app.include_router(router, prefix="/api")
 
     dist = settings.frontend_dist
     if dist is not None and (dist / "index.html").is_file():
