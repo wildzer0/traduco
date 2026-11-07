@@ -43,6 +43,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/app ./app
 RUN uv sync --frozen --no-dev
 COPY --from=frontend /src/frontend/dist /app/frontend/dist
+COPY examples /app/examples
 
 RUN useradd --create-home --uid 10001 traduco && mkdir /workspaces && chown traduco /workspaces
 USER traduco

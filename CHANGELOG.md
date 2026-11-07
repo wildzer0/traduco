@@ -5,6 +5,15 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-07
+
+Milestone M2b - project skeleton.
+
+### Added
+- `scheletro.yaml`: chapters and sections a document must contain, with mandatory flag and guide text; errors name the line.
+- New project from a bundled skeleton (an abbreviated ECSS-style requirements specification) or from your own file.
+- Conformity panel in the sidebar and amber dots in the tree for empty, missing, misplaced or out-of-order sections; "create missing sections" button.
+
 ## [0.3.0] - 2026-11-07
 
 Milestone M2 - translation engine.

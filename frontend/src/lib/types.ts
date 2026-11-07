@@ -85,3 +85,25 @@ export interface LlmStatus {
   error?: string;
   pending?: number;
 }
+
+export type SkeletonStatus = "ok" | "missing" | "empty" | "out_of_order" | "misplaced";
+
+export interface SkeletonItem {
+  id: string;
+  title: string;
+  mandatory: boolean;
+  status: SkeletonStatus;
+  path: string | null;
+  guide: string;
+}
+
+export interface SkeletonReport {
+  conform: boolean;
+  items: SkeletonItem[];
+  extra: string[];
+}
+
+export interface BundledSkeleton {
+  id: string;
+  nome: string;
+}

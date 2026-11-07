@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { keys, useProjects } from "../features/tree/queries";
-import { createProject } from "../lib/api";
+import { ApiError, createProject, listSkeletons } from "../lib/api";
 import { useT } from "../lib/i18n";
 import { useNotices } from "../lib/notices";
 import { usePrefs } from "../lib/prefs";
@@ -21,6 +21,11 @@ export function WelcomePage() {
   const [nome, setNome] = useState("");
   const [source, setSource] = useState("it");
   const [official, setOfficial] = useState("en");
+  // "" = empty project, "@file" = pasted/uploaded text, otherwise the id of a bundled skeleton
+  const [structure, setStructure] = useState("");
+  const [skeletonText, setSkeletonText] = useState("");
+  const [skeletonError, setSkeletonError] = useState<string | null>(null);
+  const { data: skeletons = [] } = useQuery({ queryKey: ["skeletons"], queryFn: listSkeletons });
   const names = new Intl.DisplayNames([locale], { type: "language" });
 
   const open = (id: string) =>
@@ -31,8 +36,11 @@ export function WelcomePage() {
       qc.invalidateQueries({ queryKey: keys.projects });
       open(p.id);
     },
-    onError: (e) =>
-      notify(t("error.generic", { message: e instanceof Error ? e.message : String(e) })),
+    onError: (e) => {
+      if (e instanceof ApiError && e.code === "invalid_skeleton")
+        setSkeletonError(t("welcome.skeletonError", { message: e.message }));
+      else notify(t("error.generic", { message: e instanceof Error ? e.message : String(e) }));
+    },
   });
 
   const field = "mt-1 w-full rounded-ui border border-border bg-surface px-2 py-1";
@@ -98,6 +106,11 @@ export function WelcomePage() {
               nome: nome.trim(),
               lingua_sorgente: source,
               lingua_ufficiale: official,
+              ...(structure === "@file"
+                ? { scheletro_testo: skeletonText }
+                : structure
+                  ? { scheletro: structure }
+                  : {}),
             });
           }}
         >
@@ -129,10 +142,51 @@ export function WelcomePage() {
               </select>
             </label>
           ))}
+          <label className="mt-3 block">
+            {t("welcome.structure")}
+            <select
+              className={field}
+              value={structure}
+              onChange={(e) => {
+                setStructure(e.target.value);
+                setSkeletonError(null);
+              }}
+            >
+              <option value="">{t("welcome.structureEmpty")}</option>
+              {skeletons.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nome}
+                </option>
+              ))}
+              <option value="@file">{t("welcome.structureFile")}</option>
+            </select>
+          </label>
+          {structure === "@file" && (
+            <label className="mt-3 block">
+              {t("welcome.skeletonFile")}
+              <input
+                type="file"
+                accept=".yaml,.yml,text/yaml,text/plain"
+                className={field}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  setSkeletonText(file ? await file.text() : "");
+                  setSkeletonError(null);
+                }}
+              />
+            </label>
+          )}
+          {skeletonError && (
+            <p role="alert" className="mt-2 text-red">
+              {skeletonError}
+            </p>
+          )}
           <div className="mt-4 flex gap-2">
             <button
               type="submit"
-              disabled={!nome.trim() || source === official}
+              disabled={
+                !nome.trim() || source === official || (structure === "@file" && !skeletonText)
+              }
               className="rounded-ui bg-accent px-3 py-1.5 text-accent-fg disabled:opacity-50"
             >
               {t("welcome.submit")}

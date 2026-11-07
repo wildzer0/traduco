@@ -1,3 +1,4 @@
+import { SkeletonPanel } from "../features/tree/SkeletonPanel";
 import { Tree } from "../features/tree/Tree";
 import { useT } from "../lib/i18n";
 import { usePrefs } from "../lib/prefs";
@@ -22,6 +23,7 @@ export function Sidebar({ projectId, selected, onSelect }: Props) {
         {t("sidebar.label")}
       </h2>
       <Tree projectId={projectId} selected={selected} onSelect={onSelect} />
+      <SkeletonPanel projectId={projectId} onSelect={onSelect} />
       <div className="mt-2 border-t border-border pt-2">
         {(["sidebar.glossary", "sidebar.templates"] as const).map((key) => (
           <button

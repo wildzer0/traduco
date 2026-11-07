@@ -35,7 +35,11 @@ export function Workspace() {
       if (event.type === "llm.status") state.setLlm(event.online === true, event.model ?? "");
       if (event.type === "job.progress") state.setPending(event.pending ?? 0);
       emitFileEvent(event);
-      qc.invalidateQueries({ queryKey: keys.tree(projectId) });
+      // translation progress events are frequent and change neither the tree nor the skeleton
+      if (event.type === "file.changed" || event.type === "project.changed") {
+        qc.invalidateQueries({ queryKey: keys.tree(projectId) });
+        qc.invalidateQueries({ queryKey: keys.skeleton(projectId) });
+      }
     },
     onConnect: () => {
       getLlmStatus()
@@ -46,6 +50,7 @@ export function Workspace() {
         .catch(() => useTranslationState.getState().setLlm(false, ""));
       // changes may have happened while disconnected: refetch the tree, let the open file re-check itself
       qc.invalidateQueries({ queryKey: keys.tree(projectId) });
+      qc.invalidateQueries({ queryKey: keys.skeleton(projectId) });
       emitFileEvent({ type: "hello" });
     },
   });
@@ -54,6 +59,7 @@ export function Workspace() {
   useEffect(() => {
     const recheck = () => {
       qc.invalidateQueries({ queryKey: keys.tree(projectId) });
+      qc.invalidateQueries({ queryKey: keys.skeleton(projectId) });
       emitFileEvent({ type: "hello" });
     };
     window.addEventListener("focus", recheck);

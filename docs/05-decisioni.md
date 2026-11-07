@@ -260,3 +260,14 @@ perché non dipende dal modello.
 **Conseguenze**: carico sul modello unico (2 richieste in parallelo): le azioni dell'utente rallentano la traduzione in coda, non il contrario. La qualità con modelli piccoli sulla lingua sorgente va verificata prima di promettere correzioni grammaticali affidabili;
 per questo il controllo ortografico resta a LanguageTool (RF-16) e il companion si concentra su stile, chiarezza e coerenza.
 
+## ADR-031 — Scheletro di progetto: formato e verifica (attua ADR-028)
+**Decisione**:
+- **File** `scheletro.yaml`: `nome`, `versione`, `nodi` ricorsivi con `id`, `titolo` (testo o mappa lingua → testo), `obbligatorio` (predefinito sì), `guida`, `nodi`.
+  Un nodo con figli è un capitolo, una foglia è una sezione. I nodi di primo livello **devono** avere figli (sono capitoli): evita capitoli con una sola sezione fittizia. Al massimo 3 livelli di capitoli (RF-02).
+  Chiavi sconosciute rifiutate. Gli errori riportano riga e motivo (ruamel round-trip per le righe); un file non valido non crea nulla.
+- **Marcatura**: ogni capitolo ha `scheletro: <id>` in `_capitolo.yaml`, ogni sezione nel front matter. Il titolo è nella lingua sorgente del progetto. La guida è un commento HTML `<!-- Guida: … -->` nel corpo (non esportato; l'editor lo mostra come blocco protetto).
+- **Conformità** (`GET …/skeleton/check`): `missing` · `empty` (solo commenti/spazi, per le obbligatorie) · `misplaced` (padre diverso da quello previsto) · `out_of_order` (fuori dalla sottosequenza crescente più lunga) · `ok`; i nodi senza marca sono `extra`. Le facoltative non fanno mai fallire la conformità.
+- **Crea mancanti**: crea i nodi obbligatori assenti sotto il loro padre e rimette i fratelli nell'ordine dello scheletro (rinumera i prefissi, come ogni riordino). Le facoltative solo su richiesta.
+- Scheletri forniti con l'app in `examples/scheletri/` (uno stile ECSS abbreviato, **didattico**: va confrontato con la norma originale, che non è inclusa); si può caricare un file proprio alla creazione.
+**Limiti**: il riordino rinumera i file, quindi i segmenti tradotti in `.traduco/segmenti/` legati al vecchio percorso si rigenerano; la UI non permette ancora di modificare lo scheletro di un progetto esistente (l'API `PUT …/skeleton` sì).
+

@@ -270,3 +270,54 @@ describe("workspace", () => {
     expect(await screen.findByText("Backend non raggiungibile")).toBeInTheDocument();
   });
 });
+
+describe("project from a skeleton", () => {
+  it("offers the bundled skeletons and sends the chosen one", async () => {
+    const calls = installFakeApi([
+      ...workspaceApi(),
+      (c) =>
+        c.url === "/api/skeletons" ? { body: [{ id: "ecss", nome: "Stile ECSS" }] } : undefined,
+      (c) =>
+        c.url === "/api/projects" && c.method === "POST"
+          ? { status: 201, body: project("spec", "Spec") }
+          : undefined,
+    ]);
+    const user = userEvent.setup();
+    renderApp("/");
+    await user.click(await screen.findByRole("button", { name: "Crea progetto" }));
+    await user.type(screen.getByLabelText("Nome del progetto"), "Spec");
+    await user.selectOptions(await screen.findByLabelText("Struttura iniziale"), "ecss");
+    await user.click(screen.getByRole("button", { name: "Crea" }));
+    await waitFor(() => expect(calls.some((c) => c.method === "POST")).toBe(true));
+    expect(calls.find((c) => c.method === "POST")?.body).toMatchObject({ scheletro: "ecss" });
+  });
+
+  it("shows the line of an invalid skeleton file", async () => {
+    installFakeApi([
+      ...workspaceApi(),
+      (c) => (c.url === "/api/skeletons" ? { body: [] } : undefined),
+      (c) =>
+        c.url === "/api/projects" && c.method === "POST"
+          ? {
+              status: 422,
+              body: {
+                error: {
+                  code: "invalid_skeleton",
+                  message: "riga 3: id duplicato",
+                  details: { line: 3 },
+                },
+              },
+            }
+          : undefined,
+    ]);
+    const user = userEvent.setup();
+    renderApp("/");
+    await user.click(await screen.findByRole("button", { name: "Crea progetto" }));
+    await user.type(screen.getByLabelText("Nome del progetto"), "Spec");
+    await user.selectOptions(screen.getByLabelText("Struttura iniziale"), "@file");
+    const file = new File(["nome: X"], "s.yaml", { type: "text/yaml" });
+    await user.upload(screen.getByLabelText("File scheletro (YAML)"), file);
+    await user.click(screen.getByRole("button", { name: "Crea" }));
+    expect(await screen.findByText(/riga 3: id duplicato/)).toBeInTheDocument();
+  });
+});

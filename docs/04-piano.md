@@ -66,10 +66,10 @@ fake-llm l'editor continua a funzionare e la traduzione riprende alla riaccensio
 
 ## M2b — Scheletro di progetto (RF-09)
 
-- [ ] Formato `scheletro.yaml` (modello pydantic, validazione, esempio ECSS-E-ST-10-06C abbreviato in `examples/scheletri/`)
-- [ ] `core/skeleton`: generazione di capitoli/sezioni (con titolo e testo guida) da uno scheletro; scheletro salvato nel progetto
-- [ ] Verifica di conformità: mancanti, extra, fuori ordine, obbligatorie vuote; API `GET /projects/{id}/skeleton/check`
-- [ ] UI: "Nuovo progetto da scheletro", indicatore di conformità nell'albero (sezioni mancanti segnate)
+- [x] Formato `scheletro.yaml` (modello pydantic, validazione, esempio ECSS-E-ST-10-06C abbreviato in `examples/scheletri/`)
+- [x] `core/skeleton`: generazione di capitoli/sezioni (con titolo e testo guida) da uno scheletro; scheletro salvato nel progetto
+- [x] Verifica di conformità: mancanti, extra, fuori ordine, obbligatorie vuote; API `GET /projects/{id}/skeleton/check`
+- [x] UI: "Nuovo progetto da scheletro", indicatore di conformità nell'albero (sezioni mancanti segnate)
 
 **Accettazione**: creare un progetto da uno scheletro produce la struttura su disco attesa; eliminare una sezione
 obbligatoria la segnala come mancante; un file di scheletro non valido dà un errore con riga e motivo.

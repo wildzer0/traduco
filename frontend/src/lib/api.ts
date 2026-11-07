@@ -1,9 +1,11 @@
 import type {
   AssetSaved,
+  BundledSkeleton,
   FileContent,
   LlmStatus,
   NodeResult,
   ProjectSummary,
+  SkeletonReport,
   TranslationView,
   TreeNode,
 } from "./types";
@@ -67,6 +69,8 @@ export const createProject = (body: {
   lingua_sorgente?: string;
   lingua_ufficiale?: string;
   esempio?: boolean;
+  scheletro?: string;
+  scheletro_testo?: string;
 }): Promise<ProjectSummary> => api("/projects", json("POST", body));
 
 export const getTree = (id: string): Promise<{ nodes: TreeNode[] }> => api(`${base(id)}/tree`);
@@ -127,3 +131,18 @@ export const retranslate = (
   api(`${base(projectId)}/retranslate`, json("POST", { scope, path }));
 
 export const getLlmStatus = (): Promise<LlmStatus> => api("/llm/status");
+
+export const listSkeletons = (): Promise<BundledSkeleton[]> => api("/skeletons");
+
+/** `null` when the project has no skeleton. */
+export const getSkeletonCheck = async (id: string): Promise<SkeletonReport | null> => {
+  try {
+    return await api<SkeletonReport>(`${base(id)}/skeleton/check`);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
+};
+
+export const createMissing = (id: string): Promise<{ created: string[] }> =>
+  api(`${base(id)}/skeleton/create-missing`, json("POST", {}));

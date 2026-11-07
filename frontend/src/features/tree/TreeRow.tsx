@@ -10,6 +10,8 @@ interface Props {
   row: Row;
   selected: boolean;
   expanded: boolean;
+  /** Skeleton problem of this node (empty, out of order…), shown as an amber dot. */
+  flag?: string;
   renaming: boolean;
   onActivate: () => void;
   onToggle: () => void;
@@ -106,6 +108,19 @@ export function TreeRow(props: Props) {
             >
               {row.node.title}
             </button>
+          )}
+          {props.flag && !renaming && (
+            <span
+              role="img"
+              data-testid="skeleton-flag"
+              aria-label={t("skeleton.flag", {
+                status: t(`skeleton.status.${props.flag}` as "skeleton.status.missing"),
+              })}
+              title={t("skeleton.flag", {
+                status: t(`skeleton.status.${props.flag}` as "skeleton.status.missing"),
+              })}
+              className="mr-1 size-2 shrink-0 rounded-full bg-amber"
+            />
           )}
         </li>
       </ContextMenu.Trigger>

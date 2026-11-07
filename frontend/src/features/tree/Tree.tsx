@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import { useT } from "../../lib/i18n";
 import type { TreeNode } from "../../lib/types";
 import { computeDrop, flattenTree } from "./dnd";
-import { useTree } from "./queries";
+import { useSkeleton, useTree } from "./queries";
 import { TreeRow } from "./TreeRow";
 import { useTreeActions } from "./useTreeActions";
 
@@ -33,6 +33,13 @@ function lastChapter(nodes: TreeNode[]): string | null {
 export function Tree({ projectId, selected, onSelect }: Props) {
   const t = useT();
   const { data: nodes = [], isLoading, isError } = useTree(projectId);
+  const { data: skeleton } = useSkeleton(projectId);
+  const flags = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const i of skeleton?.items ?? [])
+      if (i.path && i.mandatory && i.status !== "ok") map.set(i.path, i.status);
+    return map;
+  }, [skeleton]);
   const actions = useTreeActions(projectId, selected, onSelect);
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -129,6 +136,7 @@ export function Tree({ projectId, selected, onSelect }: Props) {
                   key={row.node.path}
                   row={row}
                   selected={row.node.path === selected}
+                  flag={flags.get(row.node.path)}
                   expanded={!collapsed.has(row.node.path)}
                   renaming={renaming === row.node.path}
                   onActivate={() => {
