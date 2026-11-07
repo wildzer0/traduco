@@ -1,0 +1,28 @@
+# Server installations. Desktop users run ./start.sh or start.cmd instead (ADR-011).
+#   docker compose up                  -> app only (point TRADUCO_LLM_BASE_URL at your endpoint)
+#   docker compose --profile llm up    -> app + Ollama
+services:
+  app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "${TRADUCO_PORT:-8000}:8000"
+    environment:
+      TRADUCO_LLM_BASE_URL: ${TRADUCO_LLM_BASE_URL:-http://ollama:11434/v1}
+      TRADUCO_LLM_MODEL: ${TRADUCO_LLM_MODEL:-gemma4:e4b}
+      TRADUCO_LLM_API_KEY: ${TRADUCO_LLM_API_KEY:-}
+    volumes:
+      - workspaces:/workspaces
+    restart: unless-stopped
+
+  ollama:
+    profiles: ["llm"]
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  workspaces:
+  ollama:
