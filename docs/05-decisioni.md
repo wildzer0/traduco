@@ -182,3 +182,11 @@ e il pacchetto `app.core` è sotto `mypy --strict`.
 immagini sotto `img/` con `Content-Security-Policy: sandbox` e `nosniff`. Il tipo è dedotto dal contenuto; SVG con script è rifiutato.
 Il cestino sta in `.traduco/cestino/<timestamp>/<percorso originale>` ed è nel `.gitignore` del progetto.
 **Conseguenze**: "Apri cartella esistente" (schermata di benvenuto, `03-ui.md`) richiede un registro di cartelle esterne a `~/Traduco`: non previsto in M1.
+
+## ADR-024 — Eventi di file: watchfiles, hash negli eventi, controllo Origin
+**Decisione**: un watcher `watchfiles` per progetto (avviato al primo client WebSocket, fermato all'ultimo), debounce 300 ms, che emette
+`file.changed` / `project.changed` / `glossary.changed` con `path`, `change` (`added|modified|deleted`) e, per i `.md`, l'`hash` attuale:
+il client ignora gli eventi con l'hash dei propri salvataggi. File nascosti, temporanei (scritture atomiche, rinumerazione) e `build/` non generano eventi.
+Il WebSocket rifiuta le connessioni il cui `Origin` non coincide con l'`Host` (i browser non applicano la same-origin policy ai WebSocket).
+**Conseguenze**: su WSL e unità di rete `watchfiles` passa al polling e può perdere una modifica fatta nel primo secondo dopo la connessione:
+il client deve rileggere albero e file aperto a ogni (ri)connessione. I test ripetono la modifica finché l'evento arriva.

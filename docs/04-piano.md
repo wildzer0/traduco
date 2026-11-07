@@ -34,7 +34,7 @@ il secondo avvio impiega meno di 10 s; il fake-llm risponde a una richiesta di p
 - [x] Operazioni: crea, rinomina, sposta, riordina (rinumerazione atomica dei prefissi), elimina (nel cestino `.traduco/cestino`)
 - [x] Upload immagini in `img/` del capitolo
 - [x] API projects, nodes, files, assets con controllo conflitti via hash (`If-Match`)
-- [ ] File watcher: modifiche esterne notificate via WebSocket
+- [x] File watcher: modifiche esterne notificate via WebSocket
 - [ ] Frontend: albero con drag & drop, barra strumenti, menu `/`, autosalvataggio, barra di stato
 - [ ] Forma canonica del Markdown (`canonical.ts`) e test di round-trip su tutte le fixture
 - [ ] Modalità Markdown (CodeMirror) e modalità Documento (Milkdown) sullo stesso file, interruttore `Ctrl+/`

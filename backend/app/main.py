@@ -1,5 +1,7 @@
 """FastAPI application factory."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -8,10 +10,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
-from app.api import assets, files, health, nodes, projects
+from app.api import assets, events, files, health, nodes, projects
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.workspace.errors import WorkspaceError
+from app.events import EventHub
 
 
 def _error(code: str, message: str, status: int) -> JSONResponse:
@@ -22,11 +25,19 @@ def _error(code: str, message: str, status: int) -> JSONResponse:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        app.state.hub = EventHub()
+        yield
+        await app.state.hub.close()
+
     app = FastAPI(
         title="Traduco",
         version=settings.version,
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
     app.dependency_overrides[get_settings] = lambda: settings
 
@@ -50,7 +61,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         where = ".".join(str(p) for p in first.get("loc", ()))
         return _error("validation_error", f"{where}: {first.get('msg', 'invalid request')}", 422)
 
-    for router in (health.router, projects.router, nodes.router, files.router, assets.router):
+    for router in (
+        health.router,
+        projects.router,
+        nodes.router,
+        files.router,
+        assets.router,
+        events.router,
+    ):
         app.include_router(router, prefix="/api")
 
     dist = settings.frontend_dist
