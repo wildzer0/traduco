@@ -105,6 +105,17 @@ un documento nella lingua ufficiale di progetto, conforme ai template Word azien
 | RF-66 | Le modifiche importate sono mostrate all'autore **nella sua lingua** come proposte da accettare o rifiutare | S |
 | RF-67 | Import di un DOCX esistente come nuovo progetto (conversione in capitoli/sezioni per titolo 1 e 2) | C |
 
+### Emissioni, revisione e documentazione software
+
+| ID | Requisito | Priorità |
+| --- | --- | --- |
+| RF-80 | **Emissioni** (issue/versioni): "congela" il documento con numero e data; storico delle emissioni navigabile (snapshot in `.traduco/emissioni/`, compatibile con Git) | S |
+| RF-81 | **Tabella dei cambiamenti** compilata in automatico confrontando due emissioni: il modello riassume i cambi per sezione, l'autore li corregge; alimenta `{{REVISIONI}}` | S |
+| RF-82 | **Confronto visuale** tra emissioni (o con la bozza) nell'anteprima, a livello di parola, nella lingua sorgente e in quella ufficiale; navigazione cambio per cambio | S |
+| RF-83 | **Commenti di revisione** ancorati a un segmento, con thread, stato (aperto/risolto) e autore; salvati in file accanto al documento, non nel testo | S |
+| RF-84 | **Modelli di documento software** (ADD, DDD, SRS, …) come scheletri (RF-09) con guida per sezione; tracciabilità dei requisiti tra documenti tramite identificatori e riferimenti incrociati verificati | C |
+| RF-85 | Export HTML come sito statico navigabile (indice, ricerca, immagini incluse) e altri formati (Markdown unico, EPUB) oltre a DOCX/PDF/ODT | C |
+
 ### Installazione e avvio
 
 | ID | Requisito | Priorità |
