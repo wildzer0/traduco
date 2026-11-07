@@ -157,6 +157,7 @@ def test_backend_env_does_not_inherit_the_launcher_venv(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", "/somewhere/launcher-venv")
+    monkeypatch.delenv("UV_CACHE_DIR", raising=False)  # CI runners set their own
     ctx = make_ctx(tmp_path)
     env = steps.child_env(ctx)
     assert env["UV_PROJECT_ENVIRONMENT"] == str(tmp_path / "backend" / ".venv")

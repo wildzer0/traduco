@@ -48,6 +48,10 @@ describe("canonical form: invariants", () => {
     }
   });
 
+  it("keeps a real CRLF fixture (see .gitattributes)", () => {
+    expect(readFileSync(join(FIXTURES, "crlf.in.md"), "utf8")).toContain("\r\n");
+  });
+
   it("treats CRLF and LF input as the same document", () => {
     const lf = "# T\n\nUno\n\n- a\n- b\n";
     expect(canonicalize(lf.replace(/\n/g, "\r\n"))).toBe(canonicalize(lf));

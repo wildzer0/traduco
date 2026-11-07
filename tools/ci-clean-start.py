@@ -25,7 +25,12 @@ def launch(port: int, log: Path) -> subprocess.Popen[bytes]:
     script = ["cmd", "/c", "start.cmd"] if WINDOWS else ["./start.sh"]
     cmd = [*script, "--no-browser", "--port", str(port)]
     out = log.open("wb")
-    kwargs: dict[str, object] = {"cwd": ROOT, "stdout": out, "stderr": subprocess.STDOUT}
+    kwargs: dict[str, object] = {
+        "cwd": ROOT,
+        "stdin": subprocess.DEVNULL,  # start.cmd calls `pause` on errors: never wait for a key
+        "stdout": out,
+        "stderr": subprocess.STDOUT,
+    }
     if WINDOWS:
         kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
     else:

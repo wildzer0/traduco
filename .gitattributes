@@ -5,3 +5,5 @@
 *.png binary
 *.docx binary
 *.woff2 binary
+# Fixture that must keep its CRLF line endings
+fixtures/markdown/crlf.in.md -text
