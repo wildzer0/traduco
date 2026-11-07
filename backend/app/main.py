@@ -13,6 +13,7 @@ from starlette.types import Scope
 
 from app.api import (
     assets,
+    capabilities,
     companion,
     diagrams,
     events,
@@ -121,6 +122,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         assets.router,
         diagrams.router,
         companion.router,
+        capabilities.router,
         settings_api.router,
         skeleton.router,
         templates.router,

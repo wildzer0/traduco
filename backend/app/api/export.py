@@ -10,12 +10,16 @@ from pydantic import BaseModel
 
 from app.api.deps import Root
 from app.core.export.errors import ExportError
-from app.core.export.service import ExportManager, ExportRequest, Language, Scope
+from app.core.export.service import ExportManager, ExportRequest, Format, Language, Scope
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.manifest import load_project
 
 router = APIRouter(tags=["export"])
-DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+MEDIA = {
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".pdf": "application/pdf",
+    ".odt": "application/vnd.oasis.opendocument.text",
+}
 
 
 def get_manager(request: Request) -> ExportManager:
@@ -31,6 +35,7 @@ class ExportBody(BaseModel):
     path: str | None = None
     language: Language = "ufficiale"
     template: str | None = None
+    format: Format = "docx"
 
 
 @router.post("/projects/{project_id}/export", status_code=202)
@@ -58,4 +63,8 @@ def download(root: Root, manager: Manager, job_id: str) -> FileResponse:
     job = _job(manager, root, job_id)
     if job.state != "done" or job.file is None or not job.file.is_file():
         raise ExportError("not_ready", "the export is not finished")
-    return FileResponse(job.file, media_type=DOCX, filename=job.file.name)
+    return FileResponse(
+        job.file,
+        media_type=MEDIA.get(job.file.suffix, "application/octet-stream"),
+        filename=job.file.name,
+    )

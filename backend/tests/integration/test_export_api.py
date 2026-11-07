@@ -199,3 +199,62 @@ def test_the_sample_template_can_be_added_to_any_project(xapi: TestClient, tmp_p
         {"name": "manuale", "default": True, "has_mapping": True}
     ]
     assert xapi.post(f"/api/projects/{pid}/templates/example").status_code == 409
+
+
+# --- formats and capabilities (M4b) ----------------------------------------------------------
+
+
+def test_pdf_and_odt_need_libreoffice_and_say_so(
+    xapi: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.export import office
+
+    monkeypatch.setattr(office, "find_soffice", lambda: None)
+    pid = example(xapi)
+    status = run_export(
+        xapi, pid, scope="section", path="capitoli/01-introduzione/01-scopo.md",
+        language="sorgente", format="pdf",
+    )  # fmt: skip
+    assert status["state"] == "failed" and status["error"]["code"] == "office_missing"
+
+
+def test_pdf_export_end_to_end(xapi: TestClient, soffice_bin: Path, tmp_path: Path) -> None:
+    pid = example(xapi)
+    for fmt, magic in (("pdf", b"%PDF"), ("odt", b"PK")):
+        status = run_export(
+            xapi, pid, scope="section", path="capitoli/01-introduzione/01-scopo.md",
+            language="sorgente", format=fmt,
+        )  # fmt: skip
+        assert status["state"] == "done", status
+        r = xapi.get(f"/api/projects/{pid}/export/{status['id']}/download")
+        assert r.status_code == 200 and r.content.startswith(magic)
+        assert status["filename"].endswith(f".{fmt}")
+
+
+def test_capabilities_report_tools_and_the_model_download(
+    xapi: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.export import office
+
+    monkeypatch.setattr(office, "find_soffice", lambda: None)
+    body = xapi.get("/api/capabilities").json()
+    assert body["pandoc"]["available"] is True and body["libreoffice"]["available"] is False
+    assert body["formats"] == ["docx"] and body["model"] == {"state": "none"}
+    monkeypatch.setattr(office, "find_soffice", lambda: Path("/usr/bin/soffice"))
+    assert xapi.get("/api/capabilities").json()["formats"] == ["docx", "pdf", "odt"]
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    monkeypatch.setenv("TRADUCO_RUNTIME_DIR", str(runtime))
+    (runtime / "model.json").write_text(
+        '{"state": "downloading", "model": "gemma4:e4b", "completed": 250, "total": 1000}'
+    )
+    model = xapi.get("/api/capabilities").json()["model"]
+    assert model == {
+        "state": "downloading",
+        "model": "gemma4:e4b",
+        "completed": 250,
+        "total": 1000,
+        "error": "",
+    }
+    (runtime / "model.json").write_text("{broken")
+    assert xapi.get("/api/capabilities").json()["model"] == {"state": "none"}

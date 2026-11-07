@@ -20,6 +20,7 @@ from typing import Any, Literal
 
 from app.core.export import combine as combine_mod
 from app.core.export import compose as compose_mod
+from app.core.export import office
 from app.core.export.errors import ExportError
 from app.core.export.pandoc import default_reference_doc, find_pandoc, run_pandoc
 from app.core.templates.analyze import analyze, propose_mapping
@@ -36,6 +37,7 @@ from app.core.workspace.tree import Node, build_tree
 
 Scope = Literal["section", "chapter", "project"]
 Language = Literal["ufficiale", "sorgente"]
+Format = Literal["docx", "pdf", "odt"]
 WAIT_SECONDS = 300.0
 DATE_FORMATS = {"it": "%d/%m/%Y", "de": "%d.%m.%Y", "fr": "%d/%m/%Y", "es": "%d/%m/%Y"}
 
@@ -46,6 +48,7 @@ class ExportRequest:
     path: str | None = None
     language: Language = "ufficiale"
     template: str | None = None
+    format: Format = "docx"
 
 
 @dataclass
@@ -194,6 +197,9 @@ class ExportManager:
         )
         self._step(job, 95, "snapshot", root)
         self._snapshot(root, req, combined, output)
+        if req.format != "docx":
+            self._step(job, 97, "convert", root)
+            output = await asyncio.to_thread(office.convert, output, req.format, output.parent)
         return output
 
     def _render(

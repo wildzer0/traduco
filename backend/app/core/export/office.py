@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -13,15 +14,27 @@ from app.core.export.errors import ExportError
 TIMEOUT_SECONDS = 180
 
 
+def _standard_locations() -> list[Path]:
+    if sys.platform == "win32":
+        bases = [os.environ.get("PROGRAMFILES"), os.environ.get("PROGRAMFILES(X86)")]
+        return [Path(b) / "LibreOffice" / "program" / "soffice.exe" for b in bases if b]
+    if sys.platform == "darwin":
+        return [Path("/Applications/LibreOffice.app/Contents/MacOS/soffice")]
+    return []
+
+
 def find_soffice() -> Path | None:
-    """``$TRADUCO_SOFFICE`` or ``soffice`` on PATH; ``None`` when LibreOffice is not installed."""
+    """LibreOffice: ``$TRADUCO_SOFFICE``, ``soffice`` on PATH, then the standard install places.
+
+    ``None`` when it is not installed; it is never installed by Traduco (docs/02).
+    """
     configured = os.environ.get("TRADUCO_SOFFICE")
     if configured and Path(configured).is_file():
         return Path(configured)
     for name in ("soffice", "libreoffice"):
         if found := shutil.which(name):
             return Path(found)
-    return None
+    return next((p for p in _standard_locations() if p.is_file()), None)
 
 
 def convert(docx: Path, fmt: str, outdir: Path) -> Path:
