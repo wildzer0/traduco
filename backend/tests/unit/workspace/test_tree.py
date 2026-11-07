@@ -95,3 +95,10 @@ def test_missing_capitoli_folder_gives_empty_tree(tmp_path: Path) -> None:
 def test_humanize() -> None:
     assert humanize("02-procedura-di_montaggio.md") == "Procedura di montaggio"
     assert humanize("README") == "README"
+
+
+def test_a_folder_that_vanishes_while_reading_is_skipped(tmp_path: Path) -> None:
+    """Reordering renames folders while GET /tree may be walking them (seen in the e2e logs)."""
+    from app.core.workspace.tree import _children
+
+    assert _children(tmp_path / "capitoli" / "02-gone", tmp_path, 2) == []

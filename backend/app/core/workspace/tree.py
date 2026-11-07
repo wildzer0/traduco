@@ -84,9 +84,14 @@ def _visible(entry: Path) -> bool:
 
 def _children(directory: Path, root: Path, depth: int) -> list[Node]:
     nodes: list[Node] = []
-    entries = sorted(
-        (e for e in directory.iterdir() if _visible(e)), key=lambda e: sort_key(e.name)
-    )
+    try:
+        entries = sorted(
+            (e for e in directory.iterdir() if _visible(e)), key=lambda e: sort_key(e.name)
+        )
+    except OSError:
+        # renamed or removed while the tree was being read (drag and drop renumbers folders):
+        # the file watcher reports the change and the client reads the tree again
+        return nodes
     for entry in entries:
         rel = entry.relative_to(root).as_posix()
         if entry.is_dir():
@@ -110,10 +115,13 @@ def build_tree(root: Path) -> list[Node]:
     chapters = root / CHAPTERS_DIR
     if not chapters.is_dir():
         return []
-    top = sorted(
-        (e for e in chapters.iterdir() if e.is_dir() and _visible(e)),
-        key=lambda e: sort_key(e.name),
-    )
+    try:
+        top = sorted(
+            (e for e in chapters.iterdir() if e.is_dir() and _visible(e)),
+            key=lambda e: sort_key(e.name),
+        )
+    except OSError:
+        return []
     return [
         Node(
             "chapter",
