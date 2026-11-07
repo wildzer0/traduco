@@ -199,5 +199,17 @@
   "view.write": "Scrittura",
   "view.review": "Revisione",
   "view.focus": "Concentrazione",
-  "view.label": "Modalità"
+  "view.label": "Modalità",
+  "settings.model": "Modello di traduzione",
+  "settings.modelAddress": "Indirizzo del server (compatibile OpenAI)",
+  "settings.modelName": "Modello",
+  "settings.apiKey": "Chiave API (facoltativa)",
+  "settings.apiKeySaved": "già salvata — lascia vuoto per non cambiarla",
+  "settings.saveVerify": "Salva e verifica",
+  "settings.verifyOk": "Server raggiunto. Modelli disponibili: {models}.",
+  "settings.verifyNoModel": "Server raggiunto, ma il modello «{model}» non è tra quelli disponibili: {models}.",
+  "settings.verifyNoModels": "nessuno",
+  "settings.verifyFail": "Server non raggiungibile: {error}",
+  "settings.modelHelp": "Servono un server locale come Ollama (ollama.com) e un modello scaricato, ad esempio «ollama pull gemma4:e4b». Nessun testo esce da questo computer se l'indirizzo è locale.",
+  "preview.offlineSettings": "Apri le impostazioni del modello"
 }

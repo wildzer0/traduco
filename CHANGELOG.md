@@ -5,6 +5,9 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+### Added
+- Model settings in the app (server address, model, API key) with "Save and verify"; the "model unreachable" banner links to them. Changes apply without a restart.
+
 ## [0.4.0] - 2026-11-07
 
 Milestone M3 - translation control and glossary.

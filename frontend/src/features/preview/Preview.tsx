@@ -159,7 +159,14 @@ export function Preview({ projectId }: { projectId: string }) {
           role="status"
           className="border-b border-border bg-surface-2 px-3 py-1.5 text-[13px] text-amber"
         >
-          {t("preview.offline")}
+          {t("preview.offline")}{" "}
+          <button
+            type="button"
+            onClick={() => usePrefs.getState().setSettingsOpen(true)}
+            className="underline underline-offset-2"
+          >
+            {t("preview.offlineSettings")}
+          </button>
         </p>
       )}
       <div ref={scroller} className="editor-scroll relative min-h-0 flex-1 overflow-y-auto">

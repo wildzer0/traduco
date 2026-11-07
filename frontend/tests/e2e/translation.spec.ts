@@ -74,3 +74,27 @@ test("with the model off the editor keeps working and translation resumes by its
   });
   await expect(page.getByTestId("llm-indicator")).toHaveAttribute("data-online", "true");
 });
+
+test("the model address is set from the settings and checked", async ({ page }) => {
+  // no model running: the banner offers the way out
+  if (llm) await stopFakeLlm(llm);
+  llm = null;
+  await projectWithSection(page, "Impostazioni modello");
+  await expect(page.getByText(/Modello non raggiungibile — la scrittura continua/)).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole("button", { name: "Apri le impostazioni del modello" }).click();
+  const drawer = page.getByRole("dialog", { name: "Impostazioni" });
+  llm = await startFakeLlm(); // the user starts the model server, then checks the address
+  await drawer.getByLabel(/Indirizzo del server/).fill("http://127.0.0.1:11500/v1/");
+  await drawer.getByLabel("Modello", { exact: true }).fill("fake-model");
+  await drawer.getByRole("button", { name: "Salva e verifica" }).click();
+  await expect(drawer.getByRole("status")).toContainText("Server raggiunto");
+  await expect(page.getByTestId("llm-indicator")).toHaveAttribute("data-online", "true");
+  await drawer.getByLabel("Modello", { exact: true }).fill("non-esiste");
+  await drawer.getByRole("button", { name: "Salva e verifica" }).click();
+  await expect(drawer.getByRole("status")).toContainText("non è tra quelli disponibili");
+  await drawer.getByLabel("Modello", { exact: true }).fill("fake-model");
+  await drawer.getByRole("button", { name: "Salva e verifica" }).click();
+  await expect(drawer.getByRole("status")).toContainText("Server raggiunto");
+});

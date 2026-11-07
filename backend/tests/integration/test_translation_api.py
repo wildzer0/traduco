@@ -318,3 +318,40 @@ def test_back_translation_proposes_a_source_text(tapi: TestClient) -> None:
     assert (
         r.status_code == 200 and r.json()["text"] == "[EN] One, my way."
     )  # the fake model only prefixes
+
+
+def test_model_address_can_be_changed_without_restart_and_waiting_work_resumes(
+    tmp_path: Path, llm: FakeLlm
+) -> None:
+    from app.main import create_app
+
+    dead = free_port()  # nothing listens there: the default Ollama address on a machine without it
+    settings = Settings(
+        workspaces_dir=tmp_path / "ws",
+        frontend_dist=None,
+        llm_base_url=f"http://127.0.0.1:{dead}/v1",
+        llm_model="fake-model",
+    )
+    with TestClient(create_app(settings)) as c:
+        pid, sec, _ = setup_section(c, "Uno.\n")
+        assert c.get("/api/llm/status").json()["online"] is False
+        assert c.get("/api/settings").json() == {
+            "llm_base_url": f"http://127.0.0.1:{dead}/v1",
+            "llm_model": "fake-model",
+            "has_api_key": False,
+        }
+        r = c.put("/api/settings", json={"llm_base_url": f"http://127.0.0.1:{llm.port}/v1/"})
+        assert r.status_code == 200 and r.json()["llm_base_url"].endswith(f"{llm.port}/v1")
+        assert c.get("/api/llm/status").json()["online"] is True
+        wait_for(lambda: view(c, pid, sec)["pending"] == 0, timeout=10)
+        assert view(c, pid, sec)["markdown"] == "[EN] Uno.\n"
+    # it is remembered by the next start
+    with TestClient(create_app(settings)) as again:
+        assert again.get("/api/settings").json()["llm_base_url"].endswith(f"{llm.port}/v1")
+    stored = tmp_path / "ws" / ".traduco" / "settings.yaml"
+    assert stored.is_file() and oct(stored.stat().st_mode)[-3:] == "600"
+
+
+def test_settings_reject_a_bad_address(tapi: TestClient) -> None:
+    assert tapi.put("/api/settings", json={"llm_base_url": "localhost:11434"}).status_code == 400
+    assert tapi.put("/api/settings", json={"llm_base_url": "file:///etc/passwd"}).status_code == 400

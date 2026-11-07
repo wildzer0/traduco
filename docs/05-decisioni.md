@@ -285,3 +285,10 @@ per questo il controllo ortografico resta a LanguageTool (RF-16) e il companion 
 - La barra delle azioni resta sull'ultimo segmento toccato dal mouse (non si nasconde all'uscita) perché gli eventi di uscita non sono affidabili sulla barra stessa e nei test.
 **Limiti**: il menu «Aggiungi al glossario» precompila la parola selezionata come traduzione imposta; il termine sorgente va scritto a mano. Import/export TBX/CSV (RF-44) rimandato a M6. Le scorciatoie `E I L A` valgono solo con il focus sull'anteprima.
 
+## ADR-033 — Impostazioni del modello modificabili dall'app
+**Contesto**: senza un server di modelli l'utente vedeva solo «Modello non raggiungibile» e l'unico rimedio erano le variabili d'ambiente (`TRADUCO_LLM_*`).
+**Decisione**: `GET/PUT /api/settings` (indirizzo, modello, chiave API) salvano in `<workspaces>/.traduco/settings.yaml` (permessi `600`, può contenere una chiave) e hanno la precedenza sulle variabili d'ambiente.
+Il servizio si riconfigura senza riavvio: i lavori in coda e il monitor usano subito il nuovo indirizzo (l'indirizzo è risolto all'esecuzione del lavoro; solo il modello per-progetto è fissato nel lavoro). L'interfaccia ha «Salva e verifica»,
+che distingue server irraggiungibile da modello assente e mostra i modelli disponibili. Il banner offline rimanda alle impostazioni. L'API non restituisce mai la chiave, solo `has_api_key`.
+**Conseguenze**: l'installazione automatica di Ollama e del modello resta nella M4b (RF-70…79); fino ad allora l'utente installa Ollama da sé.
+

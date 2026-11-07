@@ -100,6 +100,21 @@ class TranslationService:
             await client.aclose()
         self._clients.clear()
 
+    async def reconfigure(self, config: LlmConfig) -> None:
+        """Use another endpoint or model from now on; queued jobs and the offline monitor follow."""
+        old = list(self._clients.values())
+        self.config = config
+        self._clients.clear()
+        self._online = None
+        if self._monitor and not self._monitor.done():
+            self._monitor.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._monitor
+        self._monitor = None
+        self.queue.pause(False)  # paused jobs try the new endpoint at once
+        for client in old:
+            await client.aclose()
+
     def _client(self, base_url: str, model: str) -> LlmClient:
         key = (base_url, model)
         if key not in self._clients:
@@ -235,10 +250,12 @@ class TranslationService:
     ) -> Job:
         seg = doc.by_key()[key]
         ctx = self._context(root, project, doc, stored, key, meta, entries)
-        base_url, model = self._config_for(project)
+        # the endpoint is resolved when the job runs, so a changed setting also applies to queued
+        # jobs; only a per-project model override is fixed here
+        override = project.llm.modello if project.llm and project.llm.modello else ""
         return Job(
             root, rel, project.lingua_ufficiale, key, seg.hash, seg.source, priority, ctx,
-            base_url, model,
+            "", override,
         )  # fmt: skip
 
     def _context(
@@ -279,19 +296,20 @@ class TranslationService:
 
     # -- jobs --------------------------------------------------------------------------------
     async def _run(self, job_id: str, job: Job) -> None:
-        client = self._client(job.base_url, job.model)
+        base_url, model = self.config.base_url, job.model or self.config.model
+        client = self._client(base_url, model)
         try:
             outcome = await translate(client, job.source, job.ctx)
         except LlmUnavailable as exc:
-            self._set_online(False, job.model, str(exc))
+            self._set_online(False, model, str(exc))
             self.queue.pause(True)
             self.queue.submit(job_id, job.priority, job)
-            self._start_monitor(job.base_url, job.model)
+            self._start_monitor(base_url, model)
             return
         except LlmError as exc:
             self._record(job, None, f"model error: {exc}")
             return
-        self._set_online(True, job.model)
+        self._set_online(True, model)
         self._record(job, outcome, "")
 
     def _record(self, job: Job, outcome: Outcome | None, error: str) -> None:
@@ -299,7 +317,7 @@ class TranslationService:
             seg = file.get(job.key)
             if seg is None or seg.source_hash != job.source_hash:
                 return  # superseded by a newer edit: ignore this answer
-            seg.model = job.model
+            seg.model = job.model or self.config.model
             seg.prompt_version = PROMPT_VERSION
             seg.updated_at = store.now()
             if outcome is None or not outcome.ok:

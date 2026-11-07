@@ -199,5 +199,17 @@
   "view.write": "Writing",
   "view.review": "Review",
   "view.focus": "Focus",
-  "view.label": "Mode"
+  "view.label": "Mode",
+  "settings.model": "Translation model",
+  "settings.modelAddress": "Server address (OpenAI-compatible)",
+  "settings.modelName": "Model",
+  "settings.apiKey": "API key (optional)",
+  "settings.apiKeySaved": "already saved — leave empty to keep it",
+  "settings.saveVerify": "Save and verify",
+  "settings.verifyOk": "Server reached. Available models: {models}.",
+  "settings.verifyNoModel": "Server reached, but model “{model}” is not among the available ones: {models}.",
+  "settings.verifyNoModels": "none",
+  "settings.verifyFail": "Server unreachable: {error}",
+  "settings.modelHelp": "You need a local server such as Ollama (ollama.com) and a downloaded model, for example “ollama pull gemma4:e4b”. No text leaves this computer if the address is local.",
+  "preview.offlineSettings": "Open the model settings"
 }

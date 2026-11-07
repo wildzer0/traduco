@@ -208,3 +208,17 @@ export const patchProject = (id: string, body: { tono: Tone }): Promise<Record<s
 
 export const getProject = (id: string): Promise<{ tono: Tone } & Record<string, unknown>> =>
   api(base(id));
+
+export interface ModelSettings {
+  llm_base_url: string;
+  llm_model: string;
+  has_api_key: boolean;
+}
+
+export const getSettings = (): Promise<ModelSettings> => api("/settings");
+
+export const putSettings = (body: {
+  llm_base_url?: string;
+  llm_model?: string;
+  llm_api_key?: string;
+}): Promise<ModelSettings> => api("/settings", json("PUT", body));

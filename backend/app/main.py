@@ -21,6 +21,9 @@ from app.api import (
     skeleton,
     translation,
 )
+from app.api import (
+    settings as settings_api,
+)
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.skeleton.model import SkeletonError
@@ -42,8 +45,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         hub = EventHub()
         app.state.hub = hub
+        saved = settings_api.effective(settings)
         service = TranslationService(
-            LlmConfig(settings.llm_base_url, settings.llm_model, settings.llm_api_key),
+            LlmConfig(saved["llm_base_url"], saved["llm_model"], saved["llm_api_key"]),
             hub.publish,
         )
         app.state.translation = service
@@ -101,6 +105,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         files.router,
         assets.router,
         diagrams.router,
+        settings_api.router,
         skeleton.router,
         translation.router,
         events.router,
