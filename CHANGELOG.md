@@ -5,6 +5,10 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-07
+
+Milestone: built-in engine (llama.cpp) as an alternative to Ollama.
+
 ### Added
 - Built-in engine: without Ollama, or without administrator rights, Traduco can run llama.cpp's `llama-server` with Gemma 4 E2B/E4B by itself (`--llm builtin`; offered automatically when Ollama is missing). Nothing to install: a small program and the model are downloaded and checked, the server listens on this computer only and is protected by a random key.
 
