@@ -75,9 +75,7 @@ test("the section check applies the requirement rules and lets the author dismis
   await panel.getByRole("button", { name: "Controlla", exact: true }).click();
   const items = panel.getByTestId("suggestion");
   await expect(items.first()).toBeVisible({ timeout: 15_000 });
-  await expect(panel).toContainText(
-    "Più di una prescrizione".replace("Più di una prescrizione", "More than one prescription"),
-  );
+  await expect(panel).toContainText("Più di una prescrizione");
   const n = await items.count();
   expect(n).toBeGreaterThanOrEqual(2); // two prescriptions in one sentence, and a vague word
   await items.first().getByRole("button", { name: "Ignora" }).click();
