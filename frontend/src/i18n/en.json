@@ -84,5 +84,8 @@
   "editor.loading": "Opening section…",
   "editor.loadError": "Could not open the section: {message}",
   "editor.body": "Section text",
-  "image.error": "Image not uploaded: {message}"
+  "image.error": "Image not uploaded: {message}",
+  "preview.sourceTitle": "Preview · source",
+  "preview.empty": "The preview appears when you open a section.",
+  "preview.diagramError": "Invalid diagram: {message}"
 }

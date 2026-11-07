@@ -131,3 +131,28 @@ test("a clash between unsaved typing and an outside change offers reload or keep
   await waitSaved(page);
   await expect.poll(() => readFile("conflitto", FILE)).toContain("Prima e la mia aggiunta");
 });
+
+for (const kind of ["paste", "drop"] as const) {
+  test(`an image ${kind === "paste" ? "pasted from the clipboard" : "dropped onto the editor"} is stored in img/ and referenced`, async ({
+    page,
+  }) => {
+    await projectWithSection(page, `Via${kind}`);
+    await page.getByLabel("Testo della sezione").click();
+    await page.evaluate(
+      ([b64, how]) => {
+        const bytes = Uint8Array.from(atob(b64 as string), (c) => c.charCodeAt(0));
+        const dt = new DataTransfer();
+        dt.items.add(new File([bytes], "dal-mondo.png", { type: "image/png" }));
+        const target = document.querySelector(".ProseMirror") as HTMLElement;
+        const event =
+          how === "paste"
+            ? new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true })
+            : new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true });
+        target.dispatchEvent(event);
+      },
+      [PNG.toString("base64"), kind],
+    );
+    await expect.poll(() => onDisk(`via${kind}`, "capitoli/01-cap/img/dal-mondo.png")).toBe(true);
+    await expect.poll(() => readFile(`via${kind}`, FILE)).toContain("![](img/dal-mondo.png)");
+  });
+}

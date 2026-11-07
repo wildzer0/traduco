@@ -86,6 +86,12 @@ export function createDocumentHandle(editor: Editor): EditorHandle {
     insertImage: (src, alt) =>
       void editor.action(callCommand(insertImageCommand.key, { src, alt })),
     focus: () => view().focus(),
+    topBlock: (y) => {
+      const v = view();
+      const left = v.dom.getBoundingClientRect().left + 12;
+      const hit = v.posAtCoords({ left, top: y });
+      return hit ? v.state.doc.resolve(hit.pos).index(0) : 0;
+    },
     blockIndex: () => view().state.selection.$from.index(0),
     setBlockIndex: (index) => {
       const v = view();

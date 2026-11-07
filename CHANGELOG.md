@@ -5,6 +5,20 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
+Milestone M1 - workspace and editor.
+
+### Added
+- Welcome page, projects under `~/Traduco`, chapter/section tree with drag and drop, inline rename, context menu and trash.
+- Two-mode editor on the same file (Document with Milkdown, Markdown with CodeMirror), canonical Markdown on save, 1 s autosave,
+  toolbar, `/` menu, image paste/drop/upload into `img/`, switch with `Ctrl+/` keeping the position.
+- External changes pushed over a WebSocket; reload or "keep mine" when they clash with unsaved typing.
+- Source preview (markdown-it, raw HTML escaped) aligned with the editor; Mermaid diagrams drawn in the browser and cached as SVG/PNG.
+
+### Fixed
+- Real servers now accept WebSockets (`websockets` dependency).
+
 ## [0.1.1] - 2026-11-07
 
 ### Fixed

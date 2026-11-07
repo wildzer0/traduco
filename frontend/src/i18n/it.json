@@ -84,5 +84,8 @@
   "editor.loading": "Apertura della sezione…",
   "editor.loadError": "Impossibile aprire la sezione: {message}",
   "editor.body": "Testo della sezione",
-  "image.error": "Immagine non caricata: {message}"
+  "image.error": "Immagine non caricata: {message}",
+  "preview.sourceTitle": "Anteprima · sorgente",
+  "preview.empty": "L'anteprima appare quando apri una sezione.",
+  "preview.diagramError": "Diagramma non valido: {message}"
 }

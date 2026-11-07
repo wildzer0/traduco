@@ -45,6 +45,9 @@
 }
 
 /* Milkdown / ProseMirror */
+.preview-body > * + * {
+  margin-top: 0.9em;
+}
 .doc-host .ProseMirror {
   min-height: 60vh;
   white-space: pre-wrap;
@@ -55,97 +58,123 @@
 .doc-host .ProseMirror > * + * {
   margin-top: 0.9em;
 }
-.doc-host h1 {
+:is(.doc-host, .preview-body) h1 {
   font-size: 1.7em;
   font-weight: 600;
   line-height: 1.25;
 }
-.doc-host h2 {
+:is(.doc-host, .preview-body) h2 {
   font-size: 1.4em;
   font-weight: 600;
   line-height: 1.3;
 }
-.doc-host h3 {
+:is(.doc-host, .preview-body) h3 {
   font-size: 1.15em;
   font-weight: 600;
   line-height: 1.35;
 }
-.doc-host h4,
-.doc-host h5,
-.doc-host h6 {
+:is(.doc-host, .preview-body) h4,
+:is(.doc-host, .preview-body) h5,
+:is(.doc-host, .preview-body) h6 {
   font-weight: 600;
 }
-.doc-host ul,
-.doc-host ol {
+:is(.doc-host, .preview-body) ul,
+:is(.doc-host, .preview-body) ol {
   padding-left: 1.5em;
 }
-.doc-host ul {
+:is(.doc-host, .preview-body) ul {
   list-style: disc;
 }
-.doc-host ol {
+:is(.doc-host, .preview-body) ol {
   list-style: decimal;
 }
-.doc-host li > p {
+:is(.doc-host, .preview-body) li > p {
   margin: 0.2em 0;
 }
-.doc-host blockquote {
+:is(.doc-host, .preview-body) blockquote {
   border-left: 3px solid var(--border);
   color: var(--muted);
   margin-left: 0;
   padding-left: 1em;
 }
-.doc-host code {
+:is(.doc-host, .preview-body) code {
   background: var(--surface-2);
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 0.9em;
   padding: 0.1em 0.3em;
 }
-.doc-host pre {
+:is(.doc-host, .preview-body) pre {
   background: var(--surface-2);
   border-radius: var(--radius);
   overflow-x: auto;
   padding: 0.8em 1em;
 }
-.doc-host pre code {
+:is(.doc-host, .preview-body) pre code {
   background: none;
   padding: 0;
 }
-.doc-host hr {
+:is(.doc-host, .preview-body) hr {
   border: 0;
   border-top: 1px solid var(--border);
 }
-.doc-host table {
+:is(.doc-host, .preview-body) table {
   border-collapse: collapse;
   width: 100%;
 }
-.doc-host th,
-.doc-host td {
+:is(.doc-host, .preview-body) th,
+:is(.doc-host, .preview-body) td {
   border: 1px solid var(--border);
   padding: 0.35em 0.6em;
   text-align: left;
 }
-.doc-host th {
+:is(.doc-host, .preview-body) th {
   background: var(--surface-2);
   font-weight: 600;
 }
-.doc-host img {
+:is(.doc-host, .preview-body) img {
   display: block;
   max-width: 100%;
 }
-.doc-host a {
+:is(.doc-host, .preview-body) a {
   color: var(--accent);
   text-decoration: underline;
 }
-.doc-host [data-type="footnote_reference"],
-.doc-host sup {
+:is(.doc-host, .preview-body) [data-type="footnote_reference"],
+:is(.doc-host, .preview-body) sup {
   color: var(--accent);
   font-size: 0.8em;
   vertical-align: super;
 }
-.doc-host [data-type="footnote_definition"] {
+:is(.doc-host, .preview-body) [data-type="footnote_definition"] {
   border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.9em;
   padding-top: 0.4em;
+}
+
+/* Preview */
+.preview-body .mermaid-block svg {
+  height: auto;
+  max-width: 100%;
+}
+.preview-body .mermaid-block[data-state="error"] pre {
+  border: 1px solid var(--red);
+}
+.preview-body .footnotes {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+/* Raw HTML and other syntax Document mode cannot draw: shown as editable source, never dropped. */
+.doc-host [data-type="html"] {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0 0.25em;
+  white-space: pre-wrap;
 }

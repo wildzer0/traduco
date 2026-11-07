@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { EditorPane } from "../features/editor/EditorPane";
+import { Preview } from "../features/preview/Preview";
 import { keys } from "../features/tree/queries";
 import { emitFileEvent } from "../lib/file-events";
 import { useT } from "../lib/i18n";
@@ -63,11 +64,7 @@ export function Workspace() {
           </p>
         )}
       </main>
-      <section aria-label={t("preview.label")} className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-10 shrink-0 items-center border-b border-border px-3 text-muted">
-          {t("preview.title")}
-        </div>
-      </section>
+      <Preview projectId={projectId} />
     </>
   );
 }

@@ -48,6 +48,25 @@ describe("Markdown -> Document -> Markdown (RF-10c)", () => {
     expect(text).toBe(initial);
   });
 
+  it("shows raw HTML and unknown syntax as protected source text, and never drops it", async () => {
+    const text = readFileSync(join(FIXTURES, "protected.out.md"), "utf8");
+    const { body } = parseDocument(text);
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    const editor = await createDocumentEditor({ root, markdown: body });
+    const protectedSources = [...root.querySelectorAll('[data-type="html"]')].map(
+      (n) => n.textContent,
+    );
+    expect(protectedSources).toContain('<div class="note">\n  Blocco **HTML** grezzo\n</div>');
+    expect(protectedSources).toContain("<kbd>");
+    expect(protectedSources).toContain("<!-- commento che non deve sparire -->");
+    expect(root.textContent).toContain("::: note");
+    expect(root.textContent).toContain('{% include "parte.md" %}');
+    expect(composeDocument("", serializeBody(editor))).toBe(text);
+    await editor.destroy();
+    root.remove();
+  });
+
   it("covers every element of RF-11 in the fixtures", () => {
     const all = goldens.map((f) => readFileSync(join(FIXTURES, f), "utf8")).join("\n");
     expect(all).toMatch(/^#{1,3} /m); // headings

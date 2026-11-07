@@ -38,9 +38,9 @@ il secondo avvio impiega meno di 10 s; il fake-llm risponde a una richiesta di p
 - [x] Frontend: albero con drag & drop, barra strumenti, menu `/`, autosalvataggio, barra di stato
 - [x] Forma canonica del Markdown (`canonical.ts`) e test di round-trip su tutte le fixture
 - [x] Modalità Markdown (CodeMirror) e modalità Documento (Milkdown) sullo stesso file, interruttore `Ctrl+/`
-- [ ] Blocchi protetti per Markdown non rappresentabile in modalità Documento
-- [ ] Rendering Mermaid nel browser e salvataggio immagini in `.traduco/cache/`
-- [ ] Anteprima del sorgente renderizzato (markdown-it) con scorrimento sincronizzato
+- [x] Blocchi protetti per Markdown non rappresentabile in modalità Documento
+- [x] Rendering Mermaid nel browser e salvataggio immagini in `.traduco/cache/`
+- [x] Anteprima del sorgente renderizzato (markdown-it) con scorrimento sincronizzato
 
 **Accettazione**: creare un progetto, 2 capitoli e 3 sezioni dalla UI produce la struttura su disco attesa;
 riordinare via drag & drop rinumera i file; un'immagine incollata compare in `img/` e in anteprima; passare

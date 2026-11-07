@@ -210,3 +210,16 @@ esplicito in `tools/check-licenses.py`.
 - L'albero è una lista di pulsanti, non un `role="tree"` ARIA, finché non esiste la navigazione a frecce.
 - Le immagini relative (`img/x.png`) sono riscritte nel DOM verso `/api/projects/{id}/assets` senza toccare il Markdown.
 **Dipendenza richiesta da uvicorn**: `websockets`. Senza, i WebSocket rispondono 404 nel server reale (il `TestClient` non lo rivela): c'è un test contro un server vero.
+
+## ADR-027 — Anteprima, diagrammi e blocchi protetti in M1
+**Decisione**:
+- **Anteprima** (colonna destra, "Anteprima · sorgente"): markdown-it con HTML grezzo **disattivato** (escape) e link validati, perché le sezioni possono
+  arrivare da repository non fidati; footnote con `markdown-it-footnote`. Ogni blocco di primo livello ha `data-block` con lo stesso indice che l'editor calcola,
+  così lo scorrimento dell'editor allinea l'anteprima (da editor a anteprima, non viceversa). Si aggiorna 120 ms dopo l'ultima modifica, senza attendere il salvataggio.
+- **Mermaid**: reso nel browser (caricato solo se serve). Etichette in puro testo SVG (`htmlLabels: false`) così l'SVG è rasterizzabile senza `foreignObject`.
+  A sezione salvata il browser carica SVG + PNG 2× (tema chiaro) in `PUT /api/projects/{id}/diagrams/{sha256}`, salvati in `.traduco/cache/diagrams/`; hash = SHA-256 del
+  codice così come scritto (compreso l'a capo finale). Il server rifiuta SVG con script e PNG non validi. La cache è nel `.gitignore` del progetto.
+- **Blocchi protetti**: Milkdown conserva HTML grezzo, commenti, direttive `:::` e tag `{% %}` e li mostra come testo sorgente (`span[data-type=html]`, stile tratteggiato);
+  il round-trip non perde nulla (fixture `protected`). La sintassi sconosciuta non-HTML è un paragrafo di testo: non c'è un blocco "Markdown" dedicato.
+- I diagrammi non hanno una vista affiancata *nell'editor* (solo nell'anteprima): il codice Mermaid è un normale blocco di codice in entrambe le modalità.
+**Conseguenze**: tradurre le etichette dei diagrammi (`diagram_label`) e l'export dei PNG sono compiti di M2/M4.

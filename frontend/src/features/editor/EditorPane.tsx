@@ -7,6 +7,7 @@ import { useT } from "../../lib/i18n";
 import { canonicalize } from "../../lib/markdown/canonical";
 import { useNotices } from "../../lib/notices";
 import { type EditorMode, usePrefs } from "../../lib/prefs";
+import { usePreview } from "../../lib/preview-store";
 import type { FileContent } from "../../lib/types";
 import { keys } from "../tree/queries";
 import { Autosaver, type SaveStatus } from "./autosaver";
@@ -126,14 +127,47 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
   const bodyOf = useMemo(() => parseDocument(initialText), [initialText]);
   front.current = bodyOf.front;
 
+  // The preview follows what is typed (a short delay keeps typing fast) and what is on screen.
+  const setPreviewText = usePreview((st) => st.setText);
+  const clearPreview = usePreview((st) => st.clear);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setPreviewText(path, initial.content);
+    return () => {
+      clearTimeout(previewTimer.current);
+      clearPreview();
+    };
+  }, [path, initial, setPreviewText, clearPreview]);
+
   const changed = useCallback(
     (full: string) => {
       text.current = full;
       saver.update(full);
       setEmpty(parseDocument(full).body.trim() === "");
+      clearTimeout(previewTimer.current);
+      previewTimer.current = setTimeout(() => setPreviewText(path, full), 120);
     },
-    [saver],
+    [saver, path, setPreviewText],
   );
+
+  useEffect(() => {
+    const box = scroller.current;
+    if (!box) return;
+    let frame = 0;
+    const sync = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const block = handle.current?.topBlock(box.getBoundingClientRect().top + 8);
+        if (block !== undefined) usePreview.getState().setTopBlock(block);
+      });
+    };
+    box.addEventListener("scroll", sync, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      box.removeEventListener("scroll", sync);
+    };
+  }, []);
 
   const switchMode = useCallback(
     (next: EditorMode) => {
@@ -243,7 +277,7 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
           </button>
         </div>
       )}
-      <div className="editor-scroll relative min-h-0 flex-1 overflow-y-auto">
+      <div ref={scroller} className="editor-scroll relative min-h-0 flex-1 overflow-y-auto">
         {empty && (
           <p className="editor-hint pointer-events-none absolute text-muted">
             {t("editor.placeholder")}

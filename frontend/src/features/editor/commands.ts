@@ -25,6 +25,8 @@ export interface EditorHandle {
   /** Index of the top-level block under the cursor (used to keep position when switching mode). */
   blockIndex(): number;
   setBlockIndex(index: number): void;
+  /** Top-level block shown at viewport height ``y`` (for scroll sync with the preview). */
+  topBlock(y: number): number;
 }
 
 export const DIAGRAM_TEMPLATE = "flowchart LR\n  A[Inizio] --> B[Fine]";

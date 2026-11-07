@@ -110,6 +110,14 @@ export function MarkdownMode({ initial, onChange, onReady, onSlash, label }: Pro
     callbacks.current.onReady({
       run: apply,
       focus: () => view.focus(),
+      topBlock: (y) => {
+        const left = view.contentDOM.getBoundingClientRect().left + 12;
+        const pos = view.posAtCoords({ x: left, y });
+        if (pos === null) return 0;
+        const { text, frontLines } = bodyOffset();
+        const line = view.state.doc.lineAt(pos).number - 1 - frontLines;
+        return blockIndexAtLine(parseDocument(text).body, Math.max(0, line));
+      },
       insertImage: (src, alt) => {
         const { to } = view.state.selection.main;
         const e = insertImageRef(to, src, alt);
