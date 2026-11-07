@@ -115,6 +115,7 @@ un documento nella lingua ufficiale di progetto, conforme ai template Word azien
 | RF-83 | **Commenti di revisione** ancorati a un segmento, con thread, stato (aperto/risolto) e autore; salvati in file accanto al documento, non nel testo | S |
 | RF-84 | **Modelli di documento software** (ADD, DDD, SRS, …) come scheletri (RF-09) con guida per sezione; tracciabilità dei requisiti tra documenti tramite identificatori e riferimenti incrociati verificati | C |
 | RF-85 | Export HTML come sito statico navigabile (indice, ricerca, immagini incluse) e altri formati (Markdown unico, EPUB) oltre a DOCX/PDF/ODT | C |
+| RF-86 | **Snippet personalizzati** per progetto (`snippet.yaml`) con alias richiamabile dal menu `/` (stile VS Code): segnaposto con tab-stop, e **macro** come contatori persistenti (`{{contatore:REQ}}` → `FOO-REQ-00042`, incrementato a ogni inserimento), data, titolo della sezione | S |
 
 ### Installazione e avvio
 

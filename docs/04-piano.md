@@ -136,7 +136,7 @@ l'installazione di Ollama l'app parte e spiega come configurare un endpoint.
 esattamente 3 proposte nella sezione corretta, nella lingua sorgente; accettarle aggiorna sorgente e traduzione
 bloccata.
 
-## M5b — Emissioni, revisione e documentazione software (RF-80…85)
+## M5b — Emissioni, revisione e documentazione software (RF-80…86)
 
 Da dettagliare con l'utente prima di iniziare; ordine proposto:
 
@@ -146,6 +146,7 @@ Da dettagliare con l'utente prima di iniziare; ordine proposto:
 - [ ] Commenti di revisione per segmento con thread e stato (RF-83)
 - [ ] Modelli di scheletro ADD/DDD/SRS e controllo dei riferimenti tra requisiti (RF-84)
 - [ ] Export HTML statico, Markdown unico, EPUB (RF-85)
+- [ ] Snippet con alias, tab-stop e contatori nel menu `/` e in `snippet.yaml` (RF-86)
 
 **Accettazione**: due emissioni consecutive producono una tabella dei cambiamenti con una riga per sezione modificata;
 un commento resta ancorato al suo segmento dopo modifiche del testo vicino; l'export HTML si apre da `file://` senza server.
