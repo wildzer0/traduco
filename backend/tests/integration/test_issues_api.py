@@ -111,3 +111,21 @@ def test_comments_are_stored_beside_the_document(xapi: TestClient, tmp_path: Pat
     # the section text itself carries no trace of the comment
     assert "Da verificare" not in read(xapi, pid)["content"]
     assert xapi.delete(f"/api/projects/{pid}/comments/{thread}", params=base).status_code == 204
+
+
+def test_snippets_expand_through_the_api(xapi: TestClient) -> None:  # noqa: F811
+    pid = example(xapi)
+    base = f"/api/projects/{pid}/snippets"
+    assert xapi.get(base).json()["snippets"] == []
+    text = (
+        'contatori:\n  REQ: { prefisso: "FOO-REQ-", cifre: 5 }\n'
+        "snippet:\n  - alias: req\n    descrizione: Requisito\n"
+        '    testo: "{{contatore:REQ}} in {{titolo}}"\n'
+    )
+    saved = xapi.put(base, json={"text": text})
+    assert saved.status_code == 200 and saved.json()["snippets"][0]["alias"] == "req"
+    assert xapi.put(base, json={"text": "snippet: ["}).status_code in (400, 409)
+    first = xapi.post(f"{base}/req/expand", json={"path": SECTION}).json()["text"]
+    second = xapi.post(f"{base}/req/expand", json={"path": SECTION}).json()["text"]
+    assert first.startswith("FOO-REQ-00001 in ") and second.startswith("FOO-REQ-00002 in ")
+    assert xapi.get(base).json()["counters"][0]["next"] == "FOO-REQ-00003"

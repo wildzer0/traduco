@@ -21,6 +21,8 @@ export interface EditorHandle {
   run(command: CommandId): void;
   /** Insert an image reference (``img/name.png``) at the cursor. */
   insertImage(src: string, alt: string): void;
+  /** Insert Markdown at the cursor; `select` (when the mode supports it) marks the first tab-stop. */
+  insertText(markdown: string, select?: { from: number; to: number } | null): void;
   focus(): void;
   /** Index of the top-level block under the cursor (used to keep position when switching mode). */
   blockIndex(): number;

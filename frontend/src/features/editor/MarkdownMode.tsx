@@ -118,6 +118,16 @@ export function MarkdownMode({ initial, onChange, onReady, onSlash, label }: Pro
         const line = view.state.doc.lineAt(pos).number - 1 - frontLines;
         return blockIndexAtLine(parseDocument(text).body, Math.max(0, line));
       },
+      insertText: (markdown, select) => {
+        const { from, to } = view.state.selection.main;
+        view.dispatch({
+          changes: { from, to, insert: markdown },
+          selection: select
+            ? { anchor: from + select.from, head: from + select.to }
+            : { anchor: from + markdown.length },
+        });
+        view.focus();
+      },
       insertImage: (src, alt) => {
         const { to } = view.state.selection.main;
         const e = insertImageRef(to, src, alt);

@@ -31,6 +31,7 @@ from app.api import importer as importer_api
 from app.api import issues as issues_api
 from app.api import requirements as requirements_api
 from app.api import settings as settings_api
+from app.api import snippets as snippets_api
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.export.errors import ExportError
@@ -140,6 +141,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         issues_api.router,
         comments_api.router,
         requirements_api.router,
+        snippets_api.router,
         translation.router,
         events.router,
     ):

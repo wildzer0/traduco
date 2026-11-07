@@ -10,6 +10,17 @@ export interface SlashState {
   consume: () => void;
 }
 
+/** What the menu hands back: an editor command, a project snippet, or "edit the snippets". */
+export type SlashPick =
+  | { type: "command"; id: CommandId }
+  | { type: "snippet"; alias: string }
+  | { type: "edit-snippets" };
+
+export interface SnippetItem {
+  alias: string;
+  descrizione: string;
+}
+
 const ITEMS: { id: CommandId; label: MessageKey }[] = [
   { id: "heading1", label: "toolbar.heading1" },
   { id: "heading2", label: "toolbar.heading2" },
@@ -26,19 +37,38 @@ const ITEMS: { id: CommandId; label: MessageKey }[] = [
 
 interface Props {
   state: SlashState;
-  onPick: (command: CommandId) => void;
+  snippets?: SnippetItem[];
+  onPick: (pick: SlashPick) => void;
   onClose: () => void;
 }
 
-export function SlashMenu({ state, onPick, onClose }: Props) {
+export function SlashMenu({ state, snippets = [], onPick, onClose }: Props) {
   const t = useT();
   const [index, setIndex] = useState(0);
   const items = useMemo(() => {
     const q = state.query.toLowerCase();
-    return ITEMS.map((i) => ({ ...i, text: t(i.label) })).filter((i) =>
-      i.text.toLowerCase().includes(q),
-    );
-  }, [state.query, t]);
+    const all: { key: string; text: string; pick: SlashPick }[] = [
+      ...ITEMS.map((i) => ({
+        key: i.id,
+        text: t(i.label),
+        pick: { type: "command", id: i.id } as SlashPick,
+      })),
+      ...snippets.map((sn) => ({
+        key: `snippet:${sn.alias}`,
+        text: sn.descrizione ? `${sn.alias} — ${sn.descrizione}` : sn.alias,
+        pick: { type: "snippet", alias: sn.alias } as SlashPick,
+      })),
+    ];
+    const found = all.filter((i) => i.text.toLowerCase().includes(q));
+    return [
+      ...found,
+      {
+        key: "edit-snippets",
+        text: t("snippets.edit"),
+        pick: { type: "edit-snippets" } as SlashPick,
+      },
+    ];
+  }, [state.query, t, snippets]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: the highlighted row restarts at the top for each query
   useEffect(() => setIndex(0), [state.query]);
@@ -61,7 +91,7 @@ export function SlashMenu({ state, onPick, onClose }: Props) {
       } else if ((e.key === "Enter" || e.key === "Tab") && items[index]) {
         stop();
         state.consume();
-        onPick(items[index].id);
+        onPick(items[index].pick);
       }
     };
     window.addEventListener("keydown", onKey, true); // before the editor sees Enter/arrows
@@ -78,14 +108,14 @@ export function SlashMenu({ state, onPick, onClose }: Props) {
       {items.length === 0 && <div className="px-2 py-1 text-muted">{t("slash.empty")}</div>}
       {items.map((item, i) => (
         <div
-          key={item.id}
+          key={item.key}
           role="option"
           aria-selected={i === index}
           tabIndex={-1}
           onMouseDown={(e) => {
             e.preventDefault(); // keep the editor focused
             state.consume();
-            onPick(item.id);
+            onPick(item.pick);
           }}
           onKeyDown={() => {}}
           className={`cursor-default rounded-ui px-2 py-1 ${i === index ? "bg-accent text-accent-fg" : ""}`}

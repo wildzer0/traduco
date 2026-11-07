@@ -460,5 +460,12 @@
   "requirements.problem.unreferenced": "Mai citato",
   "requirements.refs": "{count} riferimenti",
   "requirements.ok": "Nessun problema.",
-  "requirements.refresh": "Ricontrolla"
+  "requirements.refresh": "Ricontrolla",
+  "snippets.edit": "Modifica gli snippet…",
+  "snippets.title": "Snippet",
+  "snippets.intro": "Uno snippet per voce di snippet.yaml. Nel testo: {{contatore:NOME}} (contatore), {{data}}, {{titolo}}, {{progetto}} e tab-stop come ${1:segnaposto}.",
+  "snippets.save": "Salva",
+  "snippets.saved": "Salvato",
+  "snippets.counters": "Prossimo numero di ogni contatore",
+  "snippets.example": "Inserisci un esempio"
 }

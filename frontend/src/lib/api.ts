@@ -496,3 +496,29 @@ export const getRequirements = (
   id: string,
 ): Promise<{ requirements: RequirementInfo[]; problems: RequirementProblem[] }> =>
   api(`${base(id)}/requirements`);
+
+// --- snippets ------------------------------------------------------------------------------
+export interface SnippetInfo {
+  alias: string;
+  testo: string;
+  descrizione: string;
+}
+
+export interface SnippetList {
+  snippets: SnippetInfo[];
+  counters: { name: string; next: string }[];
+  raw: string;
+  error: string | null;
+}
+
+export const listSnippets = (id: string): Promise<SnippetList> => api(`${base(id)}/snippets`);
+
+export const saveSnippets = (id: string, text: string): Promise<SnippetList> =>
+  api(`${base(id)}/snippets`, json("PUT", { text }));
+
+export const expandSnippet = (
+  id: string,
+  alias: string,
+  path: string | null,
+): Promise<{ text: string }> =>
+  api(`${base(id)}/snippets/${enc(alias)}/expand`, json("POST", path ? { path } : {}));

@@ -83,6 +83,7 @@ export function createDocumentHandle(editor: Editor): EditorHandle {
 
   return {
     run,
+    insertText: (markdown) => void editor.action(insert(markdown)),
     insertImage: (src, alt) =>
       void editor.action(callCommand(insertImageCommand.key, { src, alt })),
     focus: () => view().focus(),

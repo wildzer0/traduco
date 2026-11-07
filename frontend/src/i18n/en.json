@@ -460,5 +460,12 @@
   "requirements.problem.unreferenced": "Never referenced",
   "requirements.refs": "{count} references",
   "requirements.ok": "No problems found.",
-  "requirements.refresh": "Check again"
+  "requirements.refresh": "Check again",
+  "snippets.edit": "Edit snippets…",
+  "snippets.title": "Snippets",
+  "snippets.intro": "One snippet per entry in snippet.yaml. In the text: {{contatore:NAME}} (counter), {{data}}, {{titolo}}, {{progetto}}, and tab-stops like ${1:placeholder}.",
+  "snippets.save": "Save",
+  "snippets.saved": "Saved",
+  "snippets.counters": "Next number of each counter",
+  "snippets.example": "Insert an example"
 }

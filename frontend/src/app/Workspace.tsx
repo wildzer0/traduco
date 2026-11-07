@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { CheckPanel } from "../features/companion/CheckPanel";
 import { EditorPane } from "../features/editor/EditorPane";
+import { SnippetsDrawer } from "../features/editor/SnippetsDrawer";
 import { ExportPanel } from "../features/export/ExportPanel";
 import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
 import { ImportPanel } from "../features/import/ImportPanel";
@@ -43,6 +44,7 @@ export function Workspace() {
     issuesOpen,
     commentsOpen,
     requirementsOpen,
+    snippetsOpen,
   } = useView();
   const checkOpen = useAssist((st) => st.checkOpen);
   const lastF8 = useRef<{ path: string; key: string } | null>(null);
@@ -163,6 +165,7 @@ export function Workspace() {
       {exportOpen && <ExportPanel projectId={projectId} selected={selected} />}
       {importOpen && <ImportPanel projectId={projectId} />}
       {requirementsOpen && <RequirementsPanel projectId={projectId} />}
+      {snippetsOpen && <SnippetsDrawer projectId={projectId} />}
       {issuesOpen && <IssuesPanel projectId={projectId} />}
       {commentsOpen && <CommentsPanel projectId={projectId} path={selected} />}
     </>

@@ -21,6 +21,8 @@ interface ViewState {
   setExportOpen: (open: boolean, autoRun?: boolean) => void;
   requirementsOpen: boolean;
   setRequirementsOpen: (open: boolean) => void;
+  snippetsOpen: boolean;
+  setSnippetsOpen: (open: boolean) => void;
   issuesOpen: boolean;
   setIssuesOpen: (open: boolean) => void;
   commentsOpen: boolean;
@@ -48,6 +50,8 @@ export const useView = create<ViewState>((set) => ({
   setExportOpen: (exportOpen, autoRun = false) => set({ exportOpen, exportAutoRun: autoRun }),
   requirementsOpen: false,
   setRequirementsOpen: (requirementsOpen) => set({ requirementsOpen }),
+  snippetsOpen: false,
+  setSnippetsOpen: (snippetsOpen) => set({ snippetsOpen }),
   issuesOpen: false,
   setIssuesOpen: (issuesOpen) => set({ issuesOpen }),
   commentsOpen: false,

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getFile, putFile, uploadImage } from "../../lib/api";
+import { expandSnippet, getFile, listSnippets, putFile, uploadImage } from "../../lib/api";
 import { useAssist } from "../../lib/assist-store";
 import { editorBridge } from "../../lib/editor-bridge";
 import { useEditorStatus } from "../../lib/editor-status";
@@ -11,13 +11,15 @@ import { useNotices } from "../../lib/notices";
 import { type EditorMode, usePrefs } from "../../lib/prefs";
 import { usePreview } from "../../lib/preview-store";
 import type { FileContent } from "../../lib/types";
+import { useView } from "../../lib/view-store";
 import { keys } from "../tree/queries";
 import { Autosaver, type SaveStatus } from "./autosaver";
 import type { CommandId, EditorHandle } from "./commands";
 import { DocumentMode } from "./DocumentMode";
 import { MarkdownMode } from "./MarkdownMode";
 import { parseDocument } from "./markdown-io";
-import { SlashMenu, type SlashState } from "./SlashMenu";
+import { SlashMenu, type SlashPick, type SlashState } from "./SlashMenu";
+import { resolveStops } from "./snippet-text";
 import { Toolbar } from "./Toolbar";
 
 interface PaneProps {
@@ -218,6 +220,22 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
     [projectId, path, notify, t],
   );
 
+  const { data: snippetList } = useQuery({
+    queryKey: ["snippets", projectId],
+    queryFn: () => listSnippets(projectId),
+  });
+  const setSnippetsOpen = useView((st) => st.setSnippetsOpen);
+  const insertSnippet = async (alias: string) => {
+    try {
+      const { text: expanded } = await expandSnippet(projectId, alias, path);
+      const { text: filled, first } = resolveStops(expanded);
+      handle.current?.insertText(filled, first);
+      void qc.invalidateQueries({ queryKey: ["snippets", projectId] });
+    } catch (e) {
+      notify(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const run = useCallback((cmd: CommandId) => {
     if (cmd === "image") fileInput.current?.click();
     else handle.current?.run(cmd);
@@ -338,9 +356,12 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
         <SlashMenu
           state={slash}
           onClose={() => setSlash(null)}
-          onPick={(cmd) => {
+          snippets={snippetList?.snippets}
+          onPick={(pick: SlashPick) => {
             setSlash(null);
-            run(cmd);
+            if (pick.type === "command") run(pick.id);
+            else if (pick.type === "edit-snippets") setSnippetsOpen(true);
+            else void insertSnippet(pick.alias);
           }}
         />
       )}
