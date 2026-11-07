@@ -23,6 +23,7 @@ from app.core.export import compose as compose_mod
 from app.core.export import office
 from app.core.export.errors import ExportError
 from app.core.export.pandoc import default_reference_doc, find_pandoc, run_pandoc
+from app.core.importer.snapshot import Part, build_units
 from app.core.templates.analyze import analyze, propose_mapping
 from app.core.templates.mapping import Mapping, load_mapping, template_path
 from app.core.translation import store
@@ -154,6 +155,8 @@ class ExportManager:
     ) -> Path:
         official = req.language == "ufficiale"
         lang = project.lingua_ufficiale if official else project.lingua_sorgente
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")  # also names the snapshot
+        parts: list[Part] = []
         self._step(job, 3, "collect", root)
         nodes = _select(build_tree(root), req)
         sections = [n for n, _ in nodes if n.kind == "section"]
@@ -170,13 +173,16 @@ class ExportManager:
             if node.kind == "chapter":
                 title = await self._chapter_title(client, root, project, node.title, official, job)
                 items.append(combine_mod.Item("chapter", node.path, title, depth))
+                parts.append(Part("chapter", node.path, title))
                 continue
-            text = (root / node.path).read_text(encoding="utf-8")
+            source_text = (root / node.path).read_text(encoding="utf-8")
+            text = source_text
             if official:
                 text = self._translation.translation(root, project, node.path, text)["markdown"]
             doc = frontmatter.parse(text)
             title = str(doc.meta.get("title") or node.title)
             items.append(combine_mod.Item("section", node.path, title, depth, doc.body))
+            parts.append(Part("section", node.path, title, text, source_text))
 
         self._step(job, 65, "fields", root)
         fields = await self._fields(client, project, lang, official, job)
@@ -193,10 +199,10 @@ class ExportManager:
         combined = combine_mod.combine(root, items)
         job.warnings.extend(combined.warnings)
         output = await asyncio.to_thread(
-            self._render, root, project, req, combined, fields, revisions, lang, job
+            self._render, root, project, req, combined, fields, revisions, lang, job, stamp
         )
         self._step(job, 95, "snapshot", root)
-        self._snapshot(root, req, combined, output)
+        self._snapshot(root, req, combined, output, build_units(parts), fields, lang, stamp)
         if req.format != "docx":
             self._step(job, 97, "convert", root)
             output = await asyncio.to_thread(office.convert, output, req.format, output.parent)
@@ -212,6 +218,7 @@ class ExportManager:
         revisions: list[compose_mod.Revision],
         lang: str,
         job: ExportJob,
+        stamp: str,
     ) -> Path:
         pandoc = find_pandoc(self._pandoc)
         name = self._choose_template(root, project, req, job)
@@ -228,7 +235,9 @@ class ExportManager:
                 job.warnings.append("no template: Pandoc's default styles are used")
                 reference = default_reference_doc(pandoc, work / "reference.docx")
                 run_pandoc(pandoc, markdown, body, reference_doc=reference, resource_dir=work)
-                result = compose_mod.finish_plain(body, output, fields=fields, allow_missing=True)
+                result = compose_mod.finish_plain(
+                    body, output, fields=fields, allow_missing=True, identifier=stamp
+                )
             else:
                 template = template_path(root, name)
                 if not template.is_file():
@@ -243,6 +252,7 @@ class ExportManager:
                     fields=fields,
                     revisions=revisions,
                     language=lang,
+                    identifier=stamp,
                 )
         job.warnings.extend(result.warnings)
         return output
@@ -367,27 +377,38 @@ class ExportManager:
 
     # -- snapshot ------------------------------------------------------------------------------
     def _snapshot(
-        self, root: Path, req: ExportRequest, combined: combine_mod.Combined, output: Path
+        self,
+        root: Path,
+        req: ExportRequest,
+        combined: combine_mod.Combined,
+        output: Path,
+        units: list[dict[str, Any]],
+        fields: dict[str, str | None],
+        lang: str,
+        stamp: str,
     ) -> None:
-        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         folder = root / ".traduco" / "export" / stamp
         atomic_write_text(folder / "combined.md", combined.markdown)
         atomic_write_text(
             folder / "map.json",
             json.dumps(
                 {
+                    "id": stamp,
                     "scope": req.scope,
                     "path": req.path,
                     "language": req.language,
+                    "lang": lang,
                     "file": output.name,
                     "anchors": combined.anchors,
+                    "fields": fields,
+                    "units": units,
                 },
                 ensure_ascii=False,
                 indent=2,
                 sort_keys=True,
             )
             + "\n",
-        )  # fmt: skip
+        )
 
 
 def _select(tree: list[Node], req: ExportRequest) -> list[tuple[Node, int]]:

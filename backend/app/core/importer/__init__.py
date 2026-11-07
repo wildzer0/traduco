@@ -1,1 +1,1 @@
-"""Placeholder package; implemented in a later milestone (docs/04-piano.md)."""
+"""Import of a revised Word document back into the project (RF-65, RF-66)."""

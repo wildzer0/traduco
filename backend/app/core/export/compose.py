@@ -347,6 +347,7 @@ def compose(
     fields: MappingType[str, str | None],
     revisions: list[Revision],
     language: str,
+    identifier: str = "",
 ) -> ComposeResult:
     """Write ``output``: the template with the body at ``{{CONTENUTO}}`` and every field filled."""
     result = ComposeResult()
@@ -393,6 +394,8 @@ def compose(
             replace_in_paragraph(p, blank)
 
     _enable_update_fields(master)
+    if identifier:
+        master.core_properties.identifier = identifier  # lets an import find the matching export
     output.parent.mkdir(parents=True, exist_ok=True)
     master.save(str(output))
     return result
@@ -404,6 +407,7 @@ def finish_plain(
     *,
     fields: MappingType[str, str | None],
     allow_missing: bool,
+    identifier: str = "",
 ) -> ComposeResult:
     """Export without a template: Pandoc's document with the text's ``{{fields}}`` filled."""
     result = ComposeResult()
@@ -422,6 +426,8 @@ def finish_plain(
         result.warnings.append("fields left empty: " + ", ".join(sorted(missing)))
         for p in _all_paragraphs(doc):
             replace_in_paragraph(p, dict.fromkeys(missing, ""))
+    if identifier:
+        doc.core_properties.identifier = identifier
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(output))
     return result

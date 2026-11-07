@@ -1,0 +1,17 @@
+name: LibreOffice macro probe (manual)
+
+# Development aid for the PDF/ODT export: run it from the Actions tab to see which way of running a
+# LibreOffice Basic macro headlessly works on the CI image.
+on: workflow_dispatch
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.4"
+      - run: cd backend && uv sync
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer
+      - run: cd backend && uv run python ../tools/lo-macro-probe.py
