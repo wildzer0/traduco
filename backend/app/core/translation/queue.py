@@ -40,9 +40,11 @@ class TranslationQueue[P]:
         self._workers: list[asyncio.Task[None]] = []
         self._paused = False
         self._stopping = False
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     # -- control -----------------------------------------------------------------------------
     def start(self) -> None:
+        self._loop = asyncio.get_running_loop()
         if not self._workers:
             self._workers = [asyncio.create_task(self._work()) for _ in range(self._concurrency)]
 
@@ -57,7 +59,22 @@ class TranslationQueue[P]:
         self._running.clear()
         self._stopping = False
 
+    def _on_loop(self, fn: Callable[..., None], *args: object) -> None:
+        """Run ``fn`` on the event loop. FastAPI runs plain ``def`` endpoints in a thread, and
+        asyncio primitives (events, futures) are not safe to touch from there."""
+        try:
+            running = asyncio.get_running_loop()
+        except RuntimeError:
+            running = None
+        if self._loop is None or running is self._loop:
+            fn(*args)
+        else:
+            self._loop.call_soon_threadsafe(fn, *args)
+
     def pause(self, paused: bool) -> None:
+        self._on_loop(self._pause, paused)
+
+    def _pause(self, paused: bool) -> None:
         self._paused = paused
         if not paused:
             self._wake.set()
@@ -68,6 +85,9 @@ class TranslationQueue[P]:
 
     # -- jobs --------------------------------------------------------------------------------
     def submit(self, job_id: str, priority: int, payload: P) -> None:
+        self._on_loop(self._submit, job_id, priority, payload)
+
+    def _submit(self, job_id: str, priority: int, payload: P) -> None:
         running = self._running.get(job_id)
         if running is not None and running[1] != payload:
             running[0].cancel()
@@ -79,6 +99,9 @@ class TranslationQueue[P]:
         self._wake.set()
 
     def cancel(self, job_id: str) -> None:
+        self._on_loop(self._cancel, job_id)
+
+    def _cancel(self, job_id: str) -> None:
         self._queued.pop(job_id, None)
         running = self._running.get(job_id)
         if running is not None:
@@ -86,8 +109,11 @@ class TranslationQueue[P]:
         self._update_idle()
 
     def cancel_prefix(self, prefix: str) -> None:
+        self._on_loop(self._cancel_prefix, prefix)
+
+    def _cancel_prefix(self, prefix: str) -> None:
         for job_id in [j for j in (*self._queued, *self._running) if j.startswith(prefix)]:
-            self.cancel(job_id)
+            self._cancel(job_id)
 
     def pending(self) -> int:
         return len(self._queued) + len(self._running)

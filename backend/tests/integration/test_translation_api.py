@@ -355,3 +355,77 @@ def test_model_address_can_be_changed_without_restart_and_waiting_work_resumes(
 def test_settings_reject_a_bad_address(tapi: TestClient) -> None:
     assert tapi.put("/api/settings", json={"llm_base_url": "localhost:11434"}).status_code == 400
     assert tapi.put("/api/settings", json={"llm_base_url": "file:///etc/passwd"}).status_code == 400
+
+
+# --- M3b: writing companion ------------------------------------------------------------------
+
+
+def assist(c: TestClient, pid: str, sec: str, key: str, action: str, **extra: object) -> object:
+    return c.post(
+        f"/api/projects/{pid}/assist", json={"path": sec, "key": key, "action": action, **extra}
+    )
+
+
+def test_assist_proposes_without_touching_the_file(tapi: TestClient, tmp_path: Path) -> None:
+    text = "Questo è un paragrafo abbastanza lungo da poter essere riformulato.\n"
+    pid, sec, _ = setup_section(tapi, text)
+    settled(tapi, pid, sec)
+    r = assist(tapi, pid, sec, "p:0", "concise")
+    assert r.status_code == 200, r.text  # type: ignore[attr-defined]
+    body = r.json()  # type: ignore[attr-defined]
+    assert body["original"].startswith("Questo è un paragrafo")
+    assert body["proposal"].startswith("[EN] Questo")  # the fake model echoes with a prefix
+    assert (tmp_path / "ws" / pid / sec).read_text().endswith(text)  # nothing written
+
+
+def test_applying_a_proposal_changes_the_file_and_retranslates_only_that_segment(
+    tapi: TestClient, tmp_path: Path
+) -> None:
+    pid, sec, _ = setup_section(tapi, "Uno due tre.\n\nQuattro cinque sei.\n")
+    settled(tapi, pid, sec)
+    before = seg(view(tapi, pid, sec), "p:0")["target"]
+    r = tapi.post(
+        f"/api/projects/{pid}/assist/apply",
+        json={"path": sec, "key": "p:1", "text": "Quattro, cinque e sei."},
+    )
+    assert r.status_code == 200
+    assert (
+        (tmp_path / "ws" / pid / sec)
+        .read_text()
+        .endswith("Uno due tre.\n\nQuattro, cinque e sei.\n")
+    )
+    wait_for(lambda: "[EN] Quattro, cinque e sei." in view(tapi, pid, sec)["markdown"])
+    assert seg(view(tapi, pid, sec), "p:0")["target"] == before  # the other segment is untouched
+
+
+def test_assist_unknown_segment_and_model_off_are_reported(tapi: TestClient, llm: FakeLlm) -> None:
+    llm.stop()  # before the first request: a kept-alive connection would still be served
+    pid, sec, _ = setup_section(tapi, "Un paragrafo qualsiasi.\n")
+    assert assist(tapi, pid, sec, "p:9", "correct").status_code == 404  # type: ignore[attr-defined]
+    r = assist(tapi, pid, sec, "p:0", "correct")
+    assert r.status_code == 502  # type: ignore[attr-defined]
+
+
+def test_check_with_requirement_rules_stores_dismissable_suggestions(tapi: TestClient) -> None:
+    pid, sec, _ = setup_section(
+        tapi, "La pompa deve partire e la valvola deve chiudersi, ove possibile.\n"
+    )
+    settled(tapi, pid, sec)
+    r = tapi.post(f"/api/projects/{pid}/check", json={"path": sec, "requirements": True})
+    assert r.status_code == 200, r.text
+    items = r.json()["items"]
+    assert {i["origin"] for i in items} == {"rule"}  # the fake model returns no JSON: no remarks
+    assert any("prescription" in i["message"] for i in items)
+    stored = tapi.get(f"/api/projects/{pid}/check", params={"path": sec}).json()["items"]
+    assert [i["id"] for i in stored] == [i["id"] for i in items]
+    tapi.post(
+        f"/api/projects/{pid}/check/dismiss", json={"path": sec, "suggestion_id": items[0]["id"]}
+    )
+    after = tapi.get(f"/api/projects/{pid}/check", params={"path": sec}).json()["items"]
+    assert after[0]["status"] == "dismissed"
+
+
+def test_check_without_rules_finds_nothing_with_a_silent_model(tapi: TestClient) -> None:
+    pid, sec, _ = setup_section(tapi, "La pompa deve partire e la valvola deve chiudersi.\n")
+    r = tapi.post(f"/api/projects/{pid}/check", json={"path": sec})
+    assert r.status_code == 200 and r.json()["items"] == []

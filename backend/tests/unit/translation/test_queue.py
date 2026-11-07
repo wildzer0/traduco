@@ -92,3 +92,23 @@ async def test_cancel_prefix_drops_queued_jobs() -> None:
     await asyncio.wait_for(q.join(), 2)
     assert done == ["p2:a"]
     await q.stop()
+
+
+async def test_endpoints_run_in_threads_so_the_queue_must_accept_calls_from_one() -> None:
+    import threading
+
+    done: list[str] = []
+
+    async def handler(job_id: str, payload: str) -> None:
+        done.append(job_id)
+
+    q: TranslationQueue[str] = TranslationQueue(handler, concurrency=1)
+    q.start()
+    await asyncio.sleep(0.05)  # the worker is idle, waiting to be woken
+    thread = threading.Thread(target=q.submit, args=("from-thread", 1, ""))
+    thread.start()
+    thread.join()
+    await asyncio.sleep(0.05)  # the call is handed to the loop, not run in the thread
+    await asyncio.wait_for(q.join(), 2)
+    assert done == ["from-thread"]
+    await q.stop()

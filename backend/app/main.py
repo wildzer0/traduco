@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from app.api import (
     assets,
+    companion,
     diagrams,
     events,
     files,
@@ -105,6 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         files.router,
         assets.router,
         diagrams.router,
+        companion.router,
         settings_api.router,
         skeleton.router,
         translation.router,

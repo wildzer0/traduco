@@ -73,7 +73,7 @@ class TranslationService:
         client_factory: Callable[[LlmConfig], LlmClient] | None = None,
     ) -> None:
         self.config = config
-        self._emit = emit
+        self._raw_emit = emit
         self._monitor_seconds = monitor_seconds
         self._factory = client_factory or (
             lambda c: LlmClient(c.base_url, c.model, c.api_key, timeout=60.0)
@@ -84,6 +84,17 @@ class TranslationService:
         self._monitor: asyncio.Task[None] | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._roots: set[Path] = set()
+
+    def _emit(self, root: Path, event: dict[str, Any]) -> None:
+        """Publish an event; endpoints run in threads, the hub's queues belong to the event loop."""
+        try:
+            running = asyncio.get_running_loop()
+        except RuntimeError:
+            running = None
+        if self._loop is None or running is self._loop:
+            self._raw_emit(root, event)
+        else:
+            self._loop.call_soon_threadsafe(self._raw_emit, root, event)
 
     # -- lifecycle ---------------------------------------------------------------------------
     def start(self) -> None:

@@ -1,0 +1,5 @@
+You are an expert technical editor. A document template says that the section "{title}" must cover: {guide}
+
+Read the section inside <source> (written in {language}) and decide whether it covers what the template asks.
+
+Reply with a JSON array and nothing else. Each element is an object with "category": "coverage" and "message": one short sentence in {language} naming something the template asks for that the section does not say. Reply [] if the section covers it all or if it is still a short draft that only needs more writing. Do not invent requirements.
