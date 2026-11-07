@@ -5,6 +5,16 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-07
+
+### Fixed
+- `start.cmd` no longer breaks when started from PowerShell 7 (module path of Windows PowerShell 5.1).
+- Launcher test no longer depends on `UV_CACHE_DIR`; CI is green on Ubuntu and Windows.
+
+### Added (M1, in progress)
+- Workspace core (front matter, ordering, tree, operations, images), REST API with conflict detection,
+  file-change WebSocket, canonical Markdown form with shared golden fixtures.
+
 ## [0.1.0] - 2026-11-07
 
 Milestone M0 - foundations.
