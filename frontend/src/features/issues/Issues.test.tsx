@@ -8,6 +8,8 @@ import { ComparePanel } from "./ComparePanel";
 import { IssuesPanel } from "./IssuesPanel";
 import { RequirementsPanel } from "./RequirementsPanel";
 
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => vi.fn() }));
+
 afterEach(() => vi.unstubAllGlobals());
 
 const wrap = (node: React.ReactNode) =>
