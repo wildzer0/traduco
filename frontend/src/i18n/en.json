@@ -318,7 +318,7 @@
   "model.downloadingUnknown": "Downloading model {model}. You can write already: translation starts as soon as it is ready.",
   "model.error": "Model download failed: {error}",
   "model.errorHint": "Run Traduco again to resume where it stopped, or point to another model server in Settings.",
-  "model.unavailable": "Ollama is not installed, so there is no model to translate with. You can write and export in the source language. To translate, install Ollama (ollama.com) and run again with --update, or point to another server in Settings.",
+  "model.unavailable": "There is no model to translate with. You can write and export in the source language. To translate run again with “./start.sh --llm builtin” (built-in engine, nothing to install), or install Ollama (ollama.com) and use --update, or set another server in Settings.",
   "model.dismiss": "Dismiss",
   "model.settings": "Open the model settings",
   "preview.offlineDownloading": "The model is downloading — translation starts by itself as soon as it is ready.",

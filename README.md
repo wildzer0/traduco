@@ -22,10 +22,14 @@ Nessun diritto di amministratore richiesto, tranne per installare Ollama se non 
 
 Opzioni: `--update` aggiorna, `--model <nome>` sceglie il modello, `--no-browser`, `--port <n>`, `--offline`
 (non scarica nulla), `--reset` ricrea `.runtime/`, `--workspace <cartella>` (dove stanno i progetti), `--yes`
-(risponde sì alle domande, ad esempio l'installazione di Ollama).
+(risponde sì alle domande, ad esempio l'installazione di Ollama), `--llm builtin|ollama|auto` sceglie il motore.
 
-Il modello si scarica **in sottofondo**: puoi già scrivere mentre l'interfaccia mostra l'avanzamento. Se non vuoi
-installare Ollama, l'app parte lo stesso e in Impostazioni puoi indicare un altro server compatibile OpenAI.
+Il modello si scarica **in sottofondo**: puoi già scrivere mentre l'interfaccia mostra l'avanzamento.
+
+**Senza Ollama o senza scheda grafica**: con `./start.sh --llm builtin` (o accettando la proposta quando Ollama manca)
+Traduco usa un **motore integrato** (llama.cpp): scarica un piccolo programma e il modello Gemma 4 E2B (circa 3 GB),
+non installa nulla e non richiede permessi. Sul solo processore è più lento. In alternativa l'app parte lo stesso e in
+Impostazioni puoi indicare un altro server compatibile OpenAI.
 Per PDF e ODT serve LibreOffice (non viene installato da solo; il DOCX non lo richiede).
 
 **Senza rete**: `make bundle-offline OS=linux` (o `windows`, sul rispettivo sistema) crea uno ZIP che si avvia con

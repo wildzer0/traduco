@@ -50,7 +50,7 @@ describe("model banner", () => {
   it("tells a user without Ollama what to do, and can be dismissed", async () => {
     const user = userEvent.setup();
     mount({ state: "unavailable", model: "gemma4:e4b" });
-    expect(await screen.findByTestId("model-banner")).toHaveTextContent("Ollama non è installato");
+    expect(await screen.findByTestId("model-banner")).toHaveTextContent("--llm builtin");
     await user.click(screen.getByRole("button", { name: "Nascondi" }));
     expect(screen.queryByTestId("model-banner")).not.toBeInTheDocument();
   });
