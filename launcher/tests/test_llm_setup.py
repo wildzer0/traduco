@@ -193,3 +193,28 @@ def test_a_failed_download_is_visible_to_the_interface(
     data = json.loads((tmp_path / "model.json").read_text())
     assert data["state"] == "error" and "disk full" in data["error"]
     assert d.error is not None and d.error.code == "E042"
+
+
+def test_a_locked_state_file_does_not_fail_the_download(
+    tmp_path: Path, fake_ollama: FakeOllama, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Windows refuses to replace a file the backend is reading (seen in CI as WinError 5)."""
+    import launcher.model as model_mod
+
+    real_replace = Path.replace
+    calls = {"n": 0}
+
+    def flaky(self: Path, target: Path) -> Path:
+        calls["n"] += 1
+        if calls["n"] % 2:  # every other attempt is refused
+            raise PermissionError("[WinError 5] Access is denied")
+        return real_replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", flaky)
+    monkeypatch.setattr(model_mod.time, "sleep", lambda _s: None)
+    state = ModelState(tmp_path / "model.json")
+    d = Downloader(fake_ollama.url, "gemma4:e4b", 7, state, UI("en"))
+    d.start()
+    d.join(10)
+    assert d.error is None
+    assert json.loads((tmp_path / "model.json").read_text())["state"] == "ready"

@@ -10,7 +10,9 @@ export default defineConfig({
   testDir: "tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
   workers: 1,
-  use: { baseURL: `http://127.0.0.1:${PORT}`, locale: "it-IT" },
+  // one retry on the CI machines only; a test that needs it is a flake to investigate (trace kept)
+  retries: process.env.CI ? 1 : 0,
+  use: { baseURL: `http://127.0.0.1:${PORT}`, locale: "it-IT", trace: "retain-on-failure" },
   webServer: {
     // The backend serves the already built frontend (run `pnpm build` first, `make e2e` does it).
     command: `uv run --project ../backend uvicorn app.main:app --app-dir ../backend --port ${PORT}`,

@@ -6,6 +6,7 @@ and the interface shows the progress (``.runtime/model.json`` -> ``/api/capabili
 
 from __future__ import annotations
 
+import contextlib
 import json
 import threading
 import time
@@ -36,7 +37,15 @@ class ModelState:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(".tmp")
         tmp.write_text(json.dumps(payload), encoding="utf-8")
-        tmp.replace(self.path)
+        # On Windows the replace fails while the backend has the file open to read it: try again.
+        for attempt in range(10):
+            try:
+                tmp.replace(self.path)
+                return
+            except PermissionError:
+                time.sleep(0.05 * (attempt + 1))
+        # still locked: this update is skipped, the next one (or the final state) goes through
+        tmp.unlink(missing_ok=True)
 
 
 class Downloader:
@@ -68,7 +77,9 @@ class Downloader:
         last = {"pct": -10}
 
         def progress(_status: str, done: int, total: int | None) -> None:
-            self.state.write("downloading", self.tag, done, total)
+            # a problem with the state file must never be taken for a failed download
+            with contextlib.suppress(OSError):
+                self.state.write("downloading", self.tag, done, total)
             if total:
                 pct = done * 100 // total
                 if pct - last["pct"] >= 10:
