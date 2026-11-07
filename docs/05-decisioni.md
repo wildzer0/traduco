@@ -88,6 +88,16 @@ aperto prima dell'export (caso raro, segnalato).
 | Q3 | Si può scrivere direttamente nella lingua di destinazione? | Sì, con riallineamento proposto (ADR-010) |
 | Q4 | Collaborazione in tempo reale? | No nelle prime fasi; ciclo export/import, eventualmente in M7 |
 
+## ADR-028 — Scheletro di progetto da file di configurazione (RF-09)
+**Contesto**: molti documenti devono rispettare una struttura prescritta (es. ECSS: capitoli e paragrafi obbligatori).
+**Decisione**: un file YAML `scheletro.yaml` (nella radice del progetto, copiabile e condivisibile) descrive l'albero atteso:
+ogni nodo ha `id` stabile, `titolo` (nelle lingue del progetto), `obbligatorio`, `guida` (testo di aiuto, inserito come
+commento non esportato nella sezione) e figli. La creazione del progetto genera cartelle e file con i prefissi numerici; la
+conformità si verifica per `id` memorizzato nel front matter (`scheletro: <id>`), quindi resta valida se l'utente rinomina o
+riordina. L'app non impedisce di deviare dallo scheletro: segnala soltanto. Realizzata in M2b, dopo il motore di traduzione,
+perché non dipende dal modello.
+**Conseguenze**: il workspace guadagna un campo di front matter facoltativo e un file facoltativo, senza rompere il formato esistente.
+
 ## Domande aperte
 
 | # | Domanda | Proposta di default | Stato |

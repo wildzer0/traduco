@@ -64,6 +64,16 @@ riordinare via drag & drop rinumera i file; un'immagine incollata compare in `im
 modificare un paragrafo ritraduce solo quello; codice, URL e `{{campi}}` restano identici; spegnendo il
 fake-llm l'editor continua a funzionare e la traduzione riprende alla riaccensione.
 
+## M2b — Scheletro di progetto (RF-09)
+
+- [ ] Formato `scheletro.yaml` (modello pydantic, validazione, esempio ECSS-E-ST-10-06C abbreviato in `examples/scheletri/`)
+- [ ] `core/skeleton`: generazione di capitoli/sezioni (con titolo e testo guida) da uno scheletro; scheletro salvato nel progetto
+- [ ] Verifica di conformità: mancanti, extra, fuori ordine, obbligatorie vuote; API `GET /projects/{id}/skeleton/check`
+- [ ] UI: "Nuovo progetto da scheletro", indicatore di conformità nell'albero (sezioni mancanti segnate)
+
+**Accettazione**: creare un progetto da uno scheletro produce la struttura su disco attesa; eliminare una sezione
+obbligatoria la segnala come mancante; un file di scheletro non valido dà un errore con riga e motivo.
+
 ## M3 — Controllo della traduzione e glossario (RF-23…27, 40…43)
 
 - [ ] Modifica manuale in linea → `manual` + `locked`

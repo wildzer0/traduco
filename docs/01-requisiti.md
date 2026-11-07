@@ -31,6 +31,7 @@ un documento nella lingua ufficiale di progetto, conforme ai template Word azien
 | RF-06 | Immagini salvate nella cartella `img/` del capitolo; incolla da appunti e trascinamento creano il file automaticamente | M |
 | RF-07 | Riferimenti incrociati tra sezioni e capitoli (`[vedi](../02-architettura/01-moduli.md#database)`) risolti in export | S |
 | RF-08 | Il progetto è un normale repository Git: l'app mostra lo stato (modificato/pulito) e permette commit con messaggio | C |
+| RF-09 | **Scheletro di progetto da file di configurazione** (`scheletro.yaml`): elenco di capitoli e sezioni attesi (es. struttura prescritta da una norma come ECSS), con titolo, ordine, note guida e obbligatorietà; creazione di un progetto dallo scheletro e verifica di conformità (sezioni mancanti, extra, fuori ordine) | S |
 
 ### Editor
 
