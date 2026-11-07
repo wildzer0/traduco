@@ -1,0 +1,34 @@
+name: llama.cpp probe (manual)
+
+# Development aid for the built-in engine (ADR-041): prints the flags of the pinned llama-server and
+# shows how it answers /health and /v1/chat/completions with a tiny model. Run it by hand.
+on: workflow_dispatch
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download llama.cpp and a tiny test model
+        run: |
+          mkdir -p "$RUNNER_TEMP/llama" && cd "$RUNNER_TEMP/llama"
+          curl -fsSL -o l.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b12189/llama-b12189-bin-ubuntu-x64.tar.gz
+          echo "c446a7ba4df3c3b1cc880a734fbff586d6d34b9cebc09e151754813b94ded8c9  l.tar.gz" | sha256sum -c -
+          tar xzf l.tar.gz
+          curl -fsSL -o tiny.gguf https://huggingface.co/ggml-org/stories15M_MOE/resolve/main/moe_shakespeare15M.gguf
+          echo "d1e0617d7e10de960639d18a4620ec8c6bb56343f45692830d3634a1a3e1fe1a  tiny.gguf" | sha256sum -c -
+          find . -maxdepth 2 -name 'llama-server*'
+      - name: Flags
+        run: |
+          cd "$RUNNER_TEMP/llama"; d=$(dirname "$(find . -maxdepth 2 -name llama-server | head -1)"); cd "$d"
+          ./llama-server --version 2>&1 | head -5
+          ./llama-server --help 2>&1 | grep -iE "reasoning|think|--host|--port|--alias|webui|--ctx-size|--parallel|--jinja|chat-template|--api-key|--threads|--n-gpu-layers|--no-mmproj|--mlock|--cache" | head -50
+      - name: Start the server and ask it something
+        run: |
+          cd "$RUNNER_TEMP/llama"; d=$(dirname "$(find . -maxdepth 2 -name llama-server | head -1)"); cd "$d"
+          ./llama-server -m ../tiny.gguf --host 127.0.0.1 --port 18080 --alias tiny -c 512 > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:18080/health | grep -q 200 && break; sleep 1; done
+          echo "--- health"; curl -s http://127.0.0.1:18080/health; echo
+          echo "--- models"; curl -s http://127.0.0.1:18080/v1/models; echo
+          echo "--- chat"; curl -s http://127.0.0.1:18080/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"tiny","messages":[{"role":"user","content":"Hello"}],"max_tokens":16,"reasoning_effort":"none","stream":false}'; echo
+          echo "--- log tail"; tail -n 25 server.log
+          kill %1 || true
