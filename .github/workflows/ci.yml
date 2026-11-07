@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.13.4"
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: make setup
+      - run: make lint
+      - run: make test
+      - run: make licenses
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: make setup
+      - run: cd frontend && corepack pnpm exec playwright install --with-deps chromium
+      - run: make e2e
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose --profile llm config --quiet
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          load: true
+          tags: traduco:ci
+      - name: Container serves the app
+        run: |
+          docker run -d --name traduco -p 8000:8000 traduco:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/api/health && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8000/ | grep -q '<div id="root">'
+          docker exec traduco pandoc --version | head -1
+          docker exec traduco soffice --version
+
+  clean-start:
+    name: clean start (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      # No uv, Node or Python is set up on purpose: the start script must install everything itself.
+      - name: First start, then restart in under 10 s
+        run: python tools/ci-clean-start.py

@@ -153,3 +153,11 @@ test) non sono nell'elenco di AGENTS.md pur essendo permissive.
 - La verifica `/api/health` ignora i proxy (richiesta su loopback). Il probe della porta usa `SO_REUSEADDR` su POSIX come uvicorn.
 - SIGTERM e Ctrl+Break sono trattati come Ctrl+C: il backend viene sempre fermato.
 **Conseguenze**: i comportamenti su Windows (`start.cmd`, `bootstrap.ps1`, Ctrl+C in `cmd`) sono non verificati finché non gira il job CI su `windows-latest`.
+
+## ADR-021 — Immagine Docker su Debian 13 con Pandoc scaricato
+**Contesto**: LibreOffice >= 24 (RF-79) e Pandoc >= 3.5 non sono nei repository di Debian 12; Debian 13 ha LibreOffice 25.x ma non Pandoc 3.5+.
+**Decisione**: base `python:3.12-slim-trixie`; LibreOffice (`libreoffice-writer-nogui`) da apt; Pandoc scaricato dalle release ufficiali con SHA-256
+(stessa versione e hash di `launcher/manifest.toml`, verificati da `launcher/tests/test_consistency.py`). Build multi-stage del frontend con Node 24.
+Il compose non fissa l'immagine Ollama (`OLLAMA_IMAGE`, predefinita `latest`).
+**Conseguenze**: l'immagine non è stata costruita in locale (Docker assente): la prima verifica reale è il job CI `docker`.
+La CI usa tag maggiori delle action (`@v4`, `@v6`), non SHA: da fissare prima del rilascio pubblico.

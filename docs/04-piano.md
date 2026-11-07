@@ -13,16 +13,16 @@ Spunta i task (`- [x]`) nello stesso commit che li completa.
 - [x] `tools/fake-llm`: server OpenAI-compatibile (`/v1/chat/completions`, `/v1/models`) che restituisce
       `"[EN] " + testo`, preservando i segnaposto; modalità configurabili per simulare errori, lentezza, glossario violato
 - [x] `Makefile` con `setup`, `dev`, `test`, `e2e`, `lint`, `licenses`
-- [ ] `docker-compose.yml`: servizio `app` (backend che serve il frontend buildato, Pandoc, LibreOffice),
-      servizio `ollama` sotto profilo `llm`
-- [ ] CI GitHub Actions: lint, test, build immagine, verifica licenze
+- [x] `docker-compose.yml`: servizio `app` (backend che serve il frontend buildato, Pandoc, LibreOffice),
+      servizio `ollama` sotto profilo `llm` (build non ancora provata: Docker non disponibile nell'ambiente di sviluppo, la prova è nel job CI `docker`)
+- [x] CI GitHub Actions: lint, test, build immagine, verifica licenze (workflow non ancora eseguito: serve il primo push)
 - [x] `examples/progetto-esempio` con 2 capitoli, 5 sezioni, una tabella, un'immagine, un diagramma, glossario di 5 voci
 - [x] `start.sh`, `start.cmd`, `launcher/bootstrap.ps1`: bootstrap uv in `.runtime/uv`, poi `python -m launcher`
       (`start.sh` provato su Linux da zero; `start.cmd`/`bootstrap.ps1` non ancora eseguiti su Windows: verifica demandata alla CI)
 - [x] Launcher, prima versione: controlli preliminari, `uv sync`, build frontend con Node portabile, porta libera,
       avvio backend, attesa health, apertura browser, log, arresto pulito
 - [x] `launcher/manifest.toml` con versioni e SHA-256; `downloads.py` con ripresa, retry, proxy, verifica hash
-- [ ] Job CI "avvio pulito" su Ubuntu e Windows
+- [x] Job CI "avvio pulito" su Ubuntu e Windows (`tools/ci-clean-start.py`; provato in locale su Linux, Windows solo in CI)
 
 **Accettazione**: `make setup && make test` verde su macchina pulita; su una VM Windows 11 e una Ubuntu senza nulla
 installato, un doppio clic su `start.cmd` / `./start.sh` apre il browser sul layout vuoto senza chiedere privilegi;
