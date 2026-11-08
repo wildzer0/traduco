@@ -12,7 +12,8 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useMemo, useState } from "react";
+import { ChevronsDownUp } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "../../lib/i18n";
 import type { TreeNode } from "../../lib/types";
 import { computeDrop, flattenTree } from "./dnd";
@@ -30,6 +31,30 @@ function lastChapter(nodes: TreeNode[]): string | null {
   return nodes.length ? (nodes[nodes.length - 1]?.path ?? null) : null;
 }
 
+const AUTOFOLD_KEY = "traduco.autofold";
+
+function loadAutoFold(): boolean {
+  try {
+    return localStorage.getItem(AUTOFOLD_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Every chapter that is not an ancestor of ``selected``. */
+function chaptersToFold(nodes: TreeNode[], selected: string | null): Set<string> {
+  const fold = new Set<string>();
+  const walk = (list: TreeNode[]) => {
+    for (const n of list) {
+      if (n.kind !== "chapter") continue;
+      if (!selected?.startsWith(`${n.path}/`)) fold.add(n.path);
+      walk(n.children);
+    }
+  };
+  walk(nodes);
+  return fold;
+}
+
 export function Tree({ projectId, selected, onSelect }: Props) {
   const t = useT();
   const { data: nodes = [], isLoading, isError } = useTree(projectId);
@@ -44,6 +69,34 @@ export function Tree({ projectId, selected, onSelect }: Props) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [renaming, setRenaming] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
+
+  const [autoFold, setAutoFold] = useState(loadAutoFold);
+  const toggleAutoFold = useCallback(
+    () =>
+      setAutoFold((on) => {
+        try {
+          localStorage.setItem(AUTOFOLD_KEY, on ? "0" : "1");
+        } catch {
+          /* the choice is only a convenience */
+        }
+        return !on;
+      }),
+    [],
+  );
+  // Alt+Shift+F: keep open only the chapter of the open section
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.code === "KeyF") {
+        e.preventDefault();
+        toggleAutoFold();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [toggleAutoFold]);
+  useEffect(() => {
+    if (autoFold) setCollapsed(chaptersToFold(nodes, selected));
+  }, [autoFold, selected, nodes]);
 
   const rows = useMemo(() => {
     const expanded = new Set<string>();
@@ -176,6 +229,16 @@ export function Tree({ projectId, selected, onSelect }: Props) {
           className="rounded-ui px-2 py-1 hover:bg-surface"
         >
           {t("tree.addChapter")}
+        </button>
+        <button
+          type="button"
+          onClick={toggleAutoFold}
+          aria-pressed={autoFold}
+          title={t("tree.autoFold")}
+          aria-label={t("tree.autoFold")}
+          className={`rounded-ui px-2 py-1 hover:bg-surface ${autoFold ? "text-accent" : "text-muted"}`}
+        >
+          <ChevronsDownUp size={16} aria-hidden="true" />
         </button>
       </div>
     </div>

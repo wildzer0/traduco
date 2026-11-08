@@ -292,11 +292,53 @@ def _clear(p: Any) -> None:
             p.remove(child)
 
 
-def _build_toc(p: Any, language: str) -> None:
+def headings_of(body_doc: DocumentObject) -> list[tuple[int, str]]:
+    """(level, text) of the headings 1-3 Pandoc wrote, to fill the table of contents."""
+    found: list[tuple[int, str]] = []
+    for p in body_doc.element.body.iter(qn("w:p")):
+        style = p.find(f"{qn('w:pPr')}/{qn('w:pStyle')}")
+        name = style.get(qn("w:val")) if style is not None else ""
+        if name and name.startswith("Heading") and name[7:] in ("1", "2", "3"):
+            text = paragraph_text(p).strip()
+            if text:
+                found.append((int(name[7:]), text))
+    return found
+
+
+def _escape(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _build_toc(p: Any, language: str, entries: list[tuple[int, str]] | None = None) -> None:
+    """A table of contents field. With ``entries`` it already lists the headings (no page numbers)
+    so the document reads well before Word updates the field."""
     _clear(p)
-    runs = _field_runs('TOC \\o "1-3" \\h \\z \\u', TOC_HINT.get(language, TOC_HINT["en"]))
-    for run in runs:
-        p.append(run)
+    if not entries:
+        for run in _field_runs('TOC \\o "1-3" \\h \\z \\u', TOC_HINT.get(language, TOC_HINT["en"])):
+            p.append(run)
+        return
+    paragraphs = [p]
+    for _ in entries[1:]:
+        q = parse_xml(f"<w:p {W}/>")
+        paragraphs[-1].addnext(q)
+        paragraphs.append(q)
+    for i, (paragraph, (level, text)) in enumerate(zip(paragraphs, entries, strict=True)):
+        ppr = parse_xml(f'<w:pPr {W}><w:ind w:left="{(level - 1) * 280}"/></w:pPr>')
+        if paragraph.find(qn("w:pPr")) is None:
+            paragraph.insert(0, ppr)
+        if i == 0:
+            for xml in (
+                '<w:r {W}><w:fldChar w:fldCharType="begin"/></w:r>',
+                '<w:r {W}><w:instrText xml:space="preserve"> '
+                'TOC \\o "1-3" \\h \\z \\u </w:instrText></w:r>',
+                '<w:r {W}><w:fldChar w:fldCharType="separate"/></w:r>',
+            ):
+                paragraph.append(parse_xml(xml.replace("{W}", W)))
+        paragraph.append(
+            parse_xml(f'<w:r {W}><w:t xml:space="preserve">{_escape(text)}</w:t></w:r>')
+        )
+        if i == len(entries) - 1:
+            paragraph.append(parse_xml(f'<w:r {W}><w:fldChar w:fldCharType="end"/></w:r>'))
 
 
 def _build_revisions(
@@ -363,6 +405,7 @@ def compose(
             "{{CONTENUTO}} must be in a normal paragraph, not in a table or a text box.",
         )
 
+    toc_entries = headings_of(body_doc)
     number_figures(body_doc, language)  # before the styles change: it looks for Pandoc's caption
     result.warnings.extend(apply_styles(body_doc, master, mapping))
 
@@ -372,7 +415,7 @@ def compose(
     use_style_numbering(master, mapping)
 
     if (toc := _marker_paragraph(master, "SOMMARIO")) is not None:
-        _build_toc(toc, language)
+        _build_toc(toc, language, toc_entries)
     if (rev := _marker_paragraph(master, "REVISIONI")) is not None:
         _build_revisions(master, rev, revisions, mapping.stili.get("tabella"), language)
 

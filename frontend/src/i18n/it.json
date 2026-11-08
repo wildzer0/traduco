@@ -44,6 +44,7 @@
   "tree.newSubchapter": "Nuovo sottocapitolo",
   "tree.newSectionHere": "Nuova sezione qui",
   "tree.expand": "Espandi",
+  "tree.autoFold": "Ripiega da solo i capitoli che non contengono la sezione aperta (Alt+Maiusc+F)",
   "tree.collapse": "Comprimi",
   "tree.dragHandle": "Trascina per spostare",
   "tree.loading": "Caricamento…",

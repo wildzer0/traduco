@@ -432,7 +432,8 @@ class ExportManager:
     async def _maybe(
         self, client: Any, project: Project, key: str, value: str, official: bool, job: ExportJob
     ) -> str:
-        if official and key in project.metadati_da_tradurre:
+        # the description of a revision is prose written in the source language: always translated
+        if official and (key == "descrizione" or key in project.metadati_da_tradurre):
             return await self._translate(client, project, value, job)
         return value
 

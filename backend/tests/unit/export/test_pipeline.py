@@ -109,10 +109,12 @@ def all_text(doc: DocumentObject) -> str:
 
 
 def style_of(doc: DocumentObject, text: str) -> str | None:
+    """Style of the last paragraph with this text (the table of contents lists headings first)."""
+    found = None
     for p in doc.paragraphs:
         if p.text.strip().endswith(text) or p.text.strip() == text:
-            return p.style.style_id if p.style is not None else None
-    return None
+            found = p.style.style_id if p.style is not None else None
+    return found
 
 
 def test_no_placeholder_is_left(
@@ -192,6 +194,8 @@ def test_footnotes_toc_revisions_and_update_fields(
     out = build(project, pandoc_bin, company_template, tmp_path)
     doc = Document(str(out))
     assert "TOC" in doc.element.xml and "\\o" in doc.element.xml
+    # the field already lists the headings: readable before Word updates it
+    assert [p.text for p in doc.paragraphs].count("Scopo del documento") == 2
     revisions = next(t for t in doc.tables if t.cell(0, 0).text == "Rev.")
     assert [c.text for c in revisions.rows[2].cells] == [
         "02",

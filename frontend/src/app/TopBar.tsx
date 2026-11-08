@@ -50,9 +50,10 @@ export function TopBar() {
       <button
         type="button"
         onClick={() => void navigate({ to: "/" })}
-        className="rounded-ui font-semibold hover:text-accent"
+        className="flex items-center gap-1.5 rounded-ui font-semibold hover:text-accent"
         title={t("topbar.allProjects")}
       >
+        <img src="/logo.svg" alt="" aria-hidden="true" className="h-5 w-5" />
         {t("app.name")}
       </button>
       {projectId ? (

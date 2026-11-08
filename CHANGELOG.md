@@ -5,6 +5,24 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-08
+
+Interface rework and fixes from the first real export.
+
+### Added
+- Projects page with nested folders, search, details (issue, author, last change), duplicate and a reversible trash.
+- Resizable sidebar, preview and panels; panels keep their title and close button in view; a way back to all projects.
+- Logo and icon.
+- Sidebar: automatic folding of the chapters that do not hold the open section (button and Alt+Shift+F).
+- Team mode, first slice: OIDC login, signed sessions, roles and a permission for every route (M7).
+- The table of contents in a Word export already lists the headings (no page numbers until Word updates the field).
+
+### Fixed
+- A table that follows a paragraph without a blank line was exported to Word as loose text with the cells scattered in the document.
+- Export no longer asks to open the sections with diagrams first: the diagrams are drawn by the export itself.
+- The description of each revision is translated in the official-language export.
+- The model status is not "online" while the model is still downloading.
+
 ## [0.11.1] - 2026-11-08
 
 Fixes from the first run with the real model, pivot languages and end-to-end tests of the new panels.

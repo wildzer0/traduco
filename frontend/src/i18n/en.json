@@ -44,6 +44,7 @@
   "tree.newSubchapter": "New sub-chapter",
   "tree.newSectionHere": "New section here",
   "tree.expand": "Expand",
+  "tree.autoFold": "Fold by itself the chapters that do not hold the open section (Alt+Shift+F)",
   "tree.collapse": "Collapse",
   "tree.dragHandle": "Drag to move",
   "tree.loading": "Loading…",

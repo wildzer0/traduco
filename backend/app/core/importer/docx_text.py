@@ -55,10 +55,25 @@ def _style(p: Any) -> str:
     return str(style.get(qn("w:val"))) if style is not None else ""
 
 
+def _toc_edges(p: Any) -> tuple[bool, bool]:
+    """(starts, ends) a table of contents field: its entries are not text of the document."""
+    starts = any(i.text and i.text.strip().startswith("TOC") for i in p.iter(qn("w:instrText")))
+    ends = any(f.get(qn("w:fldCharType")) == "end" for f in p.iter(qn("w:fldChar")))
+    return starts, ends
+
+
 def _blocks(container: Any) -> list[DocUnit]:
     units: list[DocUnit] = []
+    in_toc = False
     for child in container:
         if child.tag == qn("w:p"):
+            starts, ends = _toc_edges(child)
+            if starts:
+                in_toc = True
+            if in_toc:
+                if ends:
+                    in_toc = False
+                continue
             text, authors, tracked = _paragraph(child)
             if text:
                 units.append(DocUnit("paragraph", text, _style(child), authors, tracked))
