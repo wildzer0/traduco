@@ -188,11 +188,11 @@ resta fluido.
 
 ## M7 — Team (fase successiva, RNF-09)
 
-- [ ] Astrazioni `Store` e `JobQueue` con implementazioni PostgreSQL e Valkey
-- [ ] Autenticazione OIDC (Keycloak in compose), ruoli: autore, revisore, amministratore
-- [ ] Blocco di una sezione mentre un utente la modifica; presenza degli utenti
-- [ ] Log di audit su approvazioni ed export
-- [ ] Profilo compose `team` con vLLM
+- [ ] Astrazioni `Store` e `JobQueue` con implementazioni PostgreSQL e Valkey (rimandato: oggi un solo processo; l'interfaccia `Coordination` è già separata, ADR-046)
+- [x] Autenticazione OIDC (Keycloak in compose), ruoli: autore, revisore, amministratore
+- [x] Blocco di una sezione mentre un utente la modifica; presenza degli utenti
+- [x] Log di audit su approvazioni ed export (anche import, issue, progetti)
+- [x] Profilo compose `team` con vLLM (non provato con i servizi veri: vedi docs/team.md)
 
 **Accettazione**: due utenti sullo stesso progetto non sovrascrivono il lavoro l'uno dell'altro; ogni
 approvazione riporta l'autore nel log.

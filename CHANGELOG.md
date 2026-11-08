@@ -5,6 +5,21 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-08
+
+Milestone M7 - team mode (partial: single process).
+
+### Added
+- Team mode (`TRADUCO_MODE=team`): OIDC login (Keycloak in the compose profile `team`), signed sessions, roles author / reviewer / administrator and a permission for every route.
+- Soft section locks and presence: whoever edits a section holds it, the others see it read-only with the name; the lock expires by itself.
+- Append-only audit log (approvals with their author, exports, imports, issues, project copies and deletions), read by the administrator at `GET /api/audit`.
+- Login gate, user menu and people in the project in the top bar.
+- `docs/team.md`, ADR-046.
+
+### Not done
+- PostgreSQL and Valkey implementations of the store and the job queue; locks and presence live in the memory of one process.
+- The `team` profile has not been tried with real Keycloak and vLLM.
+
 ## [0.12.0] - 2026-11-08
 
 Interface rework and fixes from the first real export.

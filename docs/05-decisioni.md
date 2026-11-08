@@ -422,3 +422,16 @@ Per la prima volta un documento realistico (generato da `tools/make-big-project.
 - **Una proposta uguale al testo non è una proposta.** Quando il modello ignora un'istruzione e restituisce il testo com'è, la casella Istruzione non mostra più un «Usa questa» inutile.
 Dopo le correzioni, sullo stesso documento: 172 su 172 tradotti, 0 da rivedere, 52 occorrenze di termini imposti tutte rispettate, nessun termine vietato, ricetta rifiutata con messaggio, riscrittura «più empatico» riuscita.
 **Limiti della misura**: un solo modello, una sola macchina, 17 sezioni su 109 possibili; nessuna lettura sistematica della qualità (le coppie di esempio sono nel rapporto, non valutate); l'export Word e le lingue aggiuntive non sono stati provati con il modello vero; il motore integrato (llama.cpp) non è stato provato con le traduzioni.
+
+## ADR-046 — Modalità team: login OIDC, ruoli, blocchi, audit
+
+**Contesto.** M7 chiede più persone sullo stesso progetto senza che si sovrascrivano e con l'autore di ogni approvazione nel registro.
+
+**Decisione.**
+- `TRADUCO_MODE=team` (il predefinito, `desktop`, non cambia nulla). Login OIDC con codice di autorizzazione e PKCE verso qualunque provider (Keycloak nel compose); sessione in un cookie firmato HMAC (`TRADUCO_SESSION_SECRET`, almeno 32 caratteri), nessuna sessione lato server.
+- Ruoli combinabili `reviewer`, `author`, `admin` letti da un claim configurabile; ogni rotta ha un permesso in `core/team/policy.py` e un test impedisce di aggiungerne una senza deciderlo. L'approvazione (`approve`) è solo del revisore: un autore non approva il proprio lavoro.
+- Blocco **morbido** di sezione: chi apre una sezione in modifica la prende, il battito (15 s) la rinnova, scade da sola dopo 45 s. Le scritture di un altro utente rispondono 423 con il nome di chi la tiene; l'interfaccia la mostra in sola lettura. Resta il controllo ottimistico con hash (409) come seconda difesa.
+- Registro di audit append-only in SQLite (`.traduco-audit.sqlite`): approvazioni, export, import, issue, copia/cancellazione di progetti; lo legge solo l'amministratore (`GET /api/audit`).
+
+**Conseguenze.** Blocchi e presenza stanno in memoria del processo: va bene con un solo processo. L'interfaccia `Coordination` permette di spostarli su Valkey, e il registro su PostgreSQL, quando servirà più di un processo: non è stato fatto e non è stato provato con Keycloak, Valkey, PostgreSQL e vLLM veri.
+

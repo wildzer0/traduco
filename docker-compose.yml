@@ -3,6 +3,8 @@
 #   docker compose --profile llm up    -> app + Ollama
 #   docker compose --profile languagetool up   -> app + LanguageTool for the spelling check; set
 #                                         TRADUCO_LANGUAGETOOL_URL=http://languagetool:8010 (RF-16)
+#   docker compose --profile team up   -> team mode: login with Keycloak, roles, section locks, audit log,
+#                                         model served by vLLM (needs an NVIDIA GPU). See docs/team.md
 services:
   app:
     build:
@@ -31,6 +33,61 @@ services:
     image: ${LANGUAGETOOL_IMAGE:-erikvl87/languagetool:latest}
     restart: unless-stopped
 
+  app-team:
+    profiles: ["team"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "${TRADUCO_PORT:-8000}:8000"
+    environment:
+      TRADUCO_MODE: team
+      TRADUCO_PUBLIC_URL: ${TRADUCO_PUBLIC_URL:-http://localhost:8000}
+      TRADUCO_OIDC_ISSUER: ${TRADUCO_OIDC_ISSUER:-http://keycloak:8080/realms/traduco}
+      TRADUCO_OIDC_CLIENT_ID: ${TRADUCO_OIDC_CLIENT_ID:-traduco}
+      TRADUCO_OIDC_ROLES_CLAIM: ${TRADUCO_OIDC_ROLES_CLAIM:-realm_access.roles}
+      TRADUCO_OIDC_CLIENT_SECRET: ${TRADUCO_OIDC_CLIENT_SECRET:?set the client secret of the Keycloak client}
+      TRADUCO_SESSION_SECRET: ${TRADUCO_SESSION_SECRET:?set a random string of at least 32 characters}
+      TRADUCO_LLM_BASE_URL: ${TRADUCO_LLM_BASE_URL:-http://vllm:8000/v1}
+      TRADUCO_LLM_MODEL: ${TRADUCO_LLM_MODEL:-google/gemma-3-4b-it}
+    volumes:
+      - workspaces:/workspaces
+    depends_on:
+      - keycloak
+    restart: unless-stopped
+
+  keycloak:
+    profiles: ["team"]
+    image: ${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.0}
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set the Keycloak administrator password}
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak:/opt/keycloak/data
+    restart: unless-stopped
+
+  vllm:
+    profiles: ["team"]
+    image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
+    command: ["--model", "${TRADUCO_LLM_MODEL:-google/gemma-3-4b-it}"]
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
 volumes:
   workspaces:
   ollama:
+  keycloak:
+  huggingface:
