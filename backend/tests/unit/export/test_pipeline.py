@@ -11,7 +11,7 @@ from docx.oxml.ns import qn
 from app.core.export.combine import Item, combine
 from app.core.export.compose import Revision, compose
 from app.core.export.errors import ExportError
-from app.core.export.pandoc import run_pandoc
+from app.core.export.pandoc import find_pandoc, run_pandoc
 from app.core.templates.analyze import analyze, propose_mapping
 from app.core.templates.mapping import Mapping
 from tests.support.template_factory import logo_png
@@ -318,3 +318,15 @@ def test_pdf_and_odt_have_a_real_table_of_contents(
         )
     pdf = convert(docx, "pdf", tmp_path / "pdf")
     assert pdf.read_bytes().startswith(b"%PDF")
+
+
+def test_a_table_right_after_a_paragraph_is_still_a_table(project: Path, tmp_path: Path) -> None:
+    body = "Testo\n| A | B |\n|---|---|\n| 1 | 2 |\n\nFine\n"
+    combined = combine(project, [Item("section", "capitoli/01-intro/01-a.md", "T", 1, body)])
+    md = tmp_path / "t.md"
+    md.write_text(combined.markdown, encoding="utf-8")
+    out = tmp_path / "t.docx"
+    run_pandoc(find_pandoc(), md, out, reference_doc=None, resource_dir=tmp_path)
+    tables = Document(str(out)).tables
+    assert len(tables) == 1
+    assert [c.text for c in tables[0].rows[1].cells] == ["1", "2"]

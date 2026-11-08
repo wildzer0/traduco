@@ -129,7 +129,7 @@ export function ProjectTable({
             <td className="px-2 py-2 tabular-nums">{p.sezioni ?? 0}</td>
             <td className="px-2 py-2 text-muted">
               {p.lingua_sorgente} →{" "}
-              {(p.lingue && p.lingue.length ? p.lingue : [p.lingua_ufficiale]).join(", ")}
+              {(p.lingue?.length ? p.lingue : [p.lingua_ufficiale]).join(", ")}
             </td>
             <td className="px-1 py-1">
               <Dropdown.Root>

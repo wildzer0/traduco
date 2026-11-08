@@ -64,10 +64,7 @@ test("exporting the example gives a Word file with the cover, the fields and the
   page,
 }) => {
   const id = await openExample(page);
-  // the Mermaid diagram of "Collaudo" is drawn by the browser; open it once so it is cached
-  await page.getByRole("button", { name: "Collaudo", exact: true }).click();
-  await expect.poll(() => onDisk(id, ".traduco/cache/diagrams"), { timeout: 15_000 }).toBe(true);
-
+  // the Mermaid diagram of "Collaudo" is not drawn yet: the export draws it by itself
   await page.getByRole("button", { name: "Esporta", exact: true }).click();
   const panel = page.getByRole("dialog", { name: "Esporta" });
   await panel.getByLabel("Cosa esportare").selectOption("project");
@@ -91,14 +88,16 @@ test("exporting the example gives a Word file with the cover, the fields and the
   expect(readFileSync(file).subarray(0, 2).toString()).toBe("PK");
 });
 
-test("a diagram that was never drawn stops the export and says where", async ({ page }) => {
-  await openExample(page);
+test("a diagram that was never drawn is drawn by the export itself", async ({ page }) => {
+  const id = await openExample(page);
   await page.getByRole("button", { name: "Esporta", exact: true }).click();
   const panel = page.getByRole("dialog", { name: "Esporta" });
   await panel.getByLabel("Lingua").selectOption("sorgente");
-  await panel.getByRole("button", { name: "Esporta DOCX" }).click();
-  await expect(panel.getByRole("alert")).toContainText("Esportazione non riuscita", {
-    timeout: 30_000,
-  });
-  await expect(panel.getByRole("alert")).toContainText("03-collaudo.md");
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 60_000 }),
+    panel.getByRole("button", { name: "Esporta DOCX" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/\.docx$/);
+  await expect(panel).toContainText("Documento pronto");
+  expect(onDisk(id, ".traduco/cache/diagrams")).toBe(true);
 });

@@ -57,6 +57,27 @@ def _text_before(lines: list[str], index: int) -> bool:
     return bool(re.sub(r"<!--.*?-->", "", above, flags=re.DOTALL).strip())
 
 
+def _separate_tables(body: str) -> str:
+    """A blank line before every top-level table.
+
+    The editor's Markdown parser accepts a table that follows a paragraph directly, Pandoc does
+    not: it would turn the table into loose text with the cells scattered in the document.
+    """
+    tokens = MarkdownIt("commonmark").enable("table").parse(body)
+    starts = {
+        t.map[0] for t in tokens if t.type == "table_open" and t.level == 0 and t.map is not None
+    }
+    if not starts:
+        return body
+    lines = body.split("\n")
+    out: list[str] = []
+    for i, line in enumerate(lines):
+        if i in starts and out and out[-1].strip():
+            out.append("")
+        out.append(line)
+    return "\n".join(out)
+
+
 def _heading_edits(body: str, level: int, title: str) -> str:
     """Shift the headings of a section under a heading of ``level``.
 
@@ -151,7 +172,7 @@ def combine(root: Path, items: list[Item]) -> Combined:
         parts.append(f"{'#' * level} {item.title} {{#{combined.anchors[item.path]}}}\n")
         if item.kind == "chapter":
             continue
-        body = _heading_edits(item.body, level, item.title)
+        body = _separate_tables(_heading_edits(item.body, level, item.title))
         rewriter = _Rewriter(root, item, combined, counter)
         verbatim: set[int] = set()
         replaced: dict[int, str | None] = {}
@@ -163,7 +184,14 @@ def combine(root: Path, items: list[Item]) -> Combined:
             if token.type == "fence" and token.info.strip() == "mermaid":
                 image = rewriter.diagram(token.content)
                 if image is None:
-                    missing.append({"section": item.path, "line": str(start + 1)})
+                    missing.append(
+                        {
+                            "section": item.path,
+                            "line": str(start + 1),
+                            "hash": diagram_hash(token.content),
+                            "code": token.content,
+                        }
+                    )
                 replaced[start] = image or ""
                 replaced.update({n: None for n in range(start + 1, end)})
         lines: list[str] = []
@@ -178,8 +206,8 @@ def combine(root: Path, items: list[Item]) -> Combined:
     if missing:
         raise ExportError(
             "diagram_missing",
-            "Some diagrams have not been drawn yet. Open each section in the editor once "
-            "so its diagram is rendered, then export again.",
+            "Some diagrams have not been drawn yet: the editor draws them and the export "
+            "starts again by itself.",
             {"diagrams": missing},
         )
     combined.markdown = "\n".join(parts)

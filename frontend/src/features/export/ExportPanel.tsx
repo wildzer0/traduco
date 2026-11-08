@@ -13,6 +13,7 @@ import { type ExportChoice, loadExportChoice, saveExportChoice } from "../../lib
 import { useT } from "../../lib/i18n";
 import type { ExportStatus } from "../../lib/types";
 import { useView } from "../../lib/view-store";
+import { cacheDiagram } from "../preview/diagrams";
 import { useReview } from "../review/queries";
 import { useProjects } from "../tree/queries";
 
@@ -81,18 +82,30 @@ export function ExportPanel({
     setStatus(null);
     saveExportChoice(used);
     try {
-      let job = await startExport(projectId, {
-        scope: used.scope,
-        ...(pathFor(used.scope) ? { path: pathFor(used.scope) as string } : {}),
-        language: used.language,
-        ...(used.template ? { template: used.template } : {}),
-        format: used.format,
-      });
-      setStatus(job);
-      while (job.state === "running") {
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        job = await getExport(projectId, job.id);
+      const attempt = async (): Promise<ExportStatus> => {
+        let job = await startExport(projectId, {
+          scope: used.scope,
+          ...(pathFor(used.scope) ? { path: pathFor(used.scope) as string } : {}),
+          language: used.language,
+          ...(used.template ? { template: used.template } : {}),
+          format: used.format,
+        });
         setStatus(job);
+        while (job.state === "running") {
+          await new Promise((resolve) => setTimeout(resolve, 400));
+          job = await getExport(projectId, job.id);
+          setStatus(job);
+        }
+        return job;
+      };
+      let job = await attempt();
+      // diagrams not drawn yet: draw them here (the browser does it) and start again, once
+      const missing = (job.error?.details?.diagrams ?? []) as { hash?: string; code?: string }[];
+      if (job.state === "failed" && job.error?.code === "diagram_missing" && missing.length > 0) {
+        setStatus({ ...job, state: "running", message: t("export.drawingDiagrams"), error: null });
+        for (const d of missing)
+          if (d.hash && d.code) await cacheDiagram(projectId, d.hash, d.code);
+        job = await attempt();
       }
       if (job.state === "done") download(job.id);
     } catch (e) {

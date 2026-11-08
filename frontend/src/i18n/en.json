@@ -311,6 +311,7 @@
   "export.goReview": "Go to review",
   "export.failed": "Export failed",
   "export.diagrams": "Diagrams not drawn yet in: {sections}",
+  "export.drawingDiagrams": "Drawing the diagrams…",
   "export.needPath": "Open a section to export it or its chapter.",
   "templates.addExample": "Add the sample template",
   "preview.diagramEngine": "Could not load the diagram engine. Reload the page (Ctrl+Shift+R): the application may have been updated.",
