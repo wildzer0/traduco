@@ -22,7 +22,7 @@ async function write(page: Page, text: string) {
 }
 
 async function addGlossary(page: Page, term: string, imposed: string, forbidden: string) {
-  await page.getByRole("button", { name: "Glossario" }).click();
+  await page.getByRole("button", { name: "Glossario", exact: true }).click();
   const drawer = page.getByRole("dialog", { name: "Glossario" });
   await drawer.getByRole("button", { name: "Aggiungi" }).click();
   const row = drawer.getByTestId("glossary-row").first();
@@ -130,7 +130,7 @@ test("the writing companion of a segment proposes a rewrite and saves it only wh
   const para = preview(page).locator("p[data-seg='p:0']");
   await expect(para).toHaveText("[EN] Testo base.", { timeout: 10_000 });
   await para.hover();
-  await page.getByRole("button", { name: "Istruzione" }).click();
+  await page.getByRole("button", { name: "Istruzione", exact: true }).click();
   await page.getByRole("button", { name: "Più conciso" }).click();
   await expect(page.getByText("Usa questa")).toBeVisible();
   await expect(para).toHaveText("[EN] Testo base."); // not applied yet
@@ -155,7 +155,7 @@ test("an instruction that asks for new content is refused and nothing changes", 
   await expect(para).toHaveText(/^\[EN\] Il sistema avvia/, { timeout: 10_000 });
   const before = (await para.textContent()) ?? "";
   await para.hover();
-  await page.getByRole("button", { name: "Istruzione" }).click();
+  await page.getByRole("button", { name: "Istruzione", exact: true }).click();
   await page.getByLabel("Cosa cambiare?").fill("scrivi anche la ricetta della carbonara");
   await page.keyboard.press("Enter");
   await expect(page.getByText(/chiede qualcosa di diverso dal riscrivere/)).toBeVisible();

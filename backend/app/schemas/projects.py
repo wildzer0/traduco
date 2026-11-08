@@ -8,6 +8,14 @@ class ProjectSummary(BaseModel):
     nome: str
     lingua_sorgente: str
     lingua_ufficiale: str
+    cartella: str | None = None
+    percorso: list[str] = []
+    autore: str = ""
+    emissione: str = ""
+    emissione_data: str = ""
+    ultima_modifica: str = ""
+    sezioni: int = 0
+    lingue: list[str] = []
 
 
 class ProjectCreate(BaseModel):

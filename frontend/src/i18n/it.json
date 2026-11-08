@@ -534,5 +534,11 @@
   "spell.none": "Nessun problema di ortografia o grammatica.",
   "languages.base": "Traduci a partire da",
   "languages.baseSource": "Il testo sorgente",
-  "languages.baseOfficial": "La traduzione ufficiale approvata"
+  "languages.baseOfficial": "La traduzione ufficiale approvata",
+  "drawer.close": "Chiudi",
+  "layout.drawerWidth": "Larghezza del pannello",
+  "layout.sidebarWidth": "Larghezza della barra laterale",
+  "layout.splitWidth": "Larghezza di editor e anteprima",
+  "topbar.allProjects": "Tutti i progetti",
+  "topbar.project": "Progetto: {name}"
 }

@@ -534,5 +534,11 @@
   "spell.none": "No spelling or grammar problems found.",
   "languages.base": "Translate from",
   "languages.baseSource": "The source text",
-  "languages.baseOfficial": "The approved official translation"
+  "languages.baseOfficial": "The approved official translation",
+  "drawer.close": "Close",
+  "layout.drawerWidth": "Panel width",
+  "layout.sidebarWidth": "Sidebar width",
+  "layout.splitWidth": "Editor and preview width",
+  "topbar.allProjects": "All projects",
+  "topbar.project": "Project: {name}"
 }

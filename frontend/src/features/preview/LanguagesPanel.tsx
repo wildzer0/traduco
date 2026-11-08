@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import { type AdditionalLanguage, listLanguages, setAdditionalLanguages } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import { usePreview } from "../../lib/preview-store";
@@ -67,21 +68,7 @@ export function LanguagesPanel({ projectId }: { projectId: string }) {
 
   const field = "rounded-ui border border-border bg-bg px-2 py-1";
   return (
-    <aside
-      role="dialog"
-      aria-label={t("languages.manage")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[460px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("languages.manage")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("issues.close")}
-        </button>
-      </div>
+    <Drawer title={t("languages.manage")} onClose={() => close(false)} width={460}>
       <p className="mt-2 text-[13px] text-muted">{t("languages.intro")}</p>
       <datalist id="common-languages">
         {COMMON.map((c) => (
@@ -182,6 +169,6 @@ export function LanguagesPanel({ projectId }: { projectId: string }) {
           {error}
         </p>
       )}
-    </aside>
+    </Drawer>
   );
 }

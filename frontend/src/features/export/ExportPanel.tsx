@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import {
   exportDownloadUrl,
   getExport,
@@ -135,22 +136,7 @@ export function ExportPanel({
   const diagrams = (status?.error?.details?.diagrams as { section: string }[] | undefined) ?? [];
 
   return (
-    <aside
-      role="dialog"
-      aria-label={t("export.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[420px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("export.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("settings.close")}
-        </button>
-      </div>
-
+    <Drawer title={t("export.title")} onClose={() => close(false)} width={420}>
       <label className="mt-3 block">
         {t("export.scope")}
         <select
@@ -340,6 +326,6 @@ export function ExportPanel({
           </ul>
         </div>
       )}
-    </aside>
+    </Drawer>
   );
 }

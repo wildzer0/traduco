@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import {
   addComment,
   getTranslation,
@@ -66,22 +67,7 @@ export function CommentsPanel({ projectId, path }: { projectId: string; path: st
   const field = "w-full rounded-ui border border-border bg-bg px-2 py-1";
   const who = author.trim() || "?";
   return (
-    <aside
-      role="dialog"
-      aria-label={t("comments.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[420px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("comments.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("issues.close")}
-        </button>
-      </div>
-
+    <Drawer title={t("comments.title")} onClose={() => close(false)} width={420}>
       {path === null && <p className="text-muted">{t("export.needPath")}</p>}
       {path !== null && (
         <>
@@ -199,6 +185,6 @@ export function CommentsPanel({ projectId, path }: { projectId: string; path: st
           )}
         </>
       )}
-    </aside>
+    </Drawer>
   );
 }

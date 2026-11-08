@@ -14,6 +14,14 @@ ROUTES: dict[tuple[str, str], str] = {
     # project, settings
     ("POST", "/api/projects"): "admin",
     ("PATCH", P): "configure",
+    ("DELETE", P): "admin",
+    ("POST", f"{P}/duplicate"): "admin",
+    ("PUT", f"{P}/folder"): "admin",
+    ("POST", "/api/folders"): "admin",
+    ("PATCH", "/api/folders/{folder_id}"): "admin",
+    ("DELETE", "/api/folders/{folder_id}"): "admin",
+    ("POST", "/api/trash/{name}/restore"): "admin",
+    ("DELETE", "/api/trash/{name}"): "admin",
     ("PUT", "/api/settings"): "admin",
     ("POST", "/api/auth/logout"): "read",  # also open without a session, see guard.PUBLIC
     # the text
@@ -69,6 +77,7 @@ ROUTES: dict[tuple[str, str], str] = {
 GET_EXCEPTIONS: dict[str, str] = {
     "/api/settings": "admin",
     "/api/audit": "admin",
+    "/api/trash": "admin",
 }
 
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Drawer } from "../components/Drawer";
 import { getLlmStatus, getSettings, putSettings } from "../lib/api";
 import { useT } from "../lib/i18n";
 import { type Locale, type Theme, usePrefs } from "../lib/prefs";
@@ -64,17 +65,7 @@ export function SettingsDrawer({ onClose }: Props) {
     }
   };
   return (
-    <aside
-      role="dialog"
-      aria-label={t("settings.title")}
-      className="fixed inset-y-0 right-0 z-10 w-[420px] max-w-full border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("settings.title")}</h2>
-        <button type="button" onClick={onClose} className="rounded-ui px-2 py-1 hover:bg-surface-2">
-          {t("settings.close")}
-        </button>
-      </div>
+    <Drawer title={t("settings.title")} onClose={onClose} width={420}>
       <label className="mt-4 block">
         {t("settings.language")}
         <select
@@ -133,6 +124,6 @@ export function SettingsDrawer({ onClose }: Props) {
         </p>
       )}
       <p className="mt-3 text-[12px] text-muted">{t("settings.modelHelp")}</p>
-    </aside>
+    </Drawer>
   );
 }

@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import { listSnippets, saveSnippets } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import { useView } from "../../lib/view-store";
@@ -46,21 +47,7 @@ export function SnippetsDrawer({ projectId }: { projectId: string }) {
   };
 
   return (
-    <aside
-      role="dialog"
-      aria-label={t("snippets.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[460px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("snippets.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("issues.close")}
-        </button>
-      </div>
+    <Drawer title={t("snippets.title")} onClose={() => close(false)} width={460}>
       <p className="mt-2 text-[13px] text-muted">{t("snippets.intro")}</p>
       <textarea
         aria-label="snippet.yaml"
@@ -105,6 +92,6 @@ export function SnippetsDrawer({ projectId }: { projectId: string }) {
           </ul>
         </>
       )}
-    </aside>
+    </Drawer>
   );
 }

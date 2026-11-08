@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { Drawer } from "../../components/Drawer";
 import { getRequirements } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import { useView } from "../../lib/view-store";
@@ -26,21 +27,7 @@ export function RequirementsPanel({ projectId }: { projectId: string }) {
   const name = (path: string) => path.split("/").pop()?.replace(/\.md$/, "") ?? path;
 
   return (
-    <aside
-      role="dialog"
-      aria-label={t("requirements.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[460px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("requirements.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("issues.close")}
-        </button>
-      </div>
+    <Drawer title={t("requirements.title")} onClose={() => close(false)} width={460}>
       <p className="mt-2 text-[13px] text-muted">{t("requirements.intro")}</p>
       <button
         type="button"
@@ -92,6 +79,6 @@ export function RequirementsPanel({ projectId }: { projectId: string }) {
           </ul>
         </>
       )}
-    </aside>
+    </Drawer>
   );
 }

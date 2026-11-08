@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import {
   addExampleTemplate,
   deleteTemplate,
@@ -90,22 +91,7 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
   const dirty = detail && mapping && JSON.stringify(mapping) !== JSON.stringify(detail.mapping);
 
   return (
-    <aside
-      role="dialog"
-      aria-label={t("templates.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[420px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("templates.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("settings.close")}
-        </button>
-      </div>
-
+    <Drawer title={t("templates.title")} onClose={() => close(false)} width={420}>
       <input
         ref={fileInput}
         type="file"
@@ -250,7 +236,7 @@ export function TemplateDrawer({ projectId }: { projectId: string }) {
           </button>
         </div>
       )}
-    </aside>
+    </Drawer>
   );
 }
 

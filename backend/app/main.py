@@ -37,6 +37,7 @@ from app.api import search as search_api
 from app.api import settings as settings_api
 from app.api import snippets as snippets_api
 from app.api import spellcheck as spellcheck_api
+from app.api import workspace as workspace_api
 from app.api.deps import STATUS
 from app.config import Settings, get_settings
 from app.core.export.errors import ExportError
@@ -161,6 +162,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         importer_api.router,
         issues_api.router,
         auth_api.router,
+        workspace_api.router,
         comments_api.router,
         requirements_api.router,
         search_api.router,

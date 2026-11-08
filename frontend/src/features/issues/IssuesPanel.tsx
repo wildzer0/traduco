@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import {
   applyChanges,
   type ChangeRow,
@@ -52,21 +53,12 @@ export function IssuesPanel({ projectId }: { projectId: string }) {
   const field = "w-full rounded-ui border border-border bg-bg px-2 py-1";
   return (
     <>
-      <aside
-        role="dialog"
-        aria-label={t("issues.title")}
-        className="fixed inset-y-0 right-0 z-10 flex w-[460px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
+      <Drawer
+        title={t("issues.title")}
+        onClose={() => close(false)}
+        width={460}
+        closeOnEscape={!compare}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">{t("issues.title")}</h2>
-          <button
-            type="button"
-            onClick={() => close(false)}
-            className="rounded-ui px-2 py-1 hover:bg-surface-2"
-          >
-            {t("issues.close")}
-          </button>
-        </div>
         <p className="mt-2 text-[13px] text-muted">{t("issues.intro")}</p>
 
         <fieldset className="mt-2 border-0 p-0">
@@ -146,7 +138,7 @@ export function IssuesPanel({ projectId }: { projectId: string }) {
             );
           })}
         </ul>
-      </aside>
+      </Drawer>
       {compare && (
         <ComparePanel
           projectId={projectId}

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams, useSearch } from "@tanstack/react-router";
-import { Download, History, ListChecks, MessageSquare, PanelLeft } from "lucide-react";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { ArrowLeft, Download, History, ListChecks, MessageSquare, PanelLeft } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
@@ -13,6 +13,7 @@ import { findTrail } from "./trail";
 
 export function TopBar() {
   const t = useT();
+  const navigate = useNavigate();
   const toggleSidebar = usePrefs((s) => s.toggleSidebar);
   const { online, model } = useTranslationState();
   const { projectId } = useParams({ strict: false }) as { projectId?: string };
@@ -35,13 +36,38 @@ export function TopBar() {
           <PanelLeft size={16} strokeWidth={1.5} aria-hidden />
         </button>
       )}
-      <span className="font-semibold">{t("app.name")}</span>
+      {projectId ? (
+        <button
+          type="button"
+          onClick={() => void navigate({ to: "/" })}
+          title={t("topbar.allProjects")}
+          className="flex h-8 items-center gap-1 rounded-ui px-2 text-muted hover:bg-surface-2 hover:text-fg"
+        >
+          <ArrowLeft size={14} strokeWidth={1.5} aria-hidden />
+          {t("topbar.allProjects")}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => void navigate({ to: "/" })}
+        className="rounded-ui font-semibold hover:text-accent"
+        title={t("topbar.allProjects")}
+      >
+        {t("app.name")}
+      </button>
       {projectId ? (
         <nav
           aria-label="breadcrumb"
           className="flex min-w-0 items-center gap-1 truncate text-muted"
         >
-          <span>{project?.nome ?? projectId}</span>
+          <button
+            type="button"
+            onClick={() => void navigate({ to: "/p/$projectId", params: { projectId } })}
+            aria-label={t("topbar.project", { name: project?.nome ?? projectId })}
+            className="rounded-ui hover:text-fg"
+          >
+            {project?.nome ?? projectId}
+          </button>
           {trail.map((n) => (
             <span key={n.path} className="truncate">
               <span aria-hidden> › </span>

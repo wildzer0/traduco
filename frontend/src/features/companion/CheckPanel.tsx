@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import { applyAssist, dismissSuggestion, getCheck, runCheck } from "../../lib/api";
 import { useAssist } from "../../lib/assist-store";
 import { useCapabilities } from "../../lib/capabilities";
@@ -77,21 +78,7 @@ export function CheckPanel({ projectId, path }: { projectId: string; path: strin
   };
 
   return (
-    <aside
-      role="dialog"
-      aria-label={t("check.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[420px] max-w-full flex-col border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("check.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("assist.close")}
-        </button>
-      </div>
+    <Drawer title={t("check.title")} onClose={() => close(false)} width={420}>
       <label className="mt-3 flex items-start gap-2 text-[13px]">
         <input
           type="checkbox"
@@ -162,6 +149,6 @@ export function CheckPanel({ projectId, path }: { projectId: string; path: strin
         ))}
       </ul>
       {spelling && <SpellPanel projectId={projectId} path={path} />}
-    </aside>
+    </Drawer>
   );
 }

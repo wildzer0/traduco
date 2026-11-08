@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
+import { ResizeHandle } from "../components/ResizeHandle";
 import { CheckPanel } from "../features/companion/CheckPanel";
 import { EditorPane } from "../features/editor/EditorPane";
 import { SnippetsDrawer } from "../features/editor/SnippetsDrawer";
@@ -20,6 +21,7 @@ import { getLlmStatus, getReview } from "../lib/api";
 import { useAssist } from "../lib/assist-store";
 import { emitFileEvent } from "../lib/file-events";
 import { useT } from "../lib/i18n";
+import { DEFAULTS, LIMITS, useLayout } from "../lib/layout";
 import { usePrefs } from "../lib/prefs";
 import { useTranslationState } from "../lib/translation-store";
 import { useView } from "../lib/view-store";
@@ -126,10 +128,14 @@ export function Workspace() {
     return () => window.removeEventListener("keydown", onKey);
   }, [qc, projectId, selected, setMode, setFocusKey]);
 
+  const split = useLayout((st) => st.split);
+  const setSplit = useLayout((st) => st.setSplit);
+  const area = useRef<HTMLDivElement>(null);
   const editor = (
     <main
       aria-label={t("editor.label")}
-      className={`flex min-w-0 flex-1 flex-col ${mode === "focus" ? "" : "border-r border-border"}`}
+      style={mode === "write" ? { flex: `0 0 ${split * 100}%` } : undefined}
+      className={`flex min-w-0 flex-col ${mode === "write" ? "" : "flex-1"} ${mode === "focus" ? "" : "border-r border-border"}`}
     >
       {selected ? (
         <EditorPane key={projectId} projectId={projectId} path={selected} />
@@ -156,10 +162,25 @@ export function Workspace() {
           }}
         />
       ) : (
-        <>
+        <div ref={area} className="flex min-w-0 flex-1">
           {editor}
-          {mode === "write" && <Preview projectId={projectId} />}
-        </>
+          {mode === "write" && (
+            <>
+              <ResizeHandle
+                label={t("layout.splitWidth")}
+                value={split}
+                min={LIMITS.split[0]}
+                max={LIMITS.split[1]}
+                step={0.02}
+                scale={1 / Math.max(300, area.current?.clientWidth ?? 1000)}
+                onChange={setSplit}
+                onReset={() => setSplit(DEFAULTS.split)}
+                className="relative -mx-[3px]"
+              />
+              <Preview projectId={projectId} />
+            </>
+          )}
+        </div>
       )}
       {glossaryOpen && <GlossaryDrawer projectId={projectId} />}
       {checkOpen && <CheckPanel projectId={projectId} path={selected} />}

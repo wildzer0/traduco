@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Drawer } from "../../components/Drawer";
 import { decideProposal, getImport, startImport } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import type { ImportJob, ImportProposal } from "../../lib/types";
@@ -77,22 +78,7 @@ export function ImportPanel({ projectId }: { projectId: string }) {
   const area = "mt-1 w-full rounded-ui border border-border bg-bg px-2 py-1 text-[13px]";
 
   return (
-    <aside
-      role="dialog"
-      aria-label={t("import.title")}
-      className="fixed inset-y-0 right-0 z-10 flex w-[640px] max-w-full flex-col overflow-y-auto border-l border-border bg-surface p-4 shadow-lg"
-    >
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">{t("import.title")}</h2>
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="rounded-ui px-2 py-1 hover:bg-surface-2"
-        >
-          {t("import.close")}
-        </button>
-      </div>
-
+    <Drawer title={t("import.title")} onClose={() => close(false)} width={640}>
       {(!job || job.state === "failed") && (
         <p className="mt-3 text-[13px] text-muted">{t("import.intro")}</p>
       )}
@@ -236,6 +222,6 @@ export function ImportPanel({ projectId }: { projectId: string }) {
           ))}
         </section>
       ))}
-    </aside>
+    </Drawer>
   );
 }
