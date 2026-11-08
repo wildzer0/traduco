@@ -8,7 +8,9 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from app.api.audit import note
 from app.api.deps import Root
+from app.core.team import guard
 from app.core.translation import glossary as glossary_mod
 from app.core.translation import glossary_io
 from app.core.translation.service import PRIORITY_OPEN, SegmentActions, TranslationService
@@ -167,6 +169,7 @@ def _row(
 
 @router.put("/projects/{project_id}/segments/{key}")
 def put_segment(
+    request: Request,
     root: Root,
     service: Service,
     key: str,
@@ -184,7 +187,11 @@ def put_segment(
     elif body.locked is not None:
         actions.lock(root, project, path, key, body.locked)
     elif body.action == "approve":
+        guard.require(request, "approve")
         actions.approve(root, project, path, key)
+        note(
+            request, root.name, "segment.approve", f"{path}#{key}", lang or project.lingua_ufficiale
+        )
     elif body.action == "accept":
         actions.accept_pending(root, project, path, key)
     elif body.action == "dismiss":

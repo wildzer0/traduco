@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
+from app.api.audit import note
 from app.api.deps import Root
 from app.config import Settings, get_settings
 from app.core.workspace import organization, registry
@@ -76,8 +77,9 @@ class Duplicate(BaseModel):
 
 
 @router.post("/projects/{project_id}/duplicate", status_code=201)
-def duplicate(root: Root, body: Duplicate, settings: Config) -> dict[str, Any]:
+def duplicate(request: Request, root: Root, body: Duplicate, settings: Config) -> dict[str, Any]:
     new_id = registry.duplicate_project(settings.workspaces_path, root.name, body.nome)
+    note(request, root.name, "project.duplicate", new_id)
     info = registry.project_info(
         settings.workspaces_path / new_id, organization.load(settings.workspaces_path)
     )
@@ -87,9 +89,11 @@ def duplicate(root: Root, body: Duplicate, settings: Config) -> dict[str, Any]:
 
 
 @router.delete("/projects/{project_id}", status_code=200)
-def delete_project(root: Root, settings: Config) -> dict[str, str]:
+def delete_project(request: Request, root: Root, settings: Config) -> dict[str, str]:
     """Move the project to the trash (it can be restored)."""
-    return {"trash": registry.trash_project(settings.workspaces_path, root.name)}
+    trashed = registry.trash_project(settings.workspaces_path, root.name)
+    note(request, root.name, "project.delete", trashed)
+    return {"trash": trashed}
 
 
 @router.get("/trash")

@@ -85,3 +85,36 @@ def test_the_second_author_cannot_write_while_the_first_is_editing(
     # when Anna leaves the section Elena can write
     anna.post(f"/api/projects/{pid}/presence", json={"path": None})
     assert save(elena, "Testo di Elena\n") == 200
+
+
+def test_an_approval_needs_the_reviewer_role_and_is_logged_with_its_author(
+    app_clients: dict[str, TestClient],
+) -> None:
+    carla, anna, bruno = (app_clients[n] for n in ("carla", "anna", "bruno"))
+    pid = carla.post("/api/projects", json={"nome": "Audit"}).json()["id"]
+    chapter = carla.post(f"/api/projects/{pid}/nodes", json={"kind": "chapter", "title": "Uno"})
+    section = carla.post(
+        f"/api/projects/{pid}/nodes",
+        json={"kind": "section", "title": "Due", "parent": chapter.json()["path"]},
+    ).json()["path"]
+    url = f"/api/projects/{pid}/files"
+    file = carla.get(url, params={"path": section}).json()
+    carla.put(
+        url,
+        params={"path": section},
+        headers={"If-Match": file["hash"]},
+        json={"content": "Un paragrafo.\n"},
+    )
+    carla.get(f"/api/projects/{pid}/translation", params={"path": section})
+    seg = f"/api/projects/{pid}/segments/p:0"
+    edited = anna.put(seg, params={"path": section}, json={"target": "A paragraph."})
+    assert edited.status_code == 200, edited.text
+    # an author may correct a translation but not approve it
+    assert anna.put(seg, params={"path": section}, json={"action": "approve"}).status_code == 403
+    assert bruno.put(seg, params={"path": section}, json={"action": "approve"}).status_code == 200
+
+    log = carla.get("/api/audit", params={"project": pid}).json()
+    assert [(e["action"], e["name"], e["target"]) for e in log] == [
+        ("segment.approve", "Bruno Revisore", f"{section}#p:0")
+    ]
+    assert anna.get("/api/audit").status_code == 403  # only the administrator reads the log

@@ -8,6 +8,7 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
+from app.api.audit import note
 from app.api.deps import Root
 from app.core.emissions import changes as changes_mod
 from app.core.emissions import compare as compare_mod
@@ -41,13 +42,13 @@ def list_issues(root: Root) -> list[dict[str, Any]]:
 
 
 @router.post("/projects/{project_id}/issues", status_code=201)
-def create_issue(root: Root, service: Service, body: NewIssue) -> dict[str, Any]:
+def create_issue(request: Request, root: Root, service: Service, body: NewIssue) -> dict[str, Any]:
     project = load_project(root)
 
     def official(path: str, text: str) -> str:
         return str(service.translation(root, project, path, text)["markdown"])
 
-    return store.create(
+    created = store.create(
         root,
         project,
         body.rev,
@@ -56,6 +57,8 @@ def create_issue(root: Root, service: Service, body: NewIssue) -> dict[str, Any]
         official,
         add_to_revisions=body.nella_tabella,
     )
+    note(request, root.name, "issue.create", body.rev, body.descrizione)
+    return created
 
 
 @router.get("/projects/{project_id}/issues/{rev}")
@@ -64,8 +67,9 @@ def get_issue(root: Root, rev: str) -> dict[str, Any]:
 
 
 @router.delete("/projects/{project_id}/issues/{rev}", status_code=204)
-def delete_issue(root: Root, rev: str) -> None:
+def delete_issue(request: Request, root: Root, rev: str) -> None:
     store.delete(root, rev)
+    note(request, root.name, "issue.delete", rev)
 
 
 def _side(
@@ -145,5 +149,7 @@ class RestoreBody(BaseModel):
 
 
 @router.post("/projects/{project_id}/issues/{rev}/restore")
-def restore(root: Root, rev: str, body: RestoreBody) -> dict[str, str]:
-    return {"hash": store.restore_section(root, rev, body.path)}
+def restore(request: Request, root: Root, rev: str, body: RestoreBody) -> dict[str, str]:
+    digest = store.restore_section(root, rev, body.path)
+    note(request, root.name, "issue.restore", body.path, rev)
+    return {"hash": digest}

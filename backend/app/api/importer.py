@@ -7,6 +7,7 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
+from app.api.audit import note
 from app.api.deps import Root
 from app.core.importer.service import ImportManager
 from app.core.workspace.errors import WorkspaceError
@@ -51,7 +52,8 @@ class Decision(BaseModel):
 
 @router.post("/projects/{project_id}/import/{job_id}/proposals/{proposal_id}")
 def decide(
-    root: Root, manager: Manager, job_id: str, proposal_id: str, body: Decision
+    request: Request, root: Root, manager: Manager, job_id: str, proposal_id: str, body: Decision
 ) -> dict[str, Any]:
     done = manager.decide(root, load_project(root), job_id, proposal_id, body.action, body.source)
+    note(request, root.name, f"import.{body.action}", proposal_id, job_id)
     return dict(done.__dict__)

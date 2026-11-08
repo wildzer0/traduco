@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from app.api.audit import note
 from app.api.deps import Root
 from app.core.export.errors import ExportError
 from app.core.export.service import ExportManager, ExportRequest, Format, Language, Scope
@@ -43,10 +44,13 @@ class ExportBody(BaseModel):
 
 
 @router.post("/projects/{project_id}/export", status_code=202)
-async def start_export(root: Root, manager: Manager, body: ExportBody) -> dict[str, Any]:
+async def start_export(
+    request: Request, root: Root, manager: Manager, body: ExportBody
+) -> dict[str, Any]:
     if body.scope != "project" and not body.path:
         raise WorkspaceError("invalid_path", "path is required for a section or a chapter")
     job = manager.start(root, load_project(root), ExportRequest(**body.model_dump()))
+    note(request, root.name, "export", body.path or body.scope, f"{body.language} {body.format}")
     return job.public()
 
 

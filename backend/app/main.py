@@ -25,6 +25,7 @@ from app.api import (
     templates,
     translation,
 )
+from app.api import audit as audit_api
 from app.api import auth as auth_api
 from app.api import comments as comments_api
 from app.api import export as export_api
@@ -95,6 +96,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         await imports.close()
         await service.close()
         await hub.close()
+        if getattr(app.state, "audit", None) is not None:
+            app.state.audit.close()
 
     app = FastAPI(
         title="Traduco",
@@ -173,6 +176,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         spellcheck_api.router,
         translation.router,
         presence_api.router,
+        audit_api.router,
         events.router,
     ):
         app.include_router(router, prefix="/api")
