@@ -29,7 +29,7 @@ const box =
 const primary = "rounded-ui bg-accent px-2 py-1 text-accent-fg disabled:opacity-50";
 const plain = "rounded-ui px-2 py-1 hover:bg-surface-2";
 const menuItem =
-  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
 
 /** Measure where the elements of some segments are, relative to the preview content. */
 function useRects(article: RefObject<HTMLElement | null>, keys: string[], html: string) {

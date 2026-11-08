@@ -5,6 +5,18 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-08
+
+Visual refresh: professional, minimal, calm.
+
+### Changed
+- New mark (a T whose bar is split in two: the text and its translation) and a larger "Traduco" name; new icon.
+- Neutral palette with one accent colour, soft borders and shadows, 14 px text; the same tokens in light and dark.
+- Top bar: one primary action (Export), icon-only secondary buttons, a soft segmented control for the view.
+- Sidebar and lists: the open section is marked with a tinted background, icons on the secondary links, wider default sidebar.
+- Editor on a white page, preview on the background; preview and editor toolbars no longer wrap.
+- Projects page: centred column, the list in a card.
+
 ## [0.14.1] - 2026-11-08
 
 ### Changed

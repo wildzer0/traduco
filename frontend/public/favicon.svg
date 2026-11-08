@@ -1,7 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Traduco">
-  <rect width="64" height="64" rx="14" fill="#2f5fd0"/>
-  <path d="M12 14h26a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H24l-8 7v-7h-4a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#fff"/>
-  <path d="M26 28h26a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-4v7l-8-7H26a4 4 0 0 1-4-4V32a4 4 0 0 1 4-4z" fill="#bcd0ff"/>
-  <path d="M16 21h18M25 21v9" stroke="#2f5fd0" stroke-width="3" stroke-linecap="round" fill="none"/>
-  <path d="M34 36l5 9 5-9M36 42h6" stroke="#2f5fd0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="15" fill="#2c4bd1"/>
+  <rect x="9" y="14" width="22" height="12" rx="6" fill="#fff"/>
+  <rect x="33" y="14" width="22" height="12" rx="6" fill="#b9c6ff"/>
+  <rect x="26" y="30" width="12" height="22" rx="6" fill="#fff"/>
 </svg>

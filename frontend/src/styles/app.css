@@ -11,6 +11,8 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --shadow-pop: var(--shadow);
   --color-amber: var(--amber);
   --color-green: var(--green);
   --color-red: var(--red);
@@ -30,8 +32,9 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
 :focus-visible {

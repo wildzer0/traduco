@@ -36,17 +36,20 @@ export function SectionSettings({
     }
   };
   const item =
-    "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+    "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
   const effective = view.tone ?? view.project_tone;
   return (
     <>
       <Dropdown.Root>
         <Dropdown.Trigger
           title={t("tone.section")}
+          aria-label={`${t("tone.label")}: ${t(`tone.${effective}` as "tone.formale")}`}
           className="flex h-7 items-center gap-1 rounded-ui px-2 hover:bg-surface-2 hover:text-fg"
         >
           <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
-          {t("tone.label")}: {t(`tone.${effective}` as "tone.formale")}
+          <span className="hidden 2xl:inline">
+            {t("tone.label")}: {t(`tone.${effective}` as "tone.formale")}
+          </span>
         </Dropdown.Trigger>
         <Dropdown.Portal>
           <Dropdown.Content

@@ -31,7 +31,7 @@ export function LanguageMenu({ projectId }: { projectId: string }) {
   const official = targets.find((l) => l.role === "official")?.code ?? null;
   const shown = current ?? official;
   const item =
-    "flex cursor-default items-center justify-between gap-3 rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+    "flex cursor-default items-center justify-between gap-3 rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
   return (
     <Dropdown.Root>
       <Dropdown.Trigger

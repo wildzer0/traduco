@@ -26,7 +26,7 @@ interface Props {
 }
 
 const menuItem =
-  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
 
 export function TreeRow(props: Props) {
   const { row, selected, expanded, renaming } = props;
@@ -53,7 +53,7 @@ export function TreeRow(props: Props) {
             transition,
             paddingLeft: row.depth * 14,
           }}
-          className={`group flex items-center rounded-ui ${selected ? "bg-surface" : "hover:bg-surface"} ${isDragging ? "opacity-50" : ""}`}
+          className={`group flex items-center rounded-ui ${selected ? "bg-accent-soft text-accent" : "hover:bg-surface-2"} ${isDragging ? "opacity-50" : ""}`}
         >
           <button
             ref={setActivatorNodeRef}

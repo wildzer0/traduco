@@ -20,7 +20,7 @@ interface Props {
 }
 
 const menuItem =
-  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
 
 /** Folders inside folders, as a tree: click to look inside, drop a project on one to move it. */
 export function FolderTree({

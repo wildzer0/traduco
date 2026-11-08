@@ -183,7 +183,7 @@ export function Preview({ projectId }: { projectId: string }) {
 
   return (
     <section aria-label={t("preview.label")} className="relative flex min-w-0 flex-1 flex-col">
-      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3 text-muted">
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-4 text-muted">
         <span className="truncate">
           {mode === "translated"
             ? t("preview.translatedTitle", { language: language ?? "" })
@@ -194,12 +194,15 @@ export function Preview({ projectId }: { projectId: string }) {
           <button
             type="button"
             aria-pressed={mode === "source"}
+            aria-label={t(mode === "source" ? "preview.showTranslation" : "preview.showSource")}
             title={`${t(mode === "source" ? "preview.showTranslation" : "preview.showSource")} (Ctrl+Shift+P)`}
             onClick={() => setMode(mode === "source" ? "translated" : "source")}
             className="flex h-7 items-center gap-1 rounded-ui px-2 hover:bg-surface-2 hover:text-fg"
           >
             <Languages size={14} strokeWidth={1.5} aria-hidden />
-            {t(mode === "source" ? "preview.showTranslation" : "preview.showSource")}
+            <span className="hidden 2xl:inline">
+              {t(mode === "source" ? "preview.showTranslation" : "preview.showSource")}
+            </span>
           </button>
           {path && translation && (
             <SectionSettings projectId={projectId} path={path} view={translation} />
@@ -266,15 +269,16 @@ function RetranslateMenu({ projectId, path }: { projectId: string; path: string 
     }
   };
   const item =
-    "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+    "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
   return (
     <Dropdown.Root>
       <Dropdown.Trigger
         title={t("preview.retranslate")}
+        aria-label={t("preview.retranslate")}
         className="flex h-7 items-center gap-1 rounded-ui px-2 hover:bg-surface-2 hover:text-fg"
       >
         <RefreshCw size={14} strokeWidth={1.5} aria-hidden />
-        {t("preview.retranslate")}
+        <span className="hidden 2xl:inline">{t("preview.retranslate")}</span>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content

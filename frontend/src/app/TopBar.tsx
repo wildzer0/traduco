@@ -10,6 +10,7 @@ import {
   PanelLeft,
   Tag,
 } from "lucide-react";
+import { Brand } from "../components/Logo";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
@@ -34,7 +35,7 @@ export function TopBar() {
   const trail = findTrail(projectId ? (tree ?? []) : [], s ?? null);
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface px-3">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
       {projectId && (
         <button
           type="button"
@@ -60,28 +61,29 @@ export function TopBar() {
       <button
         type="button"
         onClick={() => void navigate({ to: "/" })}
-        className="flex items-center gap-1.5 rounded-ui font-semibold hover:text-accent"
+        className="rounded-ui px-1 py-1 hover:bg-surface-2"
         title={t("topbar.allProjects")}
       >
-        <img src="/logo.svg" alt="" aria-hidden="true" className="h-5 w-5" />
-        {t("app.name")}
+        <Brand />
       </button>
       {projectId ? (
         <nav
           aria-label="breadcrumb"
-          className="ml-1 flex min-w-0 items-center gap-1 truncate border-l border-border pl-3 text-muted"
+          className="ml-2 flex min-w-0 items-center gap-1.5 truncate border-l border-border pl-4 text-muted"
         >
           <button
             type="button"
             onClick={() => void navigate({ to: "/p/$projectId", params: { projectId } })}
             aria-label={t("topbar.project", { name: project?.nome ?? projectId })}
-            className="rounded-ui hover:text-fg"
+            className="rounded-ui font-medium text-fg hover:text-accent"
           >
             {project?.nome ?? projectId}
           </button>
           {trail.map((n) => (
             <span key={n.path} className="truncate">
-              <span aria-hidden> › </span>
+              <span aria-hidden className="mr-1.5 text-border">
+                /
+              </span>
               {n.title}
             </span>
           ))}
@@ -178,7 +180,7 @@ function ViewSwitch() {
   const t = useT();
   const { mode, setMode } = useView();
   return (
-    <fieldset className="m-0 flex rounded-ui border border-border p-0.5">
+    <fieldset className="m-0 flex gap-0.5 rounded-ui border-0 bg-surface-2 p-0.5">
       <legend className="sr-only">{t("view.label")}</legend>
       {MODES.map((m) => (
         <button
@@ -187,7 +189,7 @@ function ViewSwitch() {
           aria-pressed={mode === m.mode}
           title={`${t(m.key)} (${m.hint})`}
           onClick={() => setMode(m.mode)}
-          className={`rounded-ui px-2 py-0.5 ${mode === m.mode ? "bg-accent text-accent-fg" : "text-muted hover:text-fg"}`}
+          className={`rounded-[6px] px-3 py-1 ${mode === m.mode ? "bg-surface font-medium text-fg shadow-[0_1px_2px_rgb(0_0_0/10%)]" : "text-muted hover:text-fg"}`}
         >
           {t(m.key)}
         </button>
@@ -225,7 +227,7 @@ function ProjectTone({ projectId }: { projectId: string }) {
             notify(err instanceof Error ? err.message : String(err));
           }
         }}
-        className="rounded-ui border border-border bg-surface px-1 py-0.5"
+        className="rounded-ui border-0 bg-transparent px-1 py-1 text-muted hover:bg-surface-2"
       >
         {TONES.map((tone) => (
           <option key={tone} value={tone}>
@@ -245,9 +247,9 @@ function ExportButton() {
       type="button"
       title={`${t("export.title")} (Ctrl+E)`}
       onClick={() => setExportOpen(true)}
-      className="flex items-center gap-1 rounded-ui border border-border px-2 py-1 hover:bg-surface-2"
+      className="flex items-center gap-1.5 rounded-ui bg-accent px-3 py-1.5 font-medium text-accent-fg hover:opacity-90"
     >
-      <Download size={14} strokeWidth={1.5} aria-hidden />
+      <Download size={14} strokeWidth={1.75} aria-hidden />
       {t("export.title")}
     </button>
   );
@@ -260,7 +262,7 @@ function PanelButtons() {
   const setCommentsOpen = useView((s) => s.setCommentsOpen);
   const setRequirementsOpen = useView((s) => s.setRequirementsOpen);
   const style =
-    "flex items-center gap-1 rounded-ui border border-border px-2 py-1 hover:bg-surface-2";
+    "flex size-8 items-center justify-center gap-1 rounded-ui text-muted hover:bg-surface-2 hover:text-fg 2xl:w-auto 2xl:px-2";
   return (
     <>
       <button

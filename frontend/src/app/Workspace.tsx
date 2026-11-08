@@ -137,7 +137,7 @@ export function Workspace() {
     <main
       aria-label={t("editor.label")}
       style={mode === "write" ? { flex: `0 0 ${split * 100}%` } : undefined}
-      className={`flex min-w-0 flex-col ${mode === "write" ? "" : "flex-1"} ${mode === "focus" ? "" : "border-r border-border"}`}
+      className={`flex min-w-0 flex-col bg-surface ${mode === "write" ? "" : "flex-1"} ${mode === "focus" ? "" : "border-r border-border"}`}
     >
       {selected ? (
         <EditorPane key={projectId} projectId={projectId} path={selected} />

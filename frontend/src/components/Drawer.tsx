@@ -40,7 +40,7 @@ export function Drawer({
       role="dialog"
       aria-label={title}
       style={{ width: size }}
-      className="fixed inset-y-0 right-0 z-10 flex max-w-full flex-col border-l border-border bg-surface shadow-lg"
+      className="fixed inset-y-0 right-0 z-10 flex max-w-full flex-col border-l border-border bg-surface shadow-pop"
     >
       <ResizeHandle
         label={t("layout.drawerWidth")}

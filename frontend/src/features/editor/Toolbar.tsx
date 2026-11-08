@@ -30,7 +30,7 @@ interface Props {
 const btn =
   "flex size-8 items-center justify-center rounded-ui text-muted hover:bg-surface-2 hover:text-fg";
 const menuItem =
-  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-fg";
+  "cursor-default rounded-ui px-2 py-1 outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent";
 /** Toolbar buttons must not take the focus (and the selection) away from the editor. */
 const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 const ICON = { size: 16, strokeWidth: 1.5, "aria-hidden": true } as const;
@@ -83,7 +83,7 @@ export function Toolbar({ mode, onMode, onCommand, onAssist, onCheck }: Props) {
     <div
       role="toolbar"
       aria-label={t("toolbar.label")}
-      className="flex h-10 shrink-0 items-center gap-0.5 border-b border-border px-2"
+      className="flex min-h-11 shrink-0 flex-wrap items-center gap-x-0.5 gap-y-1 border-b border-border px-3 py-1"
     >
       <Menu
         label={t("toolbar.heading")}
@@ -207,7 +207,7 @@ export function Toolbar({ mode, onMode, onCommand, onAssist, onCheck }: Props) {
           <ListChecks {...ICON} />
         </button>
       )}
-      <fieldset className="m-0 ml-auto flex min-w-0 rounded-ui border border-border p-0.5">
+      <fieldset className="m-0 ml-auto flex min-w-0 gap-0.5 rounded-ui border-0 bg-surface-2 p-0.5">
         <legend className="sr-only">{t("mode.label")}</legend>
         {(["document", "markdown"] as const).map((m) => (
           <button
@@ -215,7 +215,7 @@ export function Toolbar({ mode, onMode, onCommand, onAssist, onCheck }: Props) {
             type="button"
             aria-pressed={mode === m}
             onClick={() => onMode(m)}
-            className={`rounded-ui px-2 py-0.5 ${mode === m ? "bg-accent text-accent-fg" : "text-muted hover:text-fg"}`}
+            className={`rounded-[6px] px-2.5 py-0.5 ${mode === m ? "bg-surface font-medium text-fg shadow-[0_1px_2px_rgb(0_0_0/10%)]" : "text-muted hover:text-fg"}`}
           >
             {t(m === "document" ? "mode.document" : "mode.markdown")}
           </button>

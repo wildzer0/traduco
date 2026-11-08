@@ -131,7 +131,7 @@ export function ProjectsPage() {
   const nothing = projects.length === 0 && folders.length === 0;
   return (
     <main className="flex min-h-0 flex-1 overflow-hidden">
-      <aside className="flex w-64 shrink-0 flex-col gap-2 overflow-y-auto border-r border-border bg-surface-2 p-3">
+      <aside className="flex w-64 shrink-0 flex-col gap-2 overflow-y-auto border-r border-border bg-bg p-3">
         <div className="flex items-center justify-between">
           <h2 className="m-0 text-[11px] font-semibold uppercase tracking-wide text-muted">
             {t("projects.folders")}
@@ -167,9 +167,11 @@ export function ProjectsPage() {
         </button>
       </aside>
 
-      <section className="flex min-w-0 flex-1 flex-col overflow-y-auto p-6">
+      <section className="flex min-w-0 flex-1 flex-col overflow-y-auto px-[max(2rem,calc((100%-64rem)/2))] py-8">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="m-0 mr-2 text-xl font-semibold">{t("projects.title")}</h1>
+          <h1 className="m-0 mr-3 text-2xl font-semibold tracking-[-0.02em]">
+            {t("projects.title")}
+          </h1>
           <label className="relative min-w-[16rem] max-w-md flex-1">
             <span className="sr-only">{t("projects.search")}</span>
             <Search
@@ -276,7 +278,7 @@ export function ProjectsPage() {
           </ul>
         )}
 
-        <div className="mt-4">
+        <div className="mt-5">
           {shown.length > 0 ? (
             <ProjectTable
               projects={shown}

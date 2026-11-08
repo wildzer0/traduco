@@ -9,7 +9,7 @@ interface Stored {
   drawer: number | null; // px; null = each panel's own width
 }
 
-export const DEFAULTS: Stored = { sidebar: 240, split: 0.5, drawer: null };
+export const DEFAULTS: Stored = { sidebar: 264, split: 0.5, drawer: null };
 export const LIMITS = {
   sidebar: [180, 520],
   split: [0.25, 0.75],
