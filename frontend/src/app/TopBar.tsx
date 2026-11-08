@@ -15,7 +15,7 @@ import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
 import { useNotices } from "../lib/notices";
 import { usePrefs } from "../lib/prefs";
-import { logout, useMe, usePresence } from "../lib/team";
+import { logout, useLeaveOnExit, useMe, usePresence } from "../lib/team";
 import { useTranslationState } from "../lib/translation-store";
 import type { Tone } from "../lib/types";
 import { useView, type ViewMode } from "../lib/view-store";
@@ -130,6 +130,7 @@ export function TopBar() {
 function People({ projectId, path }: { projectId: string; path: string | null }) {
   const t = useT();
   const { people } = usePresence(projectId, path);
+  useLeaveOnExit(projectId);
   if (people.length === 0) return null;
   return (
     <ul aria-label={t("team.people")} className="m-0 flex list-none gap-1 p-0">

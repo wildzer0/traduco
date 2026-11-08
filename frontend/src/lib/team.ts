@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { api } from "./api";
 
 export interface Me {
@@ -31,6 +32,37 @@ export async function logout(): Promise<void> {
 }
 
 const BEAT_MS = 15_000;
+/** While someone else holds the section, look again soon: it frees up when they leave. */
+const WAIT_MS = 4_000;
+
+/** Tell the server the person left (a closed tab or another page), so the lock is freed at once. */
+function leave(projectId: string) {
+  const url = `/api/projects/${encodeURIComponent(projectId)}/presence`;
+  const body = new Blob([JSON.stringify({ path: null })], { type: "application/json" });
+  if (!navigator.sendBeacon?.(url, body)) {
+    void fetch(url, {
+      method: "POST",
+      body,
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+    }).catch(() => {});
+  }
+}
+
+/** Free the locks of this person when they leave the project or close the page. */
+export function useLeaveOnExit(projectId: string) {
+  const { data: me } = useMe();
+  const team = me?.mode === "team" && me.user !== null;
+  useEffect(() => {
+    if (!team) return;
+    const onHide = () => leave(projectId);
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      leave(projectId);
+    };
+  }, [team, projectId]);
+}
 
 /**
  * Tell the server where the person is (every 15 s, which also keeps the lock of the section they
@@ -49,7 +81,12 @@ export function usePresence(projectId: string, path: string | null) {
         body: JSON.stringify({ path, edit: canEdit && path !== null }),
       }),
     enabled: team,
-    refetchInterval: BEAT_MS,
+    refetchInterval: (query) =>
+      query.state.data?.people.some(
+        (p) => p.sub !== query.state.data?.me && p.editing && p.path === path,
+      )
+        ? WAIT_MS
+        : BEAT_MS,
     staleTime: 0,
     gcTime: 0,
   });
