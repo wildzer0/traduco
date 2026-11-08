@@ -73,6 +73,9 @@ def serve(port: int) -> None:
                 )
                 page = f"<h1>Traduco - accesso di prova</h1><p>Chi sei?</p><ul>{rows}</ul>"
                 self._send(page.encode(), "text/html; charset=utf-8")
+            elif url.path == "/favicon.ico":
+                self.send_response(204)
+                self.end_headers()
             elif url.path == "/pick":
                 query = parse_qs(url.query)
                 back = idp.authorize(f"/authorize?{url.query}", query["who"][0])
@@ -87,8 +90,13 @@ def serve(port: int) -> None:
             tokens = idp.tokens_for(form.get("code", [""])[0], form.get("code_verifier", [""])[0])
             self._json(tokens or {"error": "invalid_grant"}, 200 if tokens else 400)
 
+    class Quiet(HTTPServer):
+        def handle_error(self, request: Any, client_address: Any) -> None:
+            if not isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
+                super().handle_error(request, client_address)  # a browser that hung up is no news
+
     print(f"Accesso di prova su {idp.url} (nessuna password: solo per sviluppo)")
-    HTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    Quiet(("127.0.0.1", port), Handler).serve_forever()
 
 
 if __name__ == "__main__":
