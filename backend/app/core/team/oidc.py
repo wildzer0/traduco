@@ -58,7 +58,9 @@ class OidcClient:
                 response.raise_for_status()
                 meta = response.json()
             except (httpx.HTTPError, ValueError) as exc:
-                raise OidcError(f"the identity provider does not answer: {exc}") from exc
+                raise OidcError(
+                    f"the identity provider does not answer: {type(exc).__name__} {exc}".strip()
+                ) from exc
             for key in ("authorization_endpoint", "token_endpoint", "jwks_uri", "issuer"):
                 if key not in meta:
                     raise OidcError(f"the identity provider's configuration lacks {key}")
@@ -138,7 +140,9 @@ class OidcClient:
         try:
             response = await self._http.post(meta["token_endpoint"], data=data)
         except httpx.HTTPError as exc:
-            raise OidcError(f"the identity provider does not answer: {exc}") from exc
+            raise OidcError(
+                f"the identity provider does not answer: {type(exc).__name__} {exc}".strip()
+            ) from exc
         if response.status_code != 200:
             raise OidcError("the identity provider refused the login")
         tokens = response.json()

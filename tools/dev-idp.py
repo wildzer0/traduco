@@ -17,7 +17,7 @@ import argparse
 import html
 import json
 import sys
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -98,7 +98,9 @@ def serve(port: int) -> None:
             tokens = idp.tokens_for(form.get("code", [""])[0], form.get("code_verifier", [""])[0])
             self._json(tokens or {"error": "invalid_grant"}, 200 if tokens else 400)
 
-    class Quiet(HTTPServer):
+    class Quiet(ThreadingHTTPServer):  # one request at a time would stall the token request
+        daemon_threads = True
+
         def handle_error(self, request: Any, client_address: Any) -> None:
             if not isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
                 super().handle_error(request, client_address)  # a browser that hung up is no news
