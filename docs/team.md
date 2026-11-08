@@ -17,6 +17,17 @@ docker compose --profile team up
 
 Con un altro provider OIDC imposta `TRADUCO_OIDC_ISSUER`, `TRADUCO_OIDC_CLIENT_ID` e `TRADUCO_OIDC_CLIENT_SECRET`.
 
+## Provarlo senza Keycloak
+
+```bash
+cd backend && uv run python ../tools/dev-idp.py          # accesso di prova su http://127.0.0.1:9100
+# in un altro terminale, dalla cartella del progetto:
+TRADUCO_MODE=team TRADUCO_OIDC_ISSUER=http://127.0.0.1:9100 TRADUCO_OIDC_CLIENT_SECRET=x \
+TRADUCO_SESSION_SECRET=$(openssl rand -hex 32) ./start.sh
+```
+
+Scegli l'utente da una lista (Carla amministratrice, Anna ed Elena autrici, Bruno revisore), senza password: **solo per sviluppo**. Per essere due persone insieme usa `http://localhost:8000` in una finestra e `http://127.0.0.1:8000` in una finestra privata (i cookie sono per indirizzo).
+
 ## Cosa cambia
 
 - **Ruoli**: *autore* scrive e configura, *revisore* corregge e approva (un autore non approva), *amministratore* fa tutto, compreso creare progetti e leggere il registro.
