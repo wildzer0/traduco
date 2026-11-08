@@ -5,6 +5,17 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-08
+
+### Added
+- Attachments: a CSV file attached from the editor is shown as a table in the preview and in the export; other files are stored in `allegati/` and linked.
+- The sidebar numbers the chapters and sections when the project's template has a table of contents.
+- Checks before exporting: empty sections, broken links, missing images and attachments, remote images, translations still to review.
+- "DRAFT" watermark (in the language of the document) while something is not approved; it can be turned off in the export panel.
+- Versions of a section: the text before each writing session is kept (at most one every five minutes, 40 per section) and can be read and restored.
+- A project can be copied as a model: titles, glossary, template and settings, without the texts.
+- `tools/dev-idp.py`: a login server to try team mode without Keycloak.
+
 ## [0.13.0] - 2026-11-08
 
 Milestone M7 - team mode (partial: single process).

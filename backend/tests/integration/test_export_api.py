@@ -329,3 +329,28 @@ def test_the_outline_is_numbered_only_when_the_template_has_a_table_of_contents(
     assert xapi.get(f"/api/projects/{pid}/toc").json() == {"enabled": True}  # the sample template
     plain = xapi.post("/api/projects", json={"nome": "Senza modello"}).json()["id"]
     assert xapi.get(f"/api/projects/{plain}/toc").json() == {"enabled": False}
+
+
+def test_the_check_before_exporting_lists_what_the_export_would_hide(
+    xapi: TestClient, tmp_path: Path
+) -> None:
+    pid = xapi.post("/api/projects", json={"nome": "Controlli"}).json()["id"]
+    chapter = xapi.post(f"/api/projects/{pid}/nodes", json={"kind": "chapter", "title": "Uno"})
+    cpath = chapter.json()["path"]
+    a = xapi.post(
+        f"/api/projects/{pid}/nodes", json={"kind": "section", "title": "A", "parent": cpath}
+    ).json()["path"]
+    xapi.post(f"/api/projects/{pid}/nodes", json={"kind": "section", "title": "B", "parent": cpath})
+    text = "Vedi [altra](99-non-esiste.md) e ![x](img/manca.png) e ![t](allegati/dati.csv).\n"
+    file = xapi.get(f"/api/projects/{pid}/files", params={"path": a}).json()
+    xapi.put(
+        f"/api/projects/{pid}/files",
+        params={"path": a},
+        headers={"If-Match": file["hash"]},
+        json={"content": text},
+    )
+    found = xapi.post(f"/api/projects/{pid}/export/check", json={"scope": "project"}).json()
+    codes = sorted((f["code"], f["path"].rsplit("/", 1)[1]) for f in found["findings"])
+    assert ("broken_link", "01-a.md") in codes
+    assert ("missing_image", "01-a.md") in codes
+    assert [c for c in codes if c[0] == "empty_section"] == [("empty_section", "02-b.md")]

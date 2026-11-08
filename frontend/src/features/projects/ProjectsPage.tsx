@@ -362,11 +362,12 @@ export function ProjectsPage() {
           label={t("projects.copyName")}
           initial={t("projects.copyOf", { name: dialog.project.nome })}
           confirm={t("projects.duplicateConfirm")}
+          option={t("projects.structureOnly")}
           onClose={() => setDialog(null)}
-          onSubmit={(name) => {
+          onSubmit={(name, structureOnly) => {
             const id = dialog.project.id;
             setDialog(null);
-            void run(() => duplicateProject(id, name));
+            void run(() => duplicateProject(id, name, structureOnly));
           }}
         />
       )}

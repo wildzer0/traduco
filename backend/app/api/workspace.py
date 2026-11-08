@@ -74,11 +74,14 @@ def set_folder(root: Root, body: FolderOfProject, settings: Config) -> dict[str,
 
 class Duplicate(BaseModel):
     nome: str | None = Field(default=None, max_length=120)
+    solo_struttura: bool = False  # a model: titles and settings, no text
 
 
 @router.post("/projects/{project_id}/duplicate", status_code=201)
 def duplicate(request: Request, root: Root, body: Duplicate, settings: Config) -> dict[str, Any]:
-    new_id = registry.duplicate_project(settings.workspaces_path, root.name, body.nome)
+    new_id = registry.duplicate_project(
+        settings.workspaces_path, root.name, body.nome, body.solo_struttura
+    )
     note(request, root.name, "project.duplicate", new_id)
     info = registry.project_info(
         settings.workspaces_path / new_id, organization.load(settings.workspaces_path)

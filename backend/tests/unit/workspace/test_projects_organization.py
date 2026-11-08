@@ -162,3 +162,32 @@ def test_deleting_moves_to_the_trash_and_it_can_come_back(tmp_path: Path) -> Non
     for bad in ("../x", "nonsense", "20260101T000000Z-../../etc"):
         with pytest.raises(WorkspaceError):
             registry.restore_project(tmp_path, bad)
+
+
+def test_a_model_keeps_titles_glossary_and_settings_but_no_text_or_history(
+    tmp_path: Path,
+) -> None:
+    original = make(tmp_path, "Manuale")
+    root = tmp_path / original
+    chapter = ops.create_chapter(root, "Intro")
+    section = ops.create_section(root, chapter, "Scopo")
+    write_section(
+        root,
+        section,
+        "---\ntitle: Scopo\ntono: formale\n---\n\nTesto.\n",
+        read_section(root, section)[1],
+    )
+    (root / "glossario.yaml").write_text(
+        "- sorgente: pompa\n  destinazione: pump\n", encoding="utf-8"
+    )
+    (root / ".traduco").mkdir(exist_ok=True)
+    (root / ".traduco" / "tm.sqlite").write_bytes(b"x")
+
+    model = registry.duplicate_project(tmp_path, original, "Modello", structure_only=True)
+
+    copy = tmp_path / model
+    text = (copy / section).read_text(encoding="utf-8")
+    assert "title: Scopo" in text and "tono: formale" in text and "Testo." not in text
+    assert "pompa" in (copy / "glossario.yaml").read_text(encoding="utf-8")
+    assert not (copy / ".traduco").exists()
+    assert "Testo." in (root / section).read_text(encoding="utf-8")  # the original is untouched

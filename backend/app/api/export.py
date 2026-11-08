@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse
@@ -10,10 +10,19 @@ from pydantic import BaseModel, Field
 
 from app.api.audit import note
 from app.api.deps import Root
+from app.core.export import preflight
 from app.core.export.errors import ExportError
-from app.core.export.service import ExportManager, ExportRequest, Format, Language, Scope
+from app.core.export.service import (
+    ExportManager,
+    ExportRequest,
+    Format,
+    Language,
+    Scope,
+    _select,
+)
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.manifest import load_project
+from app.core.workspace.tree import build_tree
 
 router = APIRouter(tags=["export"])
 MEDIA = {
@@ -38,6 +47,7 @@ Manager = Annotated[ExportManager, Depends(get_manager)]
 class ExportBody(BaseModel):
     scope: Scope = "project"
     path: str | None = None
+    draft: Literal["auto", "off"] = "auto"
     language: Language = Field(default="ufficiale", min_length=2, max_length=20)
     template: str | None = None
     format: Format = "docx"
@@ -52,6 +62,28 @@ async def start_export(
     job = manager.start(root, load_project(root), ExportRequest(**body.model_dump()))
     note(request, root.name, "export", body.path or body.scope, f"{body.language} {body.format}")
     return job.public()
+
+
+@router.post("/projects/{project_id}/export/check")
+def check_export(request: Request, root: Root, body: ExportBody) -> dict[str, Any]:
+    """Problems the export would hide, found beforehand. Never blocks anything."""
+    if body.scope != "project" and not body.path:
+        raise WorkspaceError("invalid_path", "path is required for a section or a chapter")
+    selected = _select(build_tree(root), ExportRequest(**body.model_dump()))
+    sections = [n.path for n, _ in selected if n.kind == "section"]
+    scope = set(sections)
+    findings: list[preflight.Finding] = []
+    for rel in sections:
+        try:
+            text = (root / rel).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        findings += preflight.check_section(root, rel, text, scope)
+    if body.language in ("ufficiale", "bilingue"):
+        project = load_project(root)
+        rows = request.app.state.translation.review(root, project)
+        findings += preflight.check_review(rows, scope)
+    return {"findings": [f.public() for f in findings]}
 
 
 def _job(manager: ExportManager, root: Any, job_id: str) -> Any:

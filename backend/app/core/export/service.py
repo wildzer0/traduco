@@ -51,6 +51,7 @@ class ExportRequest:
     language: Language = "ufficiale"
     template: str | None = None
     format: Format = "docx"
+    draft: Literal["auto", "off"] = "auto"  # "auto": a watermark while parts are not approved
 
 
 @dataclass
@@ -62,6 +63,7 @@ class ExportJob:
     warnings: list[str] = field(default_factory=list)
     error: dict[str, Any] | None = None
     file: Path | None = None
+    watermark: str | None = None
 
     def public(self) -> dict[str, Any]:
         return {
@@ -187,6 +189,7 @@ class ExportManager:
         lang = project.lingua_ufficiale if official else project.lingua_sorgente
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")  # also names the snapshot
         parts: list[Part] = []
+        unapproved = False
         self._step(job, 3, "collect", root)
         nodes = _select(build_tree(root), req)
         sections = [n for n, _ in nodes if n.kind == "section"]
@@ -211,6 +214,7 @@ class ExportManager:
             if official:
                 view = self._translation.translation(root, project, node.path, text)
                 text = view["markdown"]
+                unapproved = unapproved or any(s["status"] != "approved" for s in view["segments"])
             doc = frontmatter.parse(text)
             title = str(doc.meta.get("title") or node.title)
             body = doc.body
@@ -233,6 +237,9 @@ class ExportManager:
         ]
 
         self._step(job, 75, "document", root)
+        if official and unapproved and req.draft == "auto":
+            job.watermark = compose_mod.WATERMARK.get(lang, compose_mod.WATERMARK["en"])
+            job.warnings.append(f'not everything is approved: watermark "{job.watermark}"')
         combined = combine_mod.combine(root, items)
         job.warnings.extend(combined.warnings)
         if two_columns:
@@ -286,7 +293,12 @@ class ExportManager:
                 reference = default_reference_doc(pandoc, work / "reference.docx")
                 run_pandoc(pandoc, markdown, body, reference_doc=reference, resource_dir=work)
                 result = compose_mod.finish_plain(
-                    body, output, fields=fields, allow_missing=True, identifier=stamp
+                    body,
+                    output,
+                    fields=fields,
+                    allow_missing=True,
+                    identifier=stamp,
+                    watermark=job.watermark,
                 )
             else:
                 template = template_path(root, name)
@@ -303,6 +315,7 @@ class ExportManager:
                     revisions=revisions,
                     language=lang,
                     identifier=stamp,
+                    watermark=job.watermark,
                 )
         job.warnings.extend(result.warnings)
         return output

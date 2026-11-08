@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Drawer } from "../../components/Drawer";
 import {
+  checkExport,
   exportDownloadUrl,
   getExport,
   listLanguages,
@@ -10,7 +11,7 @@ import {
 } from "../../lib/api";
 import { useCapabilities } from "../../lib/capabilities";
 import { type ExportChoice, loadExportChoice, saveExportChoice } from "../../lib/export-prefs";
-import { useT } from "../../lib/i18n";
+import { type MessageKey, useT } from "../../lib/i18n";
 import type { ExportStatus } from "../../lib/types";
 import { useView } from "../../lib/view-store";
 import { cacheDiagram } from "../preview/diagrams";
@@ -67,6 +68,19 @@ export function ExportPanel({
     scope === "section" ? selected : scope === "chapter" ? chapterPath : null;
   const scope = choice.scope !== "project" && !pathFor(choice.scope) ? "project" : choice.scope;
   const toReview = review?.counts.needs_review ?? 0;
+  const { data: check } = useQuery({
+    queryKey: ["export-check", projectId, scope, pathFor(scope), choice.language],
+    queryFn: () =>
+      checkExport(projectId, {
+        scope,
+        ...(pathFor(scope) ? { path: pathFor(scope) as string } : {}),
+        language: choice.language,
+      }),
+    staleTime: 0,
+    retry: false,
+  });
+  // sections still to review are already offered above: here only what the export would hide
+  const findings = (check?.findings ?? []).filter((f) => f.code !== "needs_review");
 
   const download = (job: string) => {
     const link = document.createElement("a");
@@ -89,6 +103,7 @@ export function ExportPanel({
           language: used.language,
           ...(used.template ? { template: used.template } : {}),
           format: used.format,
+          draft: used.watermark ? "auto" : "off",
         });
         setStatus(job);
         while (job.state === "running") {
@@ -243,6 +258,30 @@ export function ExportPanel({
         </select>
       </label>
 
+      {findings.length > 0 && (
+        <div className="mt-3 text-[13px]" data-testid="export-findings">
+          <p className="m-0 font-medium">{t("export.findings", { count: findings.length })}</p>
+          <ul className="m-0 mt-1 list-disc pl-5">
+            {findings.slice(0, 8).map((f) => (
+              <li
+                key={`${f.code}:${f.path}:${f.detail}`}
+                className={f.severity === "error" ? "text-red" : "text-amber"}
+              >
+                {t(`export.finding.${f.code}` as MessageKey, {
+                  section: f.path.split("/").pop() ?? f.path,
+                  detail: f.detail,
+                })}
+              </li>
+            ))}
+          </ul>
+          {findings.length > 8 && (
+            <p className="m-0 mt-1 text-muted">
+              {t("export.findingsMore", { count: findings.length - 8 })}
+            </p>
+          )}
+        </div>
+      )}
+
       {toReview > 0 && (
         <p className="m-0 mt-3 text-[13px] text-amber">
           {t("export.toReview", { count: toReview })}{" "}
@@ -259,6 +298,16 @@ export function ExportPanel({
           </button>
         </p>
       )}
+
+      <label className="mt-3 flex items-center gap-2 text-[13px]">
+        <input
+          type="checkbox"
+          checked={choice.watermark}
+          disabled={running}
+          onChange={(e) => setChoice({ ...choice, watermark: e.target.checked })}
+        />
+        {t("export.watermark")}
+      </label>
 
       <button
         type="button"

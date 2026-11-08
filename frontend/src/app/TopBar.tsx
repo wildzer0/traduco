@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Clock,
   Download,
   History,
   ListChecks,
@@ -254,6 +255,7 @@ function ExportButton() {
 function PanelButtons() {
   const t = useT();
   const setIssuesOpen = useView((s) => s.setIssuesOpen);
+  const setHistoryOpen = useView((s) => s.setHistoryOpen);
   const setCommentsOpen = useView((s) => s.setCommentsOpen);
   const setRequirementsOpen = useView((s) => s.setRequirementsOpen);
   const style =
@@ -267,6 +269,10 @@ function PanelButtons() {
       <button type="button" onClick={() => setRequirementsOpen(true)} className={style}>
         <ListChecks size={14} strokeWidth={1.5} aria-hidden />
         {t("requirements.open")}
+      </button>
+      <button type="button" onClick={() => setHistoryOpen(true)} className={style}>
+        <Clock size={14} strokeWidth={1.5} aria-hidden />
+        {t("history.open")}
       </button>
       <button type="button" onClick={() => setIssuesOpen(true)} className={style}>
         <History size={14} strokeWidth={1.5} aria-hidden />

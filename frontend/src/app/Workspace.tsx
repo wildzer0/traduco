@@ -7,6 +7,7 @@ import { EditorPane } from "../features/editor/EditorPane";
 import { SnippetsDrawer } from "../features/editor/SnippetsDrawer";
 import { ExportPanel } from "../features/export/ExportPanel";
 import { GlossaryDrawer } from "../features/glossary/GlossaryDrawer";
+import { HistoryPanel } from "../features/history/HistoryPanel";
 import { ImportPanel } from "../features/import/ImportPanel";
 import { CommentsPanel } from "../features/issues/CommentsPanel";
 import { IssuesPanel } from "../features/issues/IssuesPanel";
@@ -45,6 +46,7 @@ export function Workspace() {
     exportOpen,
     importOpen,
     issuesOpen,
+    historyOpen,
     commentsOpen,
     requirementsOpen,
     snippetsOpen,
@@ -191,6 +193,7 @@ export function Workspace() {
       {languagesOpen && <LanguagesPanel projectId={projectId} />}
       {snippetsOpen && <SnippetsDrawer projectId={projectId} />}
       {issuesOpen && <IssuesPanel projectId={projectId} />}
+      {historyOpen && <HistoryPanel projectId={projectId} path={selected} />}
       {commentsOpen && <CommentsPanel projectId={projectId} path={selected} />}
     </>
   );

@@ -7,6 +7,8 @@ export interface ExportChoice {
   language: ExportLanguage;
   template: string;
   format: ExportFormat;
+  /** A "BOZZA" watermark while some translation is not approved. */
+  watermark: boolean;
 }
 
 const KEY = "traduco.export";
@@ -15,6 +17,7 @@ const DEFAULT: ExportChoice = {
   language: "ufficiale",
   template: "",
   format: "docx",
+  watermark: true,
 };
 
 /** Last choice made in the export panel, so "Export again" is one click (docs/03-ui.md). */
@@ -30,6 +33,7 @@ export function loadExportChoice(): ExportChoice {
       format: FORMATS.includes(data.format as ExportFormat)
         ? (data.format as ExportFormat)
         : "docx",
+      watermark: data.watermark !== false,
     };
   } catch {
     return DEFAULT;

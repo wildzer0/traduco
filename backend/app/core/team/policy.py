@@ -56,6 +56,7 @@ ROUTES: dict[tuple[str, str], str] = {
     ("POST", f"{P}/check/dismiss"): "comment",
     # documents
     ("POST", f"{P}/export"): "export",
+    ("POST", f"{P}/export/check"): "read",  # only looks
     ("POST", f"{P}/import"): "edit_source",
     ("POST", f"{P}/import/{{job_id}}/proposals/{{proposal_id}}"): "edit_source",
     # project configuration

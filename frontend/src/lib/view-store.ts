@@ -31,6 +31,8 @@ interface ViewState {
   setLanguagesOpen: (open: boolean) => void;
   snippetsOpen: boolean;
   setSnippetsOpen: (open: boolean) => void;
+  historyOpen: boolean;
+  setHistoryOpen: (open: boolean) => void;
   issuesOpen: boolean;
   setIssuesOpen: (open: boolean) => void;
   commentsOpen: boolean;
@@ -67,6 +69,8 @@ export const useView = create<ViewState>((set) => ({
   setLanguagesOpen: (languagesOpen) => set({ languagesOpen }),
   snippetsOpen: false,
   setSnippetsOpen: (snippetsOpen) => set({ snippetsOpen }),
+  historyOpen: false,
+  setHistoryOpen: (historyOpen) => set({ historyOpen }),
   issuesOpen: false,
   setIssuesOpen: (issuesOpen) => set({ issuesOpen }),
   commentsOpen: false,

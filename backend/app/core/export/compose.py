@@ -39,6 +39,7 @@ TOC_HINT = {
     "it": "Aggiorna il campo (tasto destro) per generare il sommario.",
     "en": "Update the field (right click) to build the table of contents.",
 }
+WATERMARK = {"it": "BOZZA", "en": "DRAFT", "de": "ENTWURF", "fr": "BROUILLON", "es": "BORRADOR"}
 REVISION_HEAD = {
     "it": ("Rev.", "Data", "Descrizione"),
     "en": ("Rev.", "Date", "Description"),
@@ -275,6 +276,49 @@ def _field_runs(instruction: str, cached: str) -> list[Any]:
     ]
 
 
+# --- watermark ---------------------------------------------------------------------------------
+
+_WATERMARK = (
+    '<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+    ' xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">'
+    '<w:pPr><w:pStyle w:val="Header"/></w:pPr><w:r><w:rPr><w:noProof/></w:rPr><w:pict>'
+    '<v:shapetype id="_x0000_t136" coordsize="21600,21600" o:spt="136" adj="10800"'
+    ' path="m@7,l@8,m@5,21600l@6,21600e"><v:formulas><v:f eqn="sum #0 0 10800"/>'
+    '<v:f eqn="prod #0 2 1"/><v:f eqn="sum 21600 0 @1"/><v:f eqn="sum 0 0 @2"/>'
+    '<v:f eqn="sum 21600 0 @3"/><v:f eqn="if @0 @3 0"/><v:f eqn="if @0 21600 @1"/>'
+    '<v:f eqn="if @0 0 @2"/><v:f eqn="if @0 @4 21600"/><v:f eqn="mid @5 @6"/>'
+    '<v:f eqn="mid @8 @5"/><v:f eqn="mid @7 @8"/><v:f eqn="mid @6 @7"/>'
+    '<v:f eqn="sum @6 0 @5"/></v:formulas><v:path textpathok="t" o:connecttype="custom"'
+    ' o:connectlocs="@9,0;@10,10800;@11,21600;@12,10800" o:connectangles="270,180,90,0"/>'
+    '<v:textpath on="t" fitshape="t"/><o:lock v:ext="edit" text="t" shapetype="t"/>'
+    '</v:shapetype><v:shape id="PowerPlusWaterMarkObject{n}" o:spid="_x0000_s20{n}"'
+    ' type="#_x0000_t136" style="position:absolute;margin-left:0;margin-top:0;width:430pt;'
+    "height:120pt;rotation:315;z-index:-251658752;mso-position-horizontal:center;"
+    "mso-position-horizontal-relative:margin;mso-position-vertical:center;"
+    'mso-position-vertical-relative:margin" o:allowincell="f" fillcolor="silver" stroked="f">'
+    '<v:fill opacity=".5"/><v:textpath style="font-family:&quot;Calibri&quot;;font-size:1pt"'
+    ' string="{text}"/></v:shape></w:pict></w:r></w:p>'
+)
+
+
+def add_watermark(doc: DocumentObject, text: str) -> None:
+    """A diagonal grey text behind every page (Word's own watermark, in the headers)."""
+    n = 0
+    for section in doc.sections:
+        headers = [section.header]
+        if section.different_first_page_header_footer:
+            headers.append(section.first_page_header)
+        if doc.settings.odd_and_even_pages_header_footer:
+            headers.append(section.even_page_header)
+        for header in headers:
+            if header.is_linked_to_previous and section is not doc.sections[0]:
+                continue  # it shows the header of the section before, which has the mark
+            header.is_linked_to_previous = False
+            n += 1
+            xml = _WATERMARK.replace("{n}", f"{n:02d}").replace("{text}", _escape(text))
+            header._element.insert(0, parse_xml(xml))
+
+
 # --- markers -----------------------------------------------------------------------------------
 
 
@@ -390,6 +434,7 @@ def compose(
     revisions: list[Revision],
     language: str,
     identifier: str = "",
+    watermark: str | None = None,
 ) -> ComposeResult:
     """Write ``output``: the template with the body at ``{{CONTENUTO}}`` and every field filled."""
     result = ComposeResult()
@@ -437,6 +482,8 @@ def compose(
             replace_in_paragraph(p, blank)
 
     _enable_update_fields(master)
+    if watermark:
+        add_watermark(master, watermark)
     if identifier:
         master.core_properties.identifier = identifier  # lets an import find the matching export
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -451,6 +498,7 @@ def finish_plain(
     fields: MappingType[str, str | None],
     allow_missing: bool,
     identifier: str = "",
+    watermark: str | None = None,
 ) -> ComposeResult:
     """Export without a template: Pandoc's document with the text's ``{{fields}}`` filled."""
     result = ComposeResult()
@@ -469,6 +517,8 @@ def finish_plain(
         result.warnings.append("fields left empty: " + ", ".join(sorted(missing)))
         for p in _all_paragraphs(doc):
             replace_in_paragraph(p, dict.fromkeys(missing, ""))
+    if watermark:
+        add_watermark(doc, watermark)
     if identifier:
         doc.core_properties.identifier = identifier
     output.parent.mkdir(parents=True, exist_ok=True)

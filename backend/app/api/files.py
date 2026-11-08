@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.deps import Root
 from app.api.presence import lock_write
+from app.core.workspace import history
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.manifest import load_project
 from app.core.workspace.sections import ConflictError, read_section, write_section
@@ -44,3 +45,15 @@ def put_file(
     response.headers["ETag"] = f'"{digest}"'
     request.app.state.translation.schedule_sync(root, load_project(root), path, body.content)
     return FileSaved(path=path, hash=digest)
+
+
+@router.get("/projects/{project_id}/history")
+def section_history(root: Root, path: str = Query(...)) -> list[dict[str, object]]:
+    """Earlier versions of a section, newest first."""
+    read_section(root, path)  # the section must exist
+    return history.list_versions(root, path)
+
+
+@router.get("/projects/{project_id}/history/{version_id}")
+def section_version(root: Root, version_id: str, path: str = Query(...)) -> dict[str, str]:
+    return {"id": version_id, "content": history.read_version(root, path, version_id)}

@@ -354,3 +354,30 @@ def test_a_csv_attachment_becomes_a_table_and_other_attachments_a_plain_mention(
     run_pandoc(find_pandoc(), md, out, reference_doc=None, resource_dir=tmp_path)
     table = Document(str(out)).tables[0]
     assert [c.text for c in table.rows[2].cells] == ["B", "2"]
+
+
+def test_a_watermark_is_added_to_the_headers(
+    project: Path, pandoc_bin: Path, company_template: Path, tmp_path: Path
+) -> None:
+    out = tmp_path / "w.docx"
+    body = tmp_path / "b.docx"
+    md = tmp_path / "w.md"
+    md.write_text("# Titolo\n\nTesto.\n", encoding="utf-8")
+    run_pandoc(pandoc_bin, md, body, reference_doc=company_template, resource_dir=tmp_path)
+    compose(
+        company_template,
+        body,
+        out,
+        mapping=propose_mapping(analyze(company_template)),
+        fields=dict.fromkeys(
+            ("titolo", "nome", "autore", "cliente", "codice_documento", "data", "revisione"), "x"
+        ),
+        revisions=[],
+        language="it",
+        watermark="BOZZA",
+    )
+    import zipfile
+
+    with zipfile.ZipFile(out) as z:
+        headers = [z.read(n).decode() for n in z.namelist() if n.startswith("word/header")]
+    assert headers and any('string="BOZZA"' in h for h in headers)

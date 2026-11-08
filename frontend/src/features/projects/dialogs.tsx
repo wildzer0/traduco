@@ -14,6 +14,7 @@ export function NameDialog({
   label,
   initial = "",
   confirm,
+  option,
   onSubmit,
   onClose,
 }: {
@@ -21,17 +22,20 @@ export function NameDialog({
   label: string;
   initial?: string;
   confirm: string;
-  onSubmit: (name: string) => void;
+  /** An extra yes/no under the name (for example "structure only"). */
+  option?: string;
+  onSubmit: (name: string, option: boolean) => void;
   onClose: () => void;
 }) {
   const t = useT();
   const [name, setName] = useState(initial);
+  const [checked, setChecked] = useState(false);
   return (
     <Modal title={title} onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (name.trim()) onSubmit(name.trim());
+          if (name.trim()) onSubmit(name.trim(), checked);
         }}
       >
         <label className="block">
@@ -43,6 +47,16 @@ export function NameDialog({
             className="mt-1 w-full rounded-ui border border-border bg-bg px-2 py-1"
           />
         </label>
+        {option && (
+          <label className="mt-3 flex items-center gap-2 text-[13px]">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => setChecked(e.target.checked)}
+            />
+            {option}
+          </label>
+        )}
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" onClick={onClose} className={plain}>
             {t("welcome.cancel")}

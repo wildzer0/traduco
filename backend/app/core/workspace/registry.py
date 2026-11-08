@@ -11,8 +11,9 @@ from pathlib import Path
 
 from ruamel.yaml.error import YAMLError
 
-from app.core.workspace import organization
+from app.core.workspace import frontmatter, organization
 from app.core.workspace.errors import WorkspaceError
+from app.core.workspace.fsio import atomic_write_text
 from app.core.workspace.manifest import MANIFEST_NAME, create_project, load_project, save_project
 from app.core.workspace.ordering import slugify
 
@@ -144,11 +145,15 @@ def create_in_workspaces(
     return project_id
 
 
-def duplicate_project(workspaces: Path, project_id: str, nome: str | None = None) -> str:
+def duplicate_project(
+    workspaces: Path, project_id: str, nome: str | None = None, structure_only: bool = False
+) -> str:
     """Copy a project - text, translations, memory, issues - under a new name; returns its id.
 
     The copy starts clean of what is only a cache (rendered diagrams, the section trash, built
-    documents) and goes in the same folder as the original.
+    documents) and goes in the same folder as the original. With ``structure_only`` it is a
+    model: chapters and sections keep their titles but lose their text, and translations, memory,
+    issues and revisions are left behind; glossary, template and skeleton stay.
     """
     source = project_root(workspaces, project_id)
     project = load_project(source)
@@ -167,13 +172,26 @@ def duplicate_project(workspaces: Path, project_id: str, nome: str | None = None
         return set()
 
     shutil.copytree(source, target, ignore=skip)
+    if structure_only:
+        _empty_sections(target)
+        shutil.rmtree(target / ".traduco", ignore_errors=True)
     copy = load_project(target)
     copy.nome = new_name
+    if structure_only:
+        copy.revisioni = []
     save_project(target, copy)
     folder = organization.load(workspaces).projects.get(project_id)
     if folder:
         organization.set_project_folder(workspaces, new_id, folder)
     return new_id
+
+
+def _empty_sections(root: Path) -> None:
+    """Keep the front matter of every section, drop the text."""
+    for md in sorted((root / "capitoli").rglob("*.md")):
+        doc = frontmatter.parse(md.read_text(encoding="utf-8"))
+        doc.body = ""
+        atomic_write_text(md, frontmatter.render(doc))
 
 
 def _trash(workspaces: Path) -> Path:

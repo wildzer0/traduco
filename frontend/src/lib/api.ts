@@ -125,6 +125,23 @@ export const putFile = (
 ): Promise<{ path: string; hash: string }> =>
   api(`${base(id)}/files?path=${enc(path)}`, json("PUT", { content }, { "If-Match": `"${hash}"` }));
 
+export interface SectionVersion {
+  id: string;
+  at: string;
+  size: number;
+  preview: string;
+}
+
+export const listVersions = (id: string, path: string): Promise<SectionVersion[]> =>
+  api(`${base(id)}/history?path=${enc(path)}`);
+
+export const getVersion = (
+  id: string,
+  path: string,
+  version: string,
+): Promise<{ id: string; content: string }> =>
+  api(`${base(id)}/history/${enc(version)}?path=${enc(path)}`);
+
 export const uploadImage = (
   id: string,
   section: string,
@@ -337,8 +354,21 @@ export const startExport = (
     language: ExportLanguage;
     template?: string;
     format?: ExportFormat;
+    draft?: "auto" | "off";
   },
 ): Promise<ExportStatus> => api(`${base(id)}/export`, json("POST", body));
+
+export interface ExportFinding {
+  code: string;
+  path: string;
+  detail: string;
+  severity: "warning" | "error";
+}
+
+export const checkExport = (
+  id: string,
+  body: { scope: ExportScope; path?: string; language: ExportLanguage },
+): Promise<{ findings: ExportFinding[] }> => api(`${base(id)}/export/check`, json("POST", body));
 
 export const getExport = (id: string, job: string): Promise<ExportStatus> =>
   api(`${base(id)}/export/${enc(job)}`);
@@ -671,8 +701,15 @@ export const setProjectFolder = (id: string, cartella: string | null): Promise<u
 export const renameProject = (id: string, nome: string): Promise<unknown> =>
   api(base(id), json("PATCH", { nome }));
 
-export const duplicateProject = (id: string, nome?: string): Promise<ProjectSummary> =>
-  api(`${base(id)}/duplicate`, json("POST", nome ? { nome } : {}));
+export const duplicateProject = (
+  id: string,
+  nome?: string,
+  soloStruttura = false,
+): Promise<ProjectSummary> =>
+  api(
+    `${base(id)}/duplicate`,
+    json("POST", { ...(nome ? { nome } : {}), ...(soloStruttura ? { solo_struttura: true } : {}) }),
+  );
 
 export const deleteProject = (id: string): Promise<{ trash: string }> =>
   api(base(id), { method: "DELETE" });

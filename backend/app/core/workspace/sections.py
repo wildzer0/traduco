@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import threading
 from pathlib import Path
 
+from app.core.workspace import history
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.fsio import atomic_write_bytes, sha256_bytes
 from app.core.workspace.ops import resolve_node
@@ -41,8 +43,12 @@ def write_section(root: Path, rel: str, content: str, expected_hash: str) -> str
     path = _section_path(root, rel)
     payload = content.encode("utf-8")
     with _write_lock:
-        current = sha256_bytes(path.read_bytes())
+        before = path.read_bytes()
+        current = sha256_bytes(before)
         if current != expected_hash:
             raise ConflictError(current)
+        if before != payload:
+            with contextlib.suppress(OSError):  # the safety net must never stop a save
+                history.snapshot(root, rel, before)
         atomic_write_bytes(path, payload)
     return sha256_bytes(payload)
