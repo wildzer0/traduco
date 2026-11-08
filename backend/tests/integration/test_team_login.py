@@ -227,7 +227,8 @@ def test_the_live_channel_needs_a_login_too(tmp_path: Path, idp: FakeIdp) -> Non
         with client.websocket_connect(f"/api/projects/{pid}/events") as ws:
             assert ws.receive_json()["type"] == "hello"
     with (
-        make_client(tmp_path, idp, "live") as stranger, pytest.raises(WebSocketDisconnect),
+        make_client(tmp_path, idp, "live") as stranger,
+        pytest.raises(WebSocketDisconnect),
         stranger.websocket_connect("/api/projects/dal-vivo/events") as ws,
     ):
         ws.receive_json()  # never reached: the handshake is refused
