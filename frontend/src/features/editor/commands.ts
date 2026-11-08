@@ -9,6 +9,7 @@ export type CommandId =
   | "orderedList"
   | "table"
   | "image"
+  | "attachment"
   | "code"
   | "footnote"
   | "quote"

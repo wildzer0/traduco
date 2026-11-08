@@ -35,6 +35,7 @@ ROUTES: dict[tuple[str, str], str] = {
     ("DELETE", f"{P}/nodes"): "edit_source",
     ("PATCH", f"{P}/sections/meta"): "edit_source",
     ("POST", f"{P}/assets"): "edit_source",
+    ("POST", f"{P}/attachments"): "edit_source",
     ("PUT", f"{P}/diagrams/{{digest}}"): "read",  # a cache of the preview, not a document change
     ("POST", f"{P}/assist"): "read",  # only proposes
     ("POST", f"{P}/assist/apply"): "edit_source",

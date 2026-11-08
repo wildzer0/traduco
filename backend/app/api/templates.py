@@ -20,6 +20,7 @@ from app.core.templates.analyze import MAX_TEMPLATE_BYTES, Analysis
 from app.core.templates.mapping import ROLES, Mapping
 from app.core.templates.wizard import FONTS, WizardOptions
 from app.core.workspace.errors import WorkspaceError
+from app.core.workspace.manifest import load_project
 
 router = APIRouter(tags=["templates"])
 
@@ -37,6 +38,18 @@ def _detail(name: str, analysis: Analysis, mapping: Mapping, problems: list[str]
         "mapping": mapping.model_dump(),
         "problems": problems,
     }
+
+
+@router.get("/projects/{project_id}/toc")
+def toc_enabled(root: Root) -> dict[str, bool]:
+    """Does the default template have a table of contents? Then the sidebar numbers the outline."""
+    name = load_project(root).template_predefinito
+    if not name:
+        return {"enabled": False}
+    try:
+        return {"enabled": store.describe(root, name)[0].has_toc}
+    except (WorkspaceError, OSError, ValueError):
+        return {"enabled": False}
 
 
 @router.get("/projects/{project_id}/templates")

@@ -1,7 +1,7 @@
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Languages, RefreshCw } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { retranslate } from "../../lib/api";
+import { getAttachmentTable, retranslate } from "../../lib/api";
 import { useCapabilities } from "../../lib/capabilities";
 import { useEditorStatus } from "../../lib/editor-status";
 import { useT } from "../../lib/i18n";
@@ -122,6 +122,39 @@ export function Preview({ projectId }: { projectId: string }) {
       void sha256Hex(code).then((hash) => cacheDiagram(projectId, hash, code));
     }
   }, [saved, html, projectId]);
+
+  // CSV attachments: fetch the rows and draw them as a table (text only, never markup)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: html changes whenever the blocks change
+  useEffect(() => {
+    const root = article.current;
+    if (!root) return;
+    for (const el of root.querySelectorAll<HTMLElement>(".csv-table")) {
+      const name = el.dataset.csv ?? "";
+      void getAttachmentTable(projectId, name).then(
+        ({ rows }) => {
+          if (!el.isConnected || rows.length === 0) return;
+          const table = document.createElement("table");
+          if (el.dataset.title) {
+            const caption = table.createCaption();
+            caption.textContent = el.dataset.title;
+          }
+          rows.forEach((row, i) => {
+            const tr = table.insertRow();
+            for (const cell of row) {
+              const td = document.createElement(i === 0 ? "th" : "td");
+              td.textContent = cell;
+              tr.append(td);
+            }
+          });
+          el.replaceChildren(table);
+        },
+        () => {
+          el.textContent = name;
+          el.classList.add("text-red");
+        },
+      );
+    }
+  }, [html, projectId]);
 
   // Jump to a segment asked for by F8 or the review table, and flash it.
   const focusKey = useView((s) => s.focusKey);

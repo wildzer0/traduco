@@ -57,6 +57,7 @@
   "toolbar.italic": "Corsivo",
   "toolbar.list": "Elenco",
   "toolbar.table": "Tabella",
+  "toolbar.attachment": "Allegato (un file CSV diventa una tabella)",
   "toolbar.image": "Immagine",
   "toolbar.code": "Codice",
   "toolbar.footnote": "Nota",

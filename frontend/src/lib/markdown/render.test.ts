@@ -3,6 +3,12 @@ import { createRenderer } from "./render";
 const render = createRenderer({ projectId: "demo", sectionPath: "capitoli/01-a/01-s.md" });
 
 describe("preview renderer", () => {
+  it("leaves a place for the rows of a CSV attachment and links the other attachments", () => {
+    const html = render("![Dati](allegati/dati.csv)\n\n[Manuale](allegati/man.pdf)\n");
+    expect(html).toContain('<div class="csv-table" data-csv="dati.csv" data-title="Dati">');
+    expect(html).toContain('href="/api/projects/demo/attachments/man.pdf"');
+  });
+
   it("numbers top-level blocks like the editor does", () => {
     const html = render("# T\n\npar\n\n- a\n- b\n\n| x |\n| - |\n| 1 |\n");
     expect(html).toMatch(/<h1 data-block="0"/);

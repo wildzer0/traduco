@@ -57,6 +57,7 @@
   "toolbar.italic": "Italic",
   "toolbar.list": "List",
   "toolbar.table": "Table",
+  "toolbar.attachment": "Attachment (a CSV file becomes a table)",
   "toolbar.image": "Image",
   "toolbar.code": "Code",
   "toolbar.footnote": "Footnote",

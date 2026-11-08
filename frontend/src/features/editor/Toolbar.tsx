@@ -8,6 +8,7 @@ import {
   Italic,
   List,
   ListChecks,
+  Paperclip,
   Superscript,
   Table,
   Table2,
@@ -129,6 +130,16 @@ export function Toolbar({ mode, onMode, onCommand, onAssist, onCheck }: Props) {
         onClick={() => onCommand("image")}
       >
         <Image {...ICON} />
+      </button>
+      <button
+        type="button"
+        aria-label={t("toolbar.attachment")}
+        title={t("toolbar.attachment")}
+        className={btn}
+        onMouseDown={keepFocus}
+        onClick={() => onCommand("attachment")}
+      >
+        <Paperclip {...ICON} />
       </button>
       {simple.slice(4).map((s) => (
         <button

@@ -334,3 +334,23 @@ def test_a_table_right_after_a_paragraph_is_still_a_table(project: Path, tmp_pat
     tables = Document(str(out)).tables
     assert len(tables) == 1
     assert [c.text for c in tables[0].rows[1].cells] == ["1", "2"]
+
+
+def test_a_csv_attachment_becomes_a_table_and_other_attachments_a_plain_mention(
+    project: Path, tmp_path: Path
+) -> None:
+    (project / "allegati").mkdir()
+    (project / "allegati" / "dati.csv").write_text("Nome;Valore\nA;1\nB;2\n", encoding="utf-8")
+    body = "Prima.\n\n![Dati di prova](allegati/dati.csv)\n\nVedi [il manuale](allegati/man.pdf).\n"
+    combined = combine(project, [Item("section", "capitoli/01-intro/01-a.md", "T", 1, body)])
+    assert "| Nome | Valore |" in combined.markdown and "| B | 2 |" in combined.markdown
+    assert "*Dati di prova*" in combined.markdown
+    assert (
+        "il manuale (man.pdf)" in combined.markdown and "allegati/man.pdf)" not in combined.markdown
+    )
+    md = tmp_path / "c.md"
+    md.write_text(combined.markdown, encoding="utf-8")
+    out = tmp_path / "c.docx"
+    run_pandoc(find_pandoc(), md, out, reference_doc=None, resource_dir=tmp_path)
+    table = Document(str(out)).tables[0]
+    assert [c.text for c in table.rows[2].cells] == ["B", "2"]

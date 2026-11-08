@@ -12,8 +12,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronsDownUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getTocEnabled } from "../../lib/api";
 import { useT } from "../../lib/i18n";
 import type { TreeNode } from "../../lib/types";
 import { computeDrop, flattenTree } from "./dnd";
@@ -97,6 +99,25 @@ export function Tree({ projectId, selected, onSelect }: Props) {
   useEffect(() => {
     if (autoFold) setCollapsed(chaptersToFold(nodes, selected));
   }, [autoFold, selected, nodes]);
+
+  // with a table of contents in the template the outline is numbered like the document
+  const { data: toc } = useQuery({
+    queryKey: ["toc", projectId],
+    queryFn: () => getTocEnabled(projectId),
+    retry: false,
+  });
+  const numbers = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!toc?.enabled) return map;
+    const walk = (list: TreeNode[], prefix: string) =>
+      list.forEach((n, i) => {
+        const number = `${prefix}${i + 1}`;
+        map.set(n.path, number);
+        if (n.kind === "chapter") walk(n.children, `${number}.`);
+      });
+    walk(nodes, "");
+    return map;
+  }, [toc, nodes]);
 
   const rows = useMemo(() => {
     const expanded = new Set<string>();
@@ -190,6 +211,7 @@ export function Tree({ projectId, selected, onSelect }: Props) {
                   row={row}
                   selected={row.node.path === selected}
                   flag={flags.get(row.node.path)}
+                  number={numbers.get(row.node.path)}
                   expanded={!collapsed.has(row.node.path)}
                   renaming={renaming === row.node.path}
                   onActivate={() => {

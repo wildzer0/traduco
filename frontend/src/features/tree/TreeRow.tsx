@@ -12,6 +12,8 @@ interface Props {
   expanded: boolean;
   /** Skeleton problem of this node (empty, out of order…), shown as an amber dot. */
   flag?: string;
+  /** Outline number ("2.1"), shown when the template has a table of contents. */
+  number?: string;
   renaming: boolean;
   onActivate: () => void;
   onToggle: () => void;
@@ -106,6 +108,11 @@ export function TreeRow(props: Props) {
               onDoubleClick={props.onStartRename}
               className={`min-w-0 flex-1 truncate px-1 py-1 text-left ${isChapter ? "font-medium" : ""}`}
             >
+              {props.number && (
+                <span aria-hidden="true" className="mr-1.5 text-muted">
+                  {props.number}
+                </span>
+              )}
               {row.node.title}
             </button>
           )}

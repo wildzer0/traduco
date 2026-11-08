@@ -1,6 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { expandSnippet, getFile, listSnippets, putFile, uploadImage } from "../../lib/api";
+import {
+  expandSnippet,
+  getFile,
+  listSnippets,
+  putFile,
+  uploadAttachment,
+  uploadImage,
+} from "../../lib/api";
 import { useAssist } from "../../lib/assist-store";
 import { editorBridge } from "../../lib/editor-bridge";
 import { useEditorStatus } from "../../lib/editor-status";
@@ -102,6 +109,7 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
   const handle = useRef<EditorHandle | null>(null);
   const pendingBlock = useRef<number | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const attachInput = useRef<HTMLInputElement>(null);
 
   const saver = useMemo(
     () =>
@@ -241,6 +249,21 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
     [projectId, path, notify, t],
   );
 
+  const attach = async (file: File) => {
+    try {
+      const saved = await uploadAttachment(projectId, file, file.name);
+      const title = saved.name.replace(/\.[^.]+$/, "");
+      // a CSV is shown as a table, any other file as a link
+      handle.current?.insertText(
+        saved.name.toLowerCase().endsWith(".csv")
+          ? `\n![${title}](${saved.path})\n`
+          : `[${saved.name}](${saved.path})`,
+      );
+    } catch (e) {
+      notify(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const { data: snippetList } = useQuery({
     queryKey: ["snippets", projectId],
     queryFn: () => listSnippets(projectId),
@@ -259,6 +282,7 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
 
   const run = useCallback((cmd: CommandId) => {
     if (cmd === "image") fileInput.current?.click();
+    else if (cmd === "attachment") attachInput.current?.click();
     else handle.current?.run(cmd);
   }, []);
 
@@ -301,6 +325,17 @@ function EditorSession({ projectId, path, initial, onReload }: SessionProps) {
           void saver.flush().then(() => useAssist.getState().requestAssist(block));
         }}
         onCheck={() => useAssist.getState().setCheckOpen(true)}
+      />
+      <input
+        ref={attachInput}
+        type="file"
+        hidden
+        data-testid="attachment-input"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void attach(f);
+          e.target.value = "";
+        }}
       />
       <input
         ref={fileInput}

@@ -1,7 +1,7 @@
 import MarkdownIt from "markdown-it";
 import footnote from "markdown-it-footnote";
 import { imagePath } from "../../features/editor/images";
-import { assetUrl } from "../api";
+import { assetUrl, attachmentUrl } from "../api";
 
 export interface RenderOptions {
   projectId: string;
@@ -93,6 +93,11 @@ export function createRenderer(opts: RenderOptions): (body: string) => string {
   const defaultImage = md.renderer.rules.image;
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx];
+    const src = String(token?.attrGet("src") ?? "");
+    if (token && /^allegati\/[^/]+\.csv$/i.test(src)) {
+      // a CSV attachment: the preview fills the table in after fetching its rows
+      return `<div class="csv-table" data-csv="${esc(src.slice("allegati/".length))}" data-title="${esc(token.content)}"></div>`;
+    }
     if (token) {
       const resolved = imagePath(opts.sectionPath, String(token.attrGet("src") ?? ""));
       if (resolved) token.attrSet("src", assetUrl(opts.projectId, resolved));
@@ -118,7 +123,12 @@ export function createRenderer(opts: RenderOptions): (body: string) => string {
   const defaultLinkOpen = md.renderer.rules.link_open;
   md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     const token = tokens[idx];
-    if (token && /^https?:/i.test(String(token.attrGet("href") ?? ""))) {
+    const href = String(token?.attrGet("href") ?? "");
+    if (token && href.startsWith("allegati/")) {
+      token.attrSet("href", attachmentUrl(opts.projectId, href.slice("allegati/".length)));
+      token.attrSet("download", "");
+    }
+    if (token && /^https?:/i.test(href)) {
       token.attrSet("target", "_blank");
       token.attrSet("rel", "noopener noreferrer");
     }

@@ -19,11 +19,14 @@ from pathlib import Path
 from markdown_it import MarkdownIt
 
 from app.core.export.errors import ExportError
+from app.core.workspace import attachments
 from app.core.workspace.diagrams import CACHE_DIR, diagram_hash
+from app.core.workspace.errors import WorkspaceError
 
 _IMAGE = re.compile(r'!\[([^\]]*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)')
 _LINK = re.compile(r"(?<!!)\]\(([^)\s#]+\.md)(#[^)\s]*)?\)")
 _FOOTNOTE = re.compile(r"\[\^([^\]\s]+)\]")
+_ATTACHED = re.compile(r"(?<!!)\[([^\]]*)\]\(allegati/([^)\s]+)\)")
 _REMOTE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 MAX_LEVEL = 6
 
@@ -125,8 +128,24 @@ class _Rewriter:
         self.combined.assets[name] = source
         return name
 
+    def csv_table(self, alt: str, url: str) -> str:
+        """``![title](allegati/data.csv)`` becomes the table of the file, its title above it."""
+        name = url.removeprefix(f"{attachments.ATTACHMENTS_DIR}/")
+        try:
+            table = attachments.markdown_table(
+                attachments.read_table(attachments.attachment_file(self.root, name))
+            )
+        except WorkspaceError:
+            table = ""
+        if not table:
+            self._warn(f"table file not found or empty ({url})")
+            return alt
+        return f"\n\n{f'*{alt}*' + chr(10) + chr(10) if alt else ''}{table}\n\n"
+
     def image(self, m: re.Match[str]) -> str:
         alt, url = m.group(1), m.group(2)
+        if url.startswith(f"{attachments.ATTACHMENTS_DIR}/") and url.lower().endswith(".csv"):
+            return self.csv_table(alt, url)
         if _REMOTE.match(url):
             self._warn(f"remote image left out ({url})")
             return alt
@@ -150,6 +169,7 @@ class _Rewriter:
 
     def text(self, line: str) -> str:
         line = _IMAGE.sub(self.image, line)
+        line = _ATTACHED.sub(lambda m: f"{m.group(1) or m.group(2)} ({m.group(2)})", line)
         line = _LINK.sub(self.link, line)
         return _FOOTNOTE.sub(lambda m: f"[^{self.suffix}-{m.group(1)}]", line)
 

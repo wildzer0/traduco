@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import FileResponse
 
 from app.api.deps import Root
+from app.core.workspace import attachments
 from app.core.workspace.assets import MAX_IMAGE_BYTES, save_image
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.ops import resolve_node
@@ -30,6 +31,48 @@ async def upload_asset(
             raise WorkspaceError("too_large", "image too large")
     rel = save_image(root, section, filename, bytes(data))
     return AssetSaved(path=rel, markdown=f"{IMAGES_DIR}/{rel.rsplit('/', 1)[1]}")
+
+
+@router.post("/projects/{project_id}/attachments", status_code=201)
+async def upload_attachment(
+    root: Root, request: Request, filename: str = Query(...)
+) -> dict[str, str]:
+    """Any file (not an executable one), stored in ``allegati/`` of the project."""
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > attachments.MAX_ATTACHMENT_BYTES:
+        raise WorkspaceError("too_large", "attachments are limited to 50 MB")
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > attachments.MAX_ATTACHMENT_BYTES:
+            raise WorkspaceError("too_large", "attachments are limited to 50 MB")
+    rel = attachments.save_attachment(root, filename, bytes(data))
+    return {"path": rel, "name": rel.rsplit("/", 1)[1]}
+
+
+@router.get("/projects/{project_id}/attachments")
+def list_attachments(root: Root) -> list[dict[str, object]]:
+    return attachments.list_attachments(root)
+
+
+@router.get("/projects/{project_id}/attachments/{name}")
+def download_attachment(root: Root, name: str) -> FileResponse:
+    file = attachments.attachment_file(root, name)
+    return FileResponse(
+        file,
+        filename=file.name,
+        media_type=mimetypes.guess_type(file.name)[0] or "application/octet-stream",
+        headers={
+            "Content-Security-Policy": "sandbox; default-src 'none'",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.get("/projects/{project_id}/attachments/{name}/table")
+def attachment_table(root: Root, name: str) -> dict[str, list[list[str]]]:
+    """The rows of a CSV attachment, for the preview."""
+    return {"rows": attachments.read_table(attachments.attachment_file(root, name))}
 
 
 @router.get("/projects/{project_id}/assets")

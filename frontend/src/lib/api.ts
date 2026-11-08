@@ -136,6 +136,21 @@ export const uploadImage = (
     body: file,
   });
 
+export interface Attachment {
+  name: string;
+  path: string;
+  size: number;
+}
+
+export const uploadAttachment = (id: string, file: Blob, filename: string): Promise<Attachment> =>
+  api(`${base(id)}/attachments?filename=${enc(filename)}`, { method: "POST", body: file });
+
+export const attachmentUrl = (id: string, name: string): string =>
+  `/api${base(id)}/attachments/${enc(name)}`;
+
+export const getAttachmentTable = (id: string, name: string): Promise<{ rows: string[][] }> =>
+  api(`${base(id)}/attachments/${enc(name)}/table`);
+
 /** URL of an image stored under a chapter's ``img/`` folder. */
 export const assetUrl = (id: string, path: string): string =>
   `/api${base(id)}/assets?path=${enc(path)}`;
@@ -287,6 +302,8 @@ export const dismissSuggestion = (id: string, path: string, suggestionId: string
 // --- templates and export ------------------------------------------------------------------
 
 export const listTemplates = (id: string): Promise<TemplateInfo[]> => api(`${base(id)}/templates`);
+
+export const getTocEnabled = (id: string): Promise<{ enabled: boolean }> => api(`${base(id)}/toc`);
 
 export const getTemplate = (id: string, name: string): Promise<TemplateDetail> =>
   api(`${base(id)}/templates/${enc(name)}`);

@@ -320,3 +320,12 @@ def test_wizard_rejects_bad_input(xapi: TestClient) -> None:
         == 415
     )
     assert xapi.get("/api/template-wizard/fonts").json()[0] == "Calibri"
+
+
+def test_the_outline_is_numbered_only_when_the_template_has_a_table_of_contents(
+    xapi: TestClient, tmp_path: Path
+) -> None:
+    pid = example(xapi)
+    assert xapi.get(f"/api/projects/{pid}/toc").json() == {"enabled": True}  # the sample template
+    plain = xapi.post("/api/projects", json={"nome": "Senza modello"}).json()["id"]
+    assert xapi.get(f"/api/projects/{plain}/toc").json() == {"enabled": False}
