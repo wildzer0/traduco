@@ -73,6 +73,14 @@ def serve(port: int) -> None:
                 )
                 page = f"<h1>Traduco - accesso di prova</h1><p>Chi sei?</p><ul>{rows}</ul>"
                 self._send(page.encode(), "text/html; charset=utf-8")
+            elif url.path == "/":
+                page = (
+                    "<h1>Accesso di prova per Traduco</h1>"
+                    "<p>Questo server serve solo per il login. Apri Traduco su "
+                    '<a href="http://localhost:8000">http://localhost:8000</a>: sarai mandato qui '
+                    "a scegliere chi sei.</p>"
+                )
+                self._send(page.encode(), "text/html; charset=utf-8")
             elif url.path == "/favicon.ico":
                 self.send_response(204)
                 self.end_headers()
