@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +25,7 @@ from app.api import (
     templates,
     translation,
 )
+from app.api import auth as auth_api
 from app.api import comments as comments_api
 from app.api import export as export_api
 from app.api import importer as importer_api
@@ -42,6 +43,8 @@ from app.core.export.errors import ExportError
 from app.core.export.service import ExportManager
 from app.core.importer.service import ImportManager
 from app.core.skeleton.model import SkeletonError
+from app.core.team.guard import authorize
+from app.core.team.oidc import OidcClient, OidcError
 from app.core.translation.service import LlmConfig, TranslationService
 from app.core.workspace.errors import WorkspaceError
 from app.events import EventHub
@@ -72,7 +75,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         imports = ImportManager(service, publish=hub.publish)
         app.state.imports = imports
         service.start()
+        oidc: OidcClient | None = None
+        if settings.mode == "team":
+            if not settings.session_secret or len(settings.session_secret) < 32:
+                raise RuntimeError(
+                    "team mode needs TRADUCO_SESSION_SECRET (at least 32 characters)"
+                )
+            try:
+                oidc = OidcClient(settings)
+            except OidcError as exc:
+                raise RuntimeError(f"team mode: {exc}") from exc
+        app.state.oidc = oidc
         yield
+        if oidc is not None:
+            await oidc.aclose()
         await exports.close()
         await imports.close()
         await service.close()
@@ -80,6 +96,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title="Traduco",
+        dependencies=[Depends(authorize)],
         version=settings.version,
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
@@ -143,6 +160,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         export_api.router,
         importer_api.router,
         issues_api.router,
+        auth_api.router,
         comments_api.router,
         requirements_api.router,
         search_api.router,

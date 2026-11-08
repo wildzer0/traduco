@@ -8,6 +8,7 @@ FORBIDDEN = ("urllib.request", "import requests", "import aiohttp", "import http
 ALLOWED = {
     "app/core/translation/llm_client.py",
     "app/core/spellcheck/languagetool.py",
+    "app/core/team/oidc.py",  # the organisation's own identity provider, team mode only (ADR-046)
 }
 
 

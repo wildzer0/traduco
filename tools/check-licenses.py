@@ -21,6 +21,8 @@ ALLOWED = {
     "PostgreSQL", "Zlib",
     # ADR-019: permissive equivalents already pulled in by required tooling
     "PSF-2.0", "0BSD", "Unlicense", "BlueOak-1.0.0", "CC0-1.0", "Python-2.0",
+    # M7: cffi (via cryptography) is MIT-0, "MIT with no attribution", at least as permissive as MIT
+    "MIT-0",
 }  # fmt: skip
 # ADR-013: OFL-1.1 only for font assets.
 FONT_ONLY = {"OFL-1.1": re.compile(r"^@fontsource/")}
