@@ -32,6 +32,7 @@ from app.api import importer as importer_api
 from app.api import issues as issues_api
 from app.api import languages as languages_api
 from app.api import memory as memory_api
+from app.api import presence as presence_api
 from app.api import requirements as requirements_api
 from app.api import search as search_api
 from app.api import settings as settings_api
@@ -171,6 +172,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         snippets_api.router,
         spellcheck_api.router,
         translation.router,
+        presence_api.router,
         events.router,
     ):
         app.include_router(router, prefix="/api")

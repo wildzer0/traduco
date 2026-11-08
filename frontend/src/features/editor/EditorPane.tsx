@@ -10,6 +10,7 @@ import { canonicalize } from "../../lib/markdown/canonical";
 import { useNotices } from "../../lib/notices";
 import { type EditorMode, usePrefs } from "../../lib/prefs";
 import { usePreview } from "../../lib/preview-store";
+import { usePresence } from "../../lib/team";
 import type { FileContent } from "../../lib/types";
 import { useView } from "../../lib/view-store";
 import { keys } from "../tree/queries";
@@ -48,13 +49,33 @@ export function EditorPane({ projectId, path }: PaneProps) {
     );
   }
   return (
-    <EditorSession
-      key={`${path}:${epoch}`}
-      projectId={projectId}
-      path={path}
-      initial={file.data}
-      onReload={() => setEpoch((e) => e + 1)}
-    />
+    <LockedBy projectId={projectId} path={path}>
+      <EditorSession
+        key={`${path}:${epoch}`}
+        projectId={projectId}
+        path={path}
+        initial={file.data}
+        onReload={() => setEpoch((e) => e + 1)}
+      />
+    </LockedBy>
+  );
+}
+
+/** Team mode: while someone else edits the section it is read-only here (the server refuses writes). */
+function LockedBy({ projectId, path, children }: PaneProps & { children: React.ReactNode }) {
+  const t = useT();
+  const { lockedBy } = usePresence(projectId, path);
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {lockedBy && (
+        <p role="status" className="m-0 bg-amber/20 px-3 py-1.5 text-[13px]">
+          {t("team.lockedBy", { name: lockedBy })}
+        </p>
+      )}
+      <div className="flex min-h-0 flex-1 flex-col" inert={lockedBy ? true : undefined}>
+        {children}
+      </div>
+    </div>
   );
 }
 

@@ -27,6 +27,7 @@ STATUS = {
     "unreadable": 422,
     "precondition_required": 428,
     "invalid_state": 409,
+    "locked": 423,
     "invalid_template": 422,
     "model_refused": 502,
     "off_topic": 422,

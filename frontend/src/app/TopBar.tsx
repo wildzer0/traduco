@@ -1,11 +1,20 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, Download, History, ListChecks, MessageSquare, PanelLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  History,
+  ListChecks,
+  LogOut,
+  MessageSquare,
+  PanelLeft,
+} from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
 import { useT } from "../lib/i18n";
 import { useNotices } from "../lib/notices";
 import { usePrefs } from "../lib/prefs";
+import { logout, useMe, usePresence } from "../lib/team";
 import { useTranslationState } from "../lib/translation-store";
 import type { Tone } from "../lib/types";
 import { useView, type ViewMode } from "../lib/view-store";
@@ -80,6 +89,7 @@ export function TopBar() {
         <span className="text-muted">{t("topbar.noProject")}</span>
       )}
       <span className="ml-auto" />
+      {projectId && <People projectId={projectId} path={s ?? null} />}
       {projectId && <ProjectTone projectId={projectId} />}
       {projectId && <ViewSwitch />}
       {projectId && <PanelButtons />}
@@ -110,7 +120,48 @@ export function TopBar() {
           </span>
         </span>
       )}
+      <UserMenu />
     </header>
+  );
+}
+
+/** Initials of the other people in the project; a ring marks who is editing. */
+function People({ projectId, path }: { projectId: string; path: string | null }) {
+  const t = useT();
+  const { people } = usePresence(projectId, path);
+  if (people.length === 0) return null;
+  return (
+    <ul aria-label={t("team.people")} className="m-0 flex list-none gap-1 p-0">
+      {people.map((p) => (
+        <li
+          key={p.sub}
+          title={p.editing ? t("team.editing", { name: p.name, section: p.path ?? "" }) : p.name}
+          className={`flex size-6 items-center justify-center rounded-full bg-surface-2 text-[11px] font-semibold ${p.editing ? "ring-2 ring-accent" : ""}`}
+        >
+          {p.name.slice(0, 2).toUpperCase()}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function UserMenu() {
+  const t = useT();
+  const { data: me } = useMe();
+  if (me?.mode !== "team" || !me.user) return null;
+  return (
+    <span className="flex items-center gap-1 text-muted">
+      <span>{me.user.name}</span>
+      <button
+        type="button"
+        aria-label={t("team.logout")}
+        title={t("team.logout")}
+        onClick={() => void logout()}
+        className="flex size-8 items-center justify-center rounded-ui hover:bg-surface-2"
+      >
+        <LogOut size={16} strokeWidth={1.5} aria-hidden />
+      </button>
+    </span>
   );
 }
 

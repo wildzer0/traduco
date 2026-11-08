@@ -600,5 +600,9 @@
   "projects.purge": "Elimina per sempre",
   "projects.purgeTitle": "Eliminare «{name}» per sempre?",
   "projects.purgeMessage": "«{name}» sarà cancellato e non si potrà recuperare.",
-  "projects.deletedAt": "eliminato il {when}"
+  "projects.deletedAt": "eliminato il {when}",
+  "team.people": "Altre persone nel progetto",
+  "team.editing": "{name} sta modificando {section}",
+  "team.logout": "Esci",
+  "team.lockedBy": "{name} sta modificando questa sezione: la vedi in sola lettura."
 }

@@ -26,6 +26,10 @@ ROUTES: dict[tuple[str, str], str] = {
     ("POST", "/api/auth/logout"): "read",  # also open without a session, see guard.PUBLIC
     # the text
     ("PUT", f"{P}/files"): "edit_source",
+    (
+        "POST",
+        f"{P}/presence",
+    ): "read",  # a heartbeat; taking a lock needs edit_source, checked inside
     ("POST", f"{P}/nodes"): "edit_source",
     ("PATCH", f"{P}/nodes"): "edit_source",
     ("DELETE", f"{P}/nodes"): "edit_source",

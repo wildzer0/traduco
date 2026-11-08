@@ -600,5 +600,9 @@
   "projects.purge": "Delete for ever",
   "projects.purgeTitle": "Delete “{name}” for ever?",
   "projects.purgeMessage": "“{name}” will be erased and cannot be recovered.",
-  "projects.deletedAt": "deleted {when}"
+  "projects.deletedAt": "deleted {when}",
+  "team.people": "Other people in the project",
+  "team.editing": "{name} is editing {section}",
+  "team.logout": "Log out",
+  "team.lockedBy": "{name} is editing this section: you see it read-only."
 }

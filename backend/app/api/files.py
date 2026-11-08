@@ -2,6 +2,7 @@ from fastapi import APIRouter, Header, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.api.deps import Root
+from app.api.presence import lock_write
 from app.core.workspace.errors import WorkspaceError
 from app.core.workspace.manifest import load_project
 from app.core.workspace.sections import ConflictError, read_section, write_section
@@ -31,6 +32,7 @@ def put_file(
             "precondition_required", "If-Match header with the file hash is required"
         )
     expected = if_match.strip().removeprefix("W/").strip('"')
+    lock_write(request, request.path_params["project_id"], path)
     try:
         digest = write_section(root, path, body.content, expected)
     except ConflictError as exc:
