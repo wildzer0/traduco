@@ -506,6 +506,7 @@
   "palette.tmxExport": "Export the translation memory (TMX)",
   "palette.tmxImport": "Import a translation memory (TMX)",
   "palette.tmxDone": "{count} entries imported",
+  "glossary.exportAs": "Export as",
   "glossary.import": "Import CSV or TBX…",
   "glossary.imported": "{added} new terms added ({seen} in the file); yours were kept.",
   "languages.title": "Language",

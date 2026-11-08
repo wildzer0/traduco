@@ -5,6 +5,13 @@ All notable changes are documented here. Format based on Keep a Changelog; versi
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-11-08
+
+### Changed
+- Top bar: the back button and the panel buttons are icons (their names are in the tooltip), the project name no longer touches the app name.
+- Review table: fixed column widths, so the actions are never cut off.
+- Glossary: the CSV and TBX links say "Export as".
+
 ## [0.14.0] - 2026-11-08
 
 ### Added

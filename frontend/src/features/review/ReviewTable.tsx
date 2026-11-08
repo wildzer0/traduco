@@ -73,7 +73,14 @@ export function ReviewTable({
         ))}
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full border-collapse text-left">
+        <table className="w-full table-fixed border-collapse text-left">
+          <colgroup>
+            <col className="w-[11%]" />
+            <col className="w-[28%]" />
+            <col className="w-[28%]" />
+            <col className="w-[17%]" />
+            <col className="w-[16%] min-w-[11rem]" />
+          </colgroup>
           <thead className="sticky top-0 bg-surface">
             <tr className="text-[12px] text-muted">
               <th className="p-2 font-medium">{t("review.section")}</th>
@@ -91,8 +98,8 @@ export function ReviewTable({
                 data-testid="review-row"
               >
                 <td className="p-2 text-muted">{row.section}</td>
-                <td className="whitespace-pre-wrap p-2">{row.source}</td>
-                <td className="whitespace-pre-wrap p-2">
+                <td className="whitespace-pre-wrap break-words p-2">{row.source}</td>
+                <td className="whitespace-pre-wrap break-words p-2">
                   {row.target}
                   {row.pending_target && (
                     <p className="m-0 mt-1 text-amber">

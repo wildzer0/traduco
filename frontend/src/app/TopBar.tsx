@@ -4,11 +4,11 @@ import {
   ArrowLeft,
   Clock,
   Download,
-  History,
   ListChecks,
   LogOut,
   MessageSquare,
   PanelLeft,
+  Tag,
 } from "lucide-react";
 import { useProjects, useTree } from "../features/tree/queries";
 import { getProject, patchProject, retranslate } from "../lib/api";
@@ -54,7 +54,7 @@ export function TopBar() {
           className="flex h-8 items-center gap-1 rounded-ui px-2 text-muted hover:bg-surface-2 hover:text-fg"
         >
           <ArrowLeft size={14} strokeWidth={1.5} aria-hidden />
-          {t("topbar.allProjects")}
+          <span className="sr-only">{t("topbar.allProjects")}</span>
         </button>
       ) : null}
       <button
@@ -69,7 +69,7 @@ export function TopBar() {
       {projectId ? (
         <nav
           aria-label="breadcrumb"
-          className="flex min-w-0 items-center gap-1 truncate text-muted"
+          className="ml-1 flex min-w-0 items-center gap-1 truncate border-l border-border pl-3 text-muted"
         >
           <button
             type="button"
@@ -262,21 +262,45 @@ function PanelButtons() {
     "flex items-center gap-1 rounded-ui border border-border px-2 py-1 hover:bg-surface-2";
   return (
     <>
-      <button type="button" onClick={() => setCommentsOpen(true)} className={style}>
+      <button
+        type="button"
+        onClick={() => setCommentsOpen(true)}
+        className={style}
+        aria-label={t("comments.open")}
+        title={t("comments.open")}
+      >
         <MessageSquare size={14} strokeWidth={1.5} aria-hidden />
-        {t("comments.open")}
+        <span className="hidden 2xl:inline">{t("comments.open")}</span>
       </button>
-      <button type="button" onClick={() => setRequirementsOpen(true)} className={style}>
+      <button
+        type="button"
+        onClick={() => setRequirementsOpen(true)}
+        className={style}
+        aria-label={t("requirements.open")}
+        title={t("requirements.open")}
+      >
         <ListChecks size={14} strokeWidth={1.5} aria-hidden />
-        {t("requirements.open")}
+        <span className="hidden 2xl:inline">{t("requirements.open")}</span>
       </button>
-      <button type="button" onClick={() => setHistoryOpen(true)} className={style}>
+      <button
+        type="button"
+        onClick={() => setHistoryOpen(true)}
+        className={style}
+        aria-label={t("history.open")}
+        title={t("history.open")}
+      >
         <Clock size={14} strokeWidth={1.5} aria-hidden />
-        {t("history.open")}
+        <span className="hidden 2xl:inline">{t("history.open")}</span>
       </button>
-      <button type="button" onClick={() => setIssuesOpen(true)} className={style}>
-        <History size={14} strokeWidth={1.5} aria-hidden />
-        {t("issues.open")}
+      <button
+        type="button"
+        onClick={() => setIssuesOpen(true)}
+        className={style}
+        aria-label={t("issues.open")}
+        title={t("issues.open")}
+      >
+        <Tag size={14} strokeWidth={1.5} aria-hidden />
+        <span className="hidden 2xl:inline">{t("issues.open")}</span>
       </button>
     </>
   );

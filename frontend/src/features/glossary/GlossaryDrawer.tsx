@@ -140,6 +140,7 @@ export function GlossaryDrawer({ projectId }: { projectId: string }) {
             }}
           />
         </label>
+        <span className="text-muted">{t("glossary.exportAs")}</span>
         <a
           className="underline underline-offset-2"
           href={glossaryExportUrl(projectId, "csv")}
