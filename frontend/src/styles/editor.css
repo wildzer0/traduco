@@ -33,14 +33,14 @@
   font-size: 14px;
   line-height: 1.6;
 }
-/* CodeMirror's own (light) theme paints the caret black with a more specific selector: without
-   !important it is invisible on the dark theme. */
-.cm-editor .cm-content {
-  caret-color: var(--fg) !important;
+/* CodeMirror's own (light) theme paints the caret black with a selector of its own: these are
+   one class more specific, otherwise the caret is invisible on the dark theme. */
+.cm-editor .cm-scroller .cm-content {
+  caret-color: var(--fg);
 }
-.cm-editor .cm-cursor,
-.cm-editor .cm-dropCursor {
-  border-left-color: var(--fg) !important;
+.cm-editor .cm-scroller .cm-cursor,
+.cm-editor .cm-scroller .cm-dropCursor {
+  border-left-color: var(--fg);
 }
 .cm-editor .cm-selectionBackground,
 .cm-editor.cm-focused .cm-selectionBackground {

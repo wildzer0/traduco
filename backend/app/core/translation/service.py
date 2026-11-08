@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +34,7 @@ from .translator import PROMPT_VERSION, Context, Outcome, revise, translate
 
 Emit = Callable[[Path, dict[str, Any]], None]
 PRIORITY_EDIT, PRIORITY_VISIBLE, PRIORITY_OPEN, PRIORITY_BULK = 1, 2, 3, 4
+AWAITING_PIVOT = "awaiting_pivot"  # reason of a segment waiting for the approved official text
 MONITOR_SECONDS = 3.0
 
 
@@ -232,6 +233,17 @@ class TranslationService:
 
         segments: list[StoredSegment] = []
         todo: list[tuple[StoredSegment, int]] = []
+        pivot = getattr(project, "pivot_lang", None)
+
+        def enqueue(stored: StoredSegment, seg: Any, prio: int) -> None:
+            """Queue a job; a pivot language waits until the official text is approved."""
+            if pivot and self._pivot_text(root, pivot, rel, seg) is None:
+                stored.status, stored.reason = "queued", AWAITING_PIVOT
+                return
+            if stored.reason == AWAITING_PIVOT:
+                stored.reason = ""
+            todo.append((stored, prio))
+
         for seg in doc.segments:
             m = match.get(seg.key)
             kept = by_key.get(m.old_key) if m else None
@@ -240,7 +252,7 @@ class TranslationService:
                 if not force and self._reuse(root, project, new, seg.source):
                     segments.append(new)
                     continue
-                todo.append((new, max(PRIORITY_EDIT, floor)))
+                enqueue(new, seg, max(PRIORITY_EDIT, floor))
                 segments.append(new)
                 continue
             current = StoredSegment(**{**kept.__dict__, "key": seg.key, "kind": seg.kind})
@@ -254,12 +266,12 @@ class TranslationService:
                     continue  # the new wording is already in the memory
                 else:
                     current.status = "queued"
-                todo.append((current, max(PRIORITY_EDIT, floor)))
+                enqueue(current, seg, max(PRIORITY_EDIT, floor))
             elif force and not current.locked:
                 current.status = "queued"
-                todo.append((current, max(priority, floor)))
+                enqueue(current, seg, max(priority, floor))
             elif current.status == "queued":
-                todo.append((current, max(PRIORITY_OPEN, floor)))
+                enqueue(current, seg, max(PRIORITY_OPEN, floor))
         result = SegmentFile(sha256_text(text), segments)
         store.save(root, lang, rel, result)
 
@@ -277,6 +289,15 @@ class TranslationService:
             )
         self._emit(root, {"type": "job.progress", "pending": self.queue.pending()})
         return result
+
+    @staticmethod
+    def _pivot_text(root: Path, pivot: str, rel: str, seg: Any) -> str | None:
+        """The approved official translation of ``seg``, or None while it is not approved."""
+        official = store.load(root, pivot, rel)
+        stored = official.get(seg.key) if official else None
+        if stored is None or stored.status != "approved" or not stored.target:
+            return None
+        return stored.target if (stored.source_hash == seg.hash or stored.locked) else None
 
     @staticmethod
     def _reuse(root: Path, project: Project, seg: StoredSegment, source: str) -> bool:
@@ -304,8 +325,13 @@ class TranslationService:
         # the endpoint is resolved when the job runs, so a changed setting also applies to queued
         # jobs; only a per-project model override is fixed here
         override = project.llm.modello if project.llm and project.llm.modello else ""
+        source = seg.source
+        pivot = getattr(project, "pivot_lang", None)
+        if pivot:  # RF-21e: the approved official text is what gets translated
+            source = self._pivot_text(root, pivot, rel, seg) or seg.source
+            ctx = replace(ctx, source_language=pivot)
         return Job(
-            root, rel, project.lingua_ufficiale, key, seg.hash, seg.source, priority, ctx,
+            root, rel, project.lingua_ufficiale, key, seg.hash, source, priority, ctx,
             "", override,
         )  # fmt: skip
 
@@ -630,6 +656,8 @@ class SegmentActions:
 
         row = self._change(root, project, rel, key, go)
         self._remember(root, project, rel, key, row, "approved")
+        if project.lingue_aggiuntive:  # languages that translate from this approved text can go on
+            self.service.schedule_sync(root, project, rel, read_section(root, rel)[0])
         return row
 
     def accept_pending(self, root: Path, project: Project, rel: str, key: str) -> StoredSegment:

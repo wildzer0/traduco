@@ -212,7 +212,8 @@ export const applySource = (
     json("POST", { text }),
   );
 
-export const getReview = (id: string): Promise<ReviewData> => api(`${base(id)}/review`);
+export const getReview = (id: string): Promise<ReviewData> =>
+  api(`${base(id)}/review${langParam().replace("&", "?")}`);
 
 export const patchSectionMeta = (
   id: string,
@@ -601,6 +602,7 @@ export interface LanguageInfo {
 export interface AdditionalLanguage {
   codice: string;
   tono?: Tone;
+  base?: "sorgente" | "ufficiale";
   formato_date?: string;
 }
 

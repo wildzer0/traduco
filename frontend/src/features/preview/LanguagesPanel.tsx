@@ -29,6 +29,7 @@ export function LanguagesPanel({ projectId }: { projectId: string }) {
       .map((l) => ({
         codice: l.code,
         ...(l.tono ? { tono: l.tono } : {}),
+        ...(l.base === "ufficiale" ? { base: "ufficiale" as const } : {}),
         ...(l.formato_date ? { formato_date: l.formato_date } : {}),
       }));
 
@@ -120,6 +121,26 @@ export function LanguagesPanel({ projectId }: { projectId: string }) {
               <option value="formale">formale</option>
               <option value="neutro">neutro</option>
               <option value="informale">informale</option>
+            </select>
+            <select
+              className={field}
+              aria-label={t("languages.base")}
+              value={row.base ?? "sorgente"}
+              onChange={(e) => {
+                const { base: _drop, ...rest } = row;
+                setRows(
+                  current.map((r, i) =>
+                    i === index
+                      ? e.target.value === "ufficiale"
+                        ? { ...rest, base: "ufficiale" }
+                        : rest
+                      : r,
+                  ),
+                );
+              }}
+            >
+              <option value="sorgente">{t("languages.baseSource")}</option>
+              <option value="ufficiale">{t("languages.baseOfficial")}</option>
             </select>
             <input
               className={`${field} w-32`}

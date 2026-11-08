@@ -18,6 +18,8 @@ Milestone M6 - quality and polish.
 - Visual table editing (rows, columns, alignment) in both editor modes.
 - Optional spelling and grammar check of the source with your own LanguageTool server.
 - User guide (`docs/guida-utente.md`) and a 300-section performance test.
+- An additional language can translate from the approved official translation instead of the source (pivot); it waits for each segment to be approved.
+- The review table follows the language chosen in the preview.
 
 ### Fixed
 - The text cursor was black in the Markdown editor and could not be seen on the dark theme.

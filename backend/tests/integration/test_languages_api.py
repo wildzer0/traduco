@@ -118,3 +118,54 @@ def test_the_bilingual_export_puts_source_and_translation_side_by_side(
     assert not any(
         "bilingue" in f.read_text() for f in (tmp_path / "ws" / pid / ".traduco").rglob("map.json")
     )
+
+
+def add_pivot_german(c: TestClient, pid: str) -> None:
+    r = c.patch(
+        f"/api/projects/{pid}",
+        json={"lingue_aggiuntive": [{"codice": "de", "base": "ufficiale"}]},
+    )
+    assert r.status_code == 200, r.text
+
+
+def test_a_pivot_language_waits_for_the_approved_official_text(xapi: TestClient) -> None:
+    pid = example(xapi)
+    add_pivot_german(xapi, pid)
+    wait_for(lambda: view(xapi, pid, SECTION)["pending"] == 0, timeout=20)
+    german = lang_view(xapi, pid, "de")
+    # nothing in the official language is approved yet: nothing to translate from
+    assert german["segments"] and all(not s["target"] for s in german["segments"])
+    assert all(s["status"] == "queued" for s in german["segments"])
+    rows = {r["code"]: r for r in xapi.get(f"/api/projects/{pid}/languages").json()}
+    assert rows["de"]["base"] == "ufficiale" and rows["de"]["percent"] == 0
+
+    english = view(xapi, pid, SECTION)["segments"]
+    key = next(s["key"] for s in english if s["kind"] == "paragraph")
+    official = next(s for s in english if s["key"] == key)["target"]
+    done = xapi.put(
+        f"/api/projects/{pid}/segments/{key}", params={"path": SECTION}, json={"action": "approve"}
+    )
+    assert done.status_code == 200, done.text
+    wait_for(
+        lambda: (
+            next(s for s in lang_view(xapi, pid, "de")["segments"] if s["key"] == key)["target"]
+            != ""
+        ),
+        timeout=20,
+    )
+    row = next(s for s in lang_view(xapi, pid, "de")["segments"] if s["key"] == key)
+    # the fake model echoes what it is given, behind its marker: it was given the English text
+    assert row["target"] == f"[EN] {official}"
+    others = [s for s in lang_view(xapi, pid, "de")["segments"] if s["key"] != key]
+    assert others and all(not s["target"] for s in others)  # only what was approved moves on
+
+
+def test_the_review_can_be_asked_for_one_language(xapi: TestClient) -> None:
+    pid = example(xapi)
+    add_german(xapi, pid)
+    wait_for(lambda: lang_view(xapi, pid, "de")["pending"] == 0, timeout=20)
+    wait_for(lambda: view(xapi, pid, SECTION)["pending"] == 0, timeout=20)
+    english = xapi.get(f"/api/projects/{pid}/review").json()
+    german = xapi.get(f"/api/projects/{pid}/review", params={"lang": "de"}).json()
+    assert english["segments"] and german["segments"]
+    assert xapi.get(f"/api/projects/{pid}/review", params={"lang": "fr"}).status_code == 404

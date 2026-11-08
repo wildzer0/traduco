@@ -386,7 +386,11 @@ class ExportManager:
         for node in sections:
             stored = store.load(root, project.lingua_ufficiale, node.path)
             if stored is not None:
-                count += sum(1 for s in stored.segments if s.status == "queued")
+                count += sum(
+                    1
+                    for s in stored.segments
+                    if s.status == "queued" and s.reason != "awaiting_pivot"
+                )
         self._total = max(self._total, count)
         return count
 

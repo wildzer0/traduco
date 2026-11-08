@@ -172,7 +172,7 @@ al secondo inserimento `…00043`, anche dopo il riavvio.
 ## M6 — Qualità e rifinitura (RF-07, 12, 13, 16, 29, 44, 57, 64)
 
 - [x] Lingue aggiuntive (RF-21b…d): cartelle segmenti per lingua, coda a bassa priorità, tono/glossario/formati per
-      lingua, percentuali nel selettore lingua. **Non fatto**: opzione pivot sulla lingua ufficiale approvata (RF-21e, C)
+      lingua, percentuali nel selettore lingua, opzione pivot sulla lingua ufficiale approvata (RF-21e)
 - [x] Memoria di traduzione SQLite: esatte e simili, export/import TMX (e glossario CSV/TBX, RF-44)
 - [x] Riferimenti incrociati tra sezioni risolti in export (già dall'M4; i frammenti `#titolo` portano all'inizio della sezione)
 - [x] Editor visuale tabelle

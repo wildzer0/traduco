@@ -531,5 +531,8 @@
   "toolbar.tableDelete": "Elimina la tabella",
   "spell.title": "Ortografia e grammatica (LanguageTool)",
   "spell.run": "Controlla l'ortografia",
-  "spell.none": "Nessun problema di ortografia o grammatica."
+  "spell.none": "Nessun problema di ortografia o grammatica.",
+  "languages.base": "Traduci a partire da",
+  "languages.baseSource": "Il testo sorgente",
+  "languages.baseOfficial": "La traduzione ufficiale approvata"
 }

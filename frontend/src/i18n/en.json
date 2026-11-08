@@ -531,5 +531,8 @@
   "toolbar.tableDelete": "Delete the table",
   "spell.title": "Spelling and grammar (LanguageTool)",
   "spell.run": "Check spelling",
-  "spell.none": "No spelling or grammar problems found."
+  "spell.none": "No spelling or grammar problems found.",
+  "languages.base": "Translate from",
+  "languages.baseSource": "The source text",
+  "languages.baseOfficial": "The approved official translation"
 }

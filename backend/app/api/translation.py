@@ -234,8 +234,8 @@ def apply_source(
 
 
 @router.get("/projects/{project_id}/review")
-def review(root: Root, service: Service) -> dict[str, Any]:
-    rows = service.review(root, load_project(root))
+def review(root: Root, service: Service, lang: str | None = None) -> dict[str, Any]:
+    rows = service.review(root, view_for(root, lang))
     counts: dict[str, int] = {}
     for r in rows:
         counts[r["status"]] = counts.get(r["status"], 0) + 1

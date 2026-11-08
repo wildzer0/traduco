@@ -2,13 +2,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getReview } from "../../lib/api";
 import { onFileEvent } from "../../lib/file-events";
+import { usePreview } from "../../lib/preview-store";
 import { reviewKey } from "../preview/segment-actions";
 
 /** Every translated segment of the project; refreshed (debounced) while translation progresses. */
 export function useReview(projectId: string) {
   const qc = useQueryClient();
+  const language = usePreview((s) => s.language);
   const query = useQuery({
-    queryKey: reviewKey(projectId),
+    queryKey: [...reviewKey(projectId), language],
     queryFn: () => getReview(projectId),
     retry: false,
   });

@@ -91,8 +91,9 @@ modello non raggiungibile, sorgente cambiato su un segmento bloccato…). Prima 
 Il menu con il globo, sopra l'anteprima, mostra le lingue di destinazione e **a che punto** è la traduzione di ciascuna.
 **Lingue del progetto…** aggiunge lingue aggiuntive (tedesco, francese…): si traducono **dal sorgente** in sottofondo, dopo la
 lingua ufficiale, ciascuna con il proprio tono e formato di data. Ogni lingua ha le sue correzioni, il suo glossario
-(`destinazione` per lingua) e la sua memoria. La scelta del tono e della base "ufficiale come pivot" è nel
-`progetto.yaml`; il pivot non è ancora attivo.
+(`destinazione` per lingua) e la sua memoria. Per ogni lingua puoi scegliere **da dove tradurre**: dal sorgente (predefinito) o dalla **traduzione ufficiale approvata**
+(pivot), utile quando la coppia diretta rende peggio: in quel caso la lingua aspetta che approvi il segmento ufficiale.
+Anche la tabella di revisione segue la lingua scelta nel selettore.
 
 ### Controllo della sezione e ortografia
 

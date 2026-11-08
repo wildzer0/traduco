@@ -93,6 +93,10 @@ class Project(BaseModel):
             update["tono"] = extra.tono
         if extra.formato_date:
             update["formato_date"] = extra.formato_date
+        if extra.base == "ufficiale":
+            update["pivot_lang"] = (
+                self.lingua_ufficiale
+            )  # translate from its approved text (RF-21e)
         return self.model_copy(update=update)
 
     @model_validator(mode="after")
