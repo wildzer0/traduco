@@ -3,6 +3,30 @@ export interface ProjectSummary {
   nome: string;
   lingua_sorgente: string;
   lingua_ufficiale: string;
+  /** Folder it is in (null: the top level) and the names of that folder and its parents. */
+  cartella?: string | null;
+  percorso?: string[];
+  autore?: string;
+  /** Number and date of the latest issue (or last row of the revision table). */
+  emissione?: string;
+  emissione_data?: string;
+  ultima_modifica?: string;
+  sezioni?: number;
+  lingue?: string[];
+}
+
+export interface FolderInfo {
+  id: string;
+  nome: string;
+  genitore: string | null;
+  percorso: string[];
+}
+
+export interface TrashEntry {
+  name: string;
+  id: string;
+  nome: string;
+  deleted_at: string;
 }
 
 export interface TreeNode {

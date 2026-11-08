@@ -22,6 +22,9 @@ const workspaceApi = (tree = demoTree()) => [
   (c: { url: string; method: string }) =>
     c.url === "/api/projects" && c.method === "GET" ? { body: [project()] } : undefined,
   (c: { url: string; method: string }) =>
+    c.url === "/api/workspace" ? { body: { folders: [], projects: [project()] } } : undefined,
+  (c: { url: string; method: string }) => (c.url === "/api/trash" ? { body: [] } : undefined),
+  (c: { url: string; method: string }) =>
     c.url === "/api/projects/demo/tree" ? { body: { nodes: tree } } : undefined,
 ];
 
@@ -35,7 +38,7 @@ describe("welcome page", () => {
     installFakeApi(workspaceApi());
     const user = userEvent.setup();
     const { router } = renderApp("/");
-    await user.click(await screen.findByRole("button", { name: /Demo/ }));
+    await user.click(await screen.findByRole("button", { name: "Demo" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/p/demo"));
     expect(await screen.findByRole("navigation", { name: "Capitoli" })).toBeInTheDocument();
   });

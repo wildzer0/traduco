@@ -9,6 +9,7 @@ import type {
   ExportScope,
   ExportStatus,
   FileContent,
+  FolderInfo,
   GlossaryEntry,
   ImportJob,
   ImportProposal,
@@ -24,6 +25,7 @@ import type {
   TemplateMapping,
   Tone,
   TranslationView,
+  TrashEntry,
   TreeNode,
 } from "./types";
 
@@ -63,6 +65,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new ApiError(res.status, code, message, details);
   }
+  if (res.status === 204) return undefined as T; // nothing to read
   return (await res.json()) as T;
 }
 
@@ -629,3 +632,38 @@ export interface SpellIssue {
 
 export const spellcheck = (id: string, path: string): Promise<{ issues: SpellIssue[] }> =>
   api(`${base(id)}/spellcheck`, json("POST", { path }));
+
+// --- the list of projects: folders, copies, trash -----------------------------------------------
+export const getWorkspace = (): Promise<{ folders: FolderInfo[]; projects: ProjectSummary[] }> =>
+  api("/workspace");
+
+export const createFolder = (nome: string, genitore: string | null): Promise<FolderInfo> =>
+  api("/folders", json("POST", { nome, genitore }));
+
+export const updateFolder = (
+  id: string,
+  change: { nome?: string; genitore?: string | null; sposta?: boolean },
+): Promise<FolderInfo> => api(`/folders/${enc(id)}`, json("PATCH", change));
+
+export const deleteFolder = (id: string): Promise<void> =>
+  api(`/folders/${enc(id)}`, { method: "DELETE" });
+
+export const setProjectFolder = (id: string, cartella: string | null): Promise<unknown> =>
+  api(`${base(id)}/folder`, json("PUT", { cartella }));
+
+export const renameProject = (id: string, nome: string): Promise<unknown> =>
+  api(base(id), json("PATCH", { nome }));
+
+export const duplicateProject = (id: string, nome?: string): Promise<ProjectSummary> =>
+  api(`${base(id)}/duplicate`, json("POST", nome ? { nome } : {}));
+
+export const deleteProject = (id: string): Promise<{ trash: string }> =>
+  api(base(id), { method: "DELETE" });
+
+export const listTrash = (): Promise<TrashEntry[]> => api("/trash");
+
+export const restoreProject = (name: string): Promise<{ id: string }> =>
+  api(`/trash/${enc(name)}/restore`, { method: "POST" });
+
+export const purgeProject = (name: string): Promise<void> =>
+  api(`/trash/${enc(name)}`, { method: "DELETE" });

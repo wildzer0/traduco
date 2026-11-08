@@ -5,15 +5,17 @@ import {
   createRouter,
   type RouterHistory,
 } from "@tanstack/react-router";
+import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { AppShell } from "./AppShell";
-import { WelcomePage } from "./WelcomePage";
 import { Workspace } from "./Workspace";
 
 const rootRoute = createRootRoute({ component: AppShell });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: WelcomePage,
+  component: ProjectsPage,
+  validateSearch: (search: Record<string, unknown>): { c?: string } =>
+    typeof search.c === "string" && search.c ? { c: search.c } : {},
 });
 const projectRoute = createRoute({
   getParentRoute: () => rootRoute,

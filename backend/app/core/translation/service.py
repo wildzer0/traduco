@@ -159,6 +159,10 @@ class TranslationService:
         except LlmError as exc:
             self._set_online(False, model, str(exc))
             return {"online": False, "model": model, "models": [], "error": str(exc)}
+        if self._gate():  # reachable, but the model is still being downloaded: jobs wait
+            error = "the model is being downloaded"
+            self._set_online(False, model, error)
+            return {"online": False, "model": model, "models": models, "error": error}
         self._set_online(True, model)
         return {
             "online": True,

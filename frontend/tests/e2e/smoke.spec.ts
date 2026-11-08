@@ -3,7 +3,7 @@ import { createProject, openApp } from "./helpers";
 
 test("welcome page loads and talks to the backend", async ({ page }) => {
   await openApp(page);
-  await expect(page.getByRole("heading", { name: "Benvenuto in Traduco" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Progetti" })).toBeVisible();
   await expect(page.getByRole("contentinfo").getByRole("status")).toContainText("0.1.0");
 });
 
