@@ -93,3 +93,77 @@ async def test_untranslatable_term_is_protected_by_a_placeholder() -> None:
     llm = Scripted("The ⟦1⟧ is ready for the test.")
     out = await translate(llm, "La ACME Pump è pronta per il test.", ctx)
     assert out.ok and out.target == "The ACME Pump is ready for the test."
+
+
+async def test_markers_a_model_dropped_around_a_glossary_term_are_put_back() -> None:
+    """Found with Gemma: ``**messa in servizio**`` came back as plain "commissioning"."""
+    from app.core.translation import glossary as gl
+    from app.core.translation.translator import Context, translate
+
+    entries = (gl.Entry(sorgente="messa in servizio", destinazione={"en": "commissioning"}),)
+    ctx = Context("it", "en", "formale", glossary=entries)
+
+    class Dropped:
+        model = "scripted"
+
+        async def chat(self, messages, **kw):  # type: ignore[no-untyped-def]
+            return "The commissioning must be performed by trained personnel."
+
+    out = await translate(
+        Dropped(), "La **messa in servizio** deve essere eseguita da personale.", ctx
+    )
+    assert out.ok and out.target == "The **commissioning** must be performed by trained personnel."
+
+    class Lost(Dropped):
+        async def chat(self, messages, **kw):  # type: ignore[no-untyped-def]
+            return "Something else entirely."
+
+    bad = await translate(
+        Lost(), "La **messa in servizio** deve essere eseguita da personale.", ctx
+    )
+    assert not bad.ok  # nothing to repair: still reported, never invented
+
+
+class Says:
+    model = "scripted"
+
+    def __init__(self, *replies: str) -> None:
+        self.replies = list(replies)
+
+    async def chat(self, messages, **kw):  # type: ignore[no-untyped-def]
+        return self.replies.pop(0) if len(self.replies) > 1 else self.replies[0]
+
+
+async def test_a_lead_in_that_lost_its_bold_gets_it_back() -> None:
+    """Found with Gemma: ``**Attenzione.** …`` came back without its bold, every time."""
+    from app.core.translation.translator import Context, translate
+
+    source = "**Attenzione.** Prima di intervenire sezionare l'alimentazione."
+    out = await translate(
+        Says("Caution. Before working on it, disconnect the power supply."),
+        source,
+        Context("it", "en"),
+    )
+    assert (
+        out.ok and out.target == "**Caution.** Before working on it, disconnect the power supply."
+    )
+
+
+async def test_a_segment_that_was_all_bold_stays_bold() -> None:
+    from app.core.translation.translator import Context, translate
+
+    out = await translate(
+        Says("Do not open under load"), "**Non aprire sotto carico**", Context("it", "en")
+    )
+    assert out.ok and out.target == "**Do not open under load**"
+
+
+async def test_when_the_place_is_not_certain_the_text_is_kept_and_the_loss_is_reported() -> None:
+    from app.core.translation.translator import Context, translate
+
+    source = "Controllare la **tenuta** e la pressione."
+    out = await translate(Says("Check the seal and the pressure."), source, Context("it", "en"))
+    assert not out.ok and "formatting lost" in out.reason
+    assert (
+        out.target == "Check the seal and the pressure."
+    )  # not empty: the author can fix the bold

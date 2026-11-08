@@ -54,3 +54,20 @@ def test_prompt_rules() -> None:
 
 def test_do_not_translate_list() -> None:
     assert glossary.do_not_translate(ENTRIES) == ("ACME Pump",)
+
+
+def test_italian_inflection_is_found_in_every_word_of_a_term() -> None:
+    from app.core.translation.glossary import Entry, relevant
+
+    entries = [
+        Entry(sorgente="valvola di intercettazione", destinazione={"en": "isolation valve"}),
+        Entry(sorgente="quadro elettrico", destinazione={"en": "electrical panel"}),
+        Entry(sorgente="collaudo", destinazione={"en": "acceptance test"}),
+    ]
+    text = "Chiudere le valvole di intercettazione e aprire i quadri elettrici dopo i collaudi."
+    assert [e.sorgente for e in relevant(entries, text)] == [
+        "valvola di intercettazione",
+        "quadro elettrico",
+        "collaudo",
+    ]
+    assert relevant(entries, "La valvola di non ritorno e il quadrante sono a posto.") == []

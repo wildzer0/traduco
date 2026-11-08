@@ -771,7 +771,8 @@ class SegmentActions:
             outcome = await revise(client, source.source, current.target, instruction, ctx)
             if not outcome.ok:
                 raise refusal(outcome.reason)
-            return [outcome.target]
+            # a model that did not follow the instruction hands the text back: that is no proposal
+            return [] if outcome.target.strip() == current.target.strip() else [outcome.target]
         variants = [
             "Give a clearly different wording from the obvious one.",
             "Prefer a more concise wording.",

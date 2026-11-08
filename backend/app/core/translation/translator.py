@@ -11,7 +11,7 @@ from app.core.segmentation.protect import PlaceholderError, Protected, protect, 
 from . import glossary as glossary_mod
 from . import guard, prompts
 
-PROMPT_VERSION = "translate@1"
+PROMPT_VERSION = "translate@2"
 LANGUAGES = {
     "it": "Italian", "en": "English", "de": "German", "fr": "French", "es": "Spanish",
     "pt": "Portuguese", "nl": "Dutch", "pl": "Polish", "sv": "Swedish", "ro": "Romanian",
@@ -71,7 +71,7 @@ def build_messages(
 ) -> list[dict[str, str]]:
     rules = glossary_mod.prompt_rules(list(ctx.glossary), ctx.target_language)
     extra = f"\n- Glossary (mandatory):\n{rules}" if rules else ""
-    system = prompts.load("translate", 1).format(
+    system = prompts.load("translate", 2).format(
         source_language=LANGUAGES.get(ctx.source_language, ctx.source_language),
         target_language=LANGUAGES.get(ctx.target_language, ctx.target_language),
         tone_instruction=TONES.get(ctx.tone, TONES["neutro"]),
@@ -91,6 +91,76 @@ def build_messages(
         lines.append(f"IMPORTANT: {correction}")
     lines.append(f"<source>{protected.text}</source>")
     return [{"role": "system", "content": system}, {"role": "user", "content": "\n\n".join(lines)}]
+
+
+def _missing_pairs(reply: str, protected: Protected) -> list[int]:
+    """Pairs of which the answer has neither the opening nor the closing marker."""
+    return [n for n in protected.pairs if f"⟦{n}⟧" not in reply and f"⟦/{n}⟧" not in reply]
+
+
+_LEAD_IN = re.compile(r"^(\s*)(.+?[.:!?])(?=\s|$)", re.DOTALL)
+
+
+def _repair(reply: str, protected: Protected, ctx: Context) -> str | None:
+    """Put back markers that a model dropped, in the three cases where the place is certain.
+
+    * around a glossary term it replaced: ``⟦1⟧messa in servizio⟦/1⟧`` -> "commissioning" comes back
+      bare, and its imposed translation occurs once in the answer;
+    * around a lead-in ("**Attenzione.** …"): the pair opens the segment and its text ends in
+      punctuation, so the first sentence of the answer is wrapped;
+    * around the whole segment.
+    """
+    text = reply
+    for n in _missing_pairs(reply, protected):
+        inner = re.search(rf"⟦{n}⟧(.*?)⟦/{n}⟧", protected.text, re.DOTALL)
+        if inner is None:
+            continue
+        body = inner.group(1).strip()
+        for e in ctx.glossary:
+            imposed = e.destinazione.get(ctx.target_language)
+            if not imposed or not glossary_mod.matches_term(e.sorgente, body):
+                continue
+            found = list(glossary_mod.term_pattern(imposed).finditer(text))
+            if len(found) == 1:
+                a, b = found[0].span()
+                text = f"{text[:a]}⟦{n}⟧{text[a:b]}⟦/{n}⟧{text[b:]}"
+                break
+        else:
+            if protected.text.strip() == f"⟦{n}⟧{inner.group(1)}⟦/{n}⟧":
+                text = f"⟦{n}⟧{text.strip()}⟦/{n}⟧"  # the whole segment
+            elif protected.text.lstrip().startswith(f"⟦{n}⟧") and body[-1:] in ".:!?":
+                lead = _LEAD_IN.match(text)
+                if lead and "⟦" not in lead.group(2):
+                    start = lead.start(2)
+                    text = f"{text[:start]}⟦{n}⟧{lead.group(2)}⟦/{n}⟧{text[lead.end(2) :]}"
+    return text if text != reply else None
+
+
+def _degraded(reply: str, protected: Protected) -> str | None:
+    """The answer with the formatting it lost simply left out, when everything else is right."""
+    missing = _missing_pairs(reply, protected)
+    if not missing:
+        return None
+    bare = Protected(
+        protected.text,
+        protected.atoms,
+        {n: marks for n, marks in protected.pairs.items() if n not in missing},
+    )
+    try:
+        return restore(reply, bare)
+    except PlaceholderError:
+        return None
+
+
+def restore_or_repair(reply: str, protected: Protected, ctx: Context) -> str:
+    """``restore`` the answer; if its markers are damaged try :func:`_repair` once."""
+    try:
+        return restore(reply, protected)
+    except PlaceholderError:
+        fixed = _repair(reply, protected, ctx)
+        if fixed is None:
+            raise
+        return restore(fixed, protected)
 
 
 def _clean(reply: str) -> str:
@@ -121,9 +191,12 @@ async def translate(client: Chat, source: str, ctx: Context) -> Outcome:
             )
         )
         try:
-            restored = restore(reply, protected)
+            restored = restore_or_repair(reply, protected, ctx)
         except PlaceholderError as exc:
             reason = f"placeholders: {exc}"
+            best = _degraded(reply, protected) or best
+            if best and attempt == 2:
+                reason = f"placeholders: formatting lost ({exc})"
             correction = (
                 "Your previous answer broke the placeholders (" + str(exc) + "). "
                 "Copy every ⟦n⟧ marker exactly once, keeping pairs ⟦n⟧…⟦/n⟧ around the same words."
@@ -199,7 +272,7 @@ async def revise(
         if guard.is_refusal(reply):
             return Outcome(current, False, guard.OFF_TOPIC, model=client.model, attempts=attempt)
         try:
-            restored = restore(reply, protected)
+            restored = restore_or_repair(reply, protected, ctx)
         except PlaceholderError as exc:
             reason = f"your answer broke the placeholders ({exc})"
             continue

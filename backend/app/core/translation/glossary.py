@@ -71,19 +71,41 @@ def save(root: Path, entries: list[Entry]) -> None:
     atomic_write_text(root / GLOSSARY_FILE, out.getvalue() if ordered else "[]\n")
 
 
-def _pattern(term: str) -> re.Pattern[str]:
-    """Whole-word, case-insensitive; tolerates ``-s``/``-es`` and a changing final vowel
-    (Italian ``offerta`` / ``offerte``, ``progetto`` / ``progetti``)."""
+def _pattern(term: str, inflect: bool = False) -> re.Pattern[str]:
+    """Whole-word, case-insensitive; tolerates ``-s``/``-es`` after the term.
+
+    With ``inflect`` (for a term in the *source* language) the final vowel of every word of four
+    letters or more may change, as Italian does for the plural and the gender: ``pompa di
+    mandata`` is also found in ``pompe di mandata``, ``quadro elettrico`` in ``quadri elettrici``.
+    """
     term = term.strip()
-    body = re.escape(term)
-    if len(term) > 3 and term[-1].lower() in "aeio":
-        body = re.escape(term[:-1]) + "[aeio]"
+    words = term.split()
+    if inflect:
+        parts = [
+            re.escape(w[:-1]) + "[aeio]" if len(w) > 3 and w[-1].lower() in "aeio" else re.escape(w)
+            for w in words
+        ]
+        body = r"\s+".join(parts)
+    else:
+        body = re.escape(term)
+        if len(term) > 3 and term[-1].lower() in "aeio":
+            body = re.escape(term[:-1]) + "[aeio]"
     return re.compile(rf"(?<!\w){body}{_PLURAL}(?!\w)", re.IGNORECASE)
+
+
+def term_pattern(term: str) -> re.Pattern[str]:
+    """The pattern that finds a target-language term in a translation."""
+    return _pattern(term)
+
+
+def matches_term(term: str, text: str) -> bool:
+    """Is ``text`` exactly the source ``term`` (in any of its inflected forms)?"""
+    return _pattern(term, inflect=True).fullmatch(text.strip()) is not None
 
 
 def relevant(entries: list[Entry], source: str) -> list[Entry]:
     """Entries whose source term occurs in ``source``."""
-    return [e for e in entries if _pattern(e.sorgente).search(source)]
+    return [e for e in entries if _pattern(e.sorgente, inflect=True).search(source)]
 
 
 def do_not_translate(entries: list[Entry]) -> tuple[str, ...]:

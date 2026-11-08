@@ -18,10 +18,14 @@ Milestone M6 - quality and polish.
 - Visual table editing (rows, columns, alignment) in both editor modes.
 - Optional spelling and grammar check of the source with your own LanguageTool server.
 - User guide (`docs/guida-utente.md`) and a 300-section performance test.
+- `tools/make-big-project.py` (a large realistic manual to try a model on), `tools/benchmark-translation.py` (speed and quality report) and `docs/prova-gemma.md`.
 - An additional language can translate from the approved official translation instead of the source (pivot); it waits for each segment to be approved.
 - The review table follows the language chosen in the preview.
 
 ### Fixed
+- With the real model, bold text was often translated without its markers and the segment was left empty ("**Attenzione.** …" every time). The markers are put back where the place is certain, and otherwise the translation is kept and reported as having lost its formatting.
+- The glossary did not recognise a plural in the first words of a term ("valvole di intercettazione"), so imposed and forbidden terms were not checked there.
+- The instruction box no longer offers a "proposal" that is the current text.
 - The text cursor was black in the Markdown editor and could not be seen on the dark theme.
 - Uploading a template right after opening the Templates panel could leave the list empty.
 
