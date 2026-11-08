@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 from urllib.parse import urlparse
 
@@ -12,6 +13,7 @@ from app.core.team import session
 from app.core.team.guard import settings_of, user_of
 from app.core.team.oidc import OidcClient, OidcError
 
+log = logging.getLogger("uvicorn.error")
 router = APIRouter(tags=["auth"])
 LOGIN_SECONDS = 600
 
@@ -62,6 +64,7 @@ async def login(request: Request, next: str = "/") -> Any:
     try:
         url, remembered = await _client(request).start(_redirect_uri(request), _safe_next(next))
     except OidcError as exc:
+        log.warning("login unavailable: %s", exc)
         return JSONResponse({"error": {"code": "login_unavailable", "message": str(exc)}}, 503)
     response = RedirectResponse(url, status_code=302)
     response.set_cookie(
@@ -82,6 +85,7 @@ async def callback(request: Request, code: str = "", state: str = "", error: str
             code, state, {k: str(v) for k, v in (remembered or {}).items()}, _redirect_uri(request)
         )
     except OidcError as exc:
+        log.warning("login refused: %s", exc)  # the browser only shows a line of JSON
         return JSONResponse({"error": {"code": "login_failed", "message": str(exc)}}, 403)
     response = RedirectResponse(
         _safe_next(str((remembered or {}).get("next", "/"))), status_code=302
